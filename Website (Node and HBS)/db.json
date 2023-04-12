@@ -1,0 +1,34 @@
+[
+  {
+    "artist": {
+      "key": "beyonce",
+      "label": "Beyoncé"
+    },
+    "tour": {
+      "key": "renaissance",
+      "label": "Renaissance World Tour"
+    },
+    "cities": [
+      {
+        "city": "London",
+        "venue": "Wembley Stadium",
+        "dates": [
+          "2023-05-29",
+          "2023-05-30",
+          "2023-06-01",
+          "2024-02-15",
+          "2021-02-15",
+          "2023-06-03",
+          "2023-06-04"
+        ]
+      },
+      {
+        "city": "Sunderland",
+        "venue": "Stadium of Light",
+        "dates": [
+          "2023-05-23"
+        ]
+      }
+    ]
+  }
+]

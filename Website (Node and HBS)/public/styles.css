@@ -1,0 +1,9 @@
+.note-to-self {
+    color: grey;
+    font-style: italic;
+    display: block;
+}
+
+.note-to-self:before {
+    content: "// ";
+}

@@ -1,0 +1,9 @@
+<main>
+    <h2>How it works</h2>
+</main>
+<aside>
+    <h2>Upcoming Events</h2>
+    {{#each events}}
+        <li>{{this.artist.label}}: {{this.tour.label}}</li>
+    {{/each}}
+</aside>

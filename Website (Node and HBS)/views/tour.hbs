@@ -1,0 +1,32 @@
+<h1>{{ artist }}</h1>
+<h2>{{ tour }}</h2>
+<!--<h3>Dates</h3>-->
+<!--<ul>-->
+<!--    {{# each cities }}-->
+<!--        <li>-->
+<!--            {{ this.city }}-->
+<!--            <ul>-->
+<!--                {{# each this.dates }}-->
+<!--                    <li>{{this}}</li>-->
+<!--                {{/ each }}-->
+<!--            </ul>-->
+<!--        </li>-->
+<!--    {{/each}}-->
+<!--</ul>-->
+{{#each cities}}
+    <div class="card" id="card-{{this.city}}" onclick="cardClicked('{{this.city}}')">
+        <h2>{{this.city}} - {{this.venue}}</h2>
+        <p>{{this.dates.length}} dates:
+            {{#each this.dates}}
+                {{this}}{{#unless @last}}, {{/unless}}
+            {{/each}}
+        </p>
+        <p>£{{this.lowestPriceAvailable}} - £{{this.highestPriceAvailable}}</p>
+        <h3>Availability:</h3>
+        <ul>
+            {{#each this.sections}}
+                <li class="availability availability-{{this.availability}}">Section {{this.name}}: {{this.availability}}</li>
+            {{/each}}
+        </ul>
+    </div>
+{{/each}}
