@@ -1,20 +1,7 @@
 <h1>{{ artist }}</h1>
 <h2>{{ tour }}</h2>
-<!--<h3>Dates</h3>-->
-<!--<ul>-->
-<!--    {{# each cities }}-->
-<!--        <li>-->
-<!--            {{ this.city }}-->
-<!--            <ul>-->
-<!--                {{# each this.dates }}-->
-<!--                    <li>{{this}}</li>-->
-<!--                {{/ each }}-->
-<!--            </ul>-->
-<!--        </li>-->
-<!--    {{/each}}-->
-<!--</ul>-->
 {{#each cities}}
-    <div class="card" id="card-{{this.city}}" onclick="cardClicked('{{this.city}}')">
+    <div class="card" id="card-{{this.city}}" data-city="{{this.city}}">
         <h2>{{this.city}} - {{this.venue}}</h2>
         <p>{{this.dates.length}} dates:
             {{#each this.dates}}
@@ -30,3 +17,14 @@
         </ul>
     </div>
 {{/each}}
+
+<script>
+    $(document).ready(function(){
+        $(".card").click( function() { onClickFun($(this)) } )
+    })
+
+    function onClickFun(obj) {
+        console.log(obj.attr("data-city"))
+    }
+
+</script>

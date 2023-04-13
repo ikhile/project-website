@@ -16,14 +16,14 @@ router.get('/:artist', (req, res) => {
         return
     }
 
-    console.log(artist)
-
     let context = {
         artist: artist[0].artist.label,
-        tours: loadArtist(req.params.artist)
+        tours: loadArtist(req.params.artist),
     }
 
     res.render('artist', context)
+
+    $("")
 })
 
 router.get('/:artist/:tour', (req, res) => {
@@ -34,13 +34,20 @@ router.get('/:artist/:tour', (req, res) => {
         return
     }
 
-    let context = {
-        artist: event.artist.label,
-        tour: event.tour.label,
-        cities: event.cities,
+    let isOnsale = true // later get from onsale date in database and compare to today
+
+    if (isOnsale) {
+        let context = {
+            artist: event.artist.label,
+            tour: event.tour.label,
+            cities: event.cities,
+        }
+        res.render('tour', context)
     }
-    console.log(event.tour)
-    res.render('tour', context)
+
+    else {
+        res.render('tour-before-sale')
+    }    
 })
 
 let db
