@@ -32,8 +32,12 @@ Handlebars.registerHelper('replaceSymbols', function(str){
     for (let char of chars) {
         str = str.replace(char.key, char.char)
     }
-    
+
     return str
+})
+
+Handlebars.registerHelper('toLowerCase', function(str) {
+    return str.toLowerCase()
 })
 
 app.get('/', async (request, response) => {
