@@ -15,7 +15,8 @@
     "express-handlebars": "^7.0.1",
     "hbs": "^4.2.0",
     "jquery": "^3.6.4",
-    "jsdom": "^21.1.1"
+    "jsdom": "^21.1.1",
+    "mysql2": "^3.2.3"
   },
   "devDependencies": {
     "nodemon": "^2.0.21"

@@ -4,6 +4,14 @@ const exphbs = require('express-handlebars')
 const Handlebars = require('handlebars')
 const port = 3000;
 
+// just figuring out how to make my own modules lol
+const um = require('./queue')
+um()
+// having the above lets me use um() AND runs the lile queueing interval
+// but if I don't want um then just
+require('./queue')
+// also works
+
 // https://stackabuse.com/guide-to-handlebars-templating-engine-for-node/
 const { engine } = require('express-handlebars')
 const fs = require("fs");
@@ -39,6 +47,10 @@ Handlebars.registerHelper('replaceSymbols', function(str){
 Handlebars.registerHelper('toLowerCase', function(str) {
     return str.toLowerCase()
 })
+
+// setInterval(function(){
+//     console.log("interval")
+// }, 3000)
 
 app.get('/', async (request, response) => {
     // https://stackoverflow.com/a/61284053

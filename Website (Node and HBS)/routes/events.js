@@ -30,60 +30,79 @@ router.get('/:artist', (req, res) => {
 
 router.get('/:artist/:tour', (req, res) => {
     let event = loadTour(req.params.artist, req.params.tour)
-    console.log(req.originalUrl)
 
     if (!event) {
         res.status(404).render('events-404');
         return
     }
 
-    let isOnsale = true // later get from onsale date in database and compare to today
+    let isOnsale = false // later get from onsale date in database and compare to today
 
-    if (isOnsale) {
+    // if (isOnsale) {
         let context = {
             originalUrl: req.originalUrl,
+            event: event,
             artist: event.artist.label,
             tour: event.tour.label,
             cities: event.cities,
         }
         res.render('events/artist/tour', context)
-    }
+    // }
 
-    else {
-        res.render('tour-before-sale')
-    }    
+    // else {
+    //     res.render('tour-before-sale')
+    // }    
 })
 
 router.get('/:artist/:tour/purchase', (req, res) => {
     let event = loadTour(req.params.artist, req.params.tour)
-    console.log(req.originalUrl)
 
     if (!event) {
         res.status(404).render('events-404');
         return
     }
 
-    let isOnsale = true // later get from onsale date in database and compare to today
+    let isOnsale = false // later get from onsale date in database and compare to today
 
-    if (isOnsale) {
-        let context = {
-            originalUrl: req.originalUrl,
-            artist: event.artist.label,
-            tour: event.tour.label,
-            cities: event.cities,
-        }
-        res.render('events/artist/tour/purchase', context)
+    // approach A - one template
+    // use if/else/unless to show different content depending on if the tickets are on sale or not (could simply be a link to sign up vs purchase page + some info about when they go on sale)
+    let context = {
+        originalUrl: req.originalUrl,
+        artist: event.artist.label,
+        tour: event.tour.label,
+        cities: event.cities,
+        onSale: isOnsale,
     }
+    res.render('events/artist/tour/purchase', context)
 
-    else {
-        res.render('events/artist/tour/purchase/before-sale.hbs')
-    }   
+    // approach B - two templates
+    // if (isOnsale) {
+        // let context = {
+        //     originalUrl: req.originalUrl,
+        //     artist: event.artist.label,
+        //     tour: event.tour.label,
+        //     cities: event.cities,
+        //     onSale: isOnsale
+        // }
+        // res.render('events/artist/tour/purchase', context)
+    // }
+
+    // else {
+    //     res.render('events/artist/tour/purchase/before-sale.hbs')
+    // }   
+
+
 })
 
 // e.g. events/beyonce/renaissance/sign-up OR events/beyonce/renaissance/purchase/sign-up
 router.route(['/:artist/:tour/sign-up', '/:artist/:tour/purchase/sign-up']).get((req, res) => {
+    // actually just realised I have the purchase slots sign up and the waiting list sign up which are two slightly separate things...
     let city = req.query.city // can use to autofill city on sign up form
     res.send(`Sign up for tickets for ${req.params.artist} ${req.params.tour} at ${req.params.city}`)
+})
+
+router.route(['/:artist/:tour/waiting-list', '/:artist/:tour/purchase/waiting-list', '/:artist/:tour/purchase/:city/waiting-list']).get((req, res) => {
+    res.send(`Sign up for the waiting list`)
 })
 
 router.get('/:artist/:tour/purchase/:city', (req, res, next) => {
@@ -91,12 +110,13 @@ router.get('/:artist/:tour/purchase/:city', (req, res, next) => {
     if (!city) { res.status(404).render('events-404'); return }
 
     isOnsale = true // later get from onsale date in database and compare to today
+
     if (!isOnsale) { 
         // refactored for clarity
         // res.redirect(req.originalUrl.replace(req.params.city, "sign-up") + `?city=${req.params.city}`) 
 
         let newUrl = req.originalUrl.replace(req.params.city, "sign-up")
-        let cityQuery = `?city=${req.params.city}`
+        let cityQuery = "?city=" + req.params.city
         res.redirect(newUrl + cityQuery)
     }
 

@@ -1,5 +1,6 @@
 <h1>{{ artist }}</h1>
 <h2>{{ tour }}</h2>
+<p>This tour is {{#unless onSale}}<b>not</b>{{/unless}} on sale</p>
 {{#each cities}}
     <div class="card" id="card-{{this.city}}" data-city="{{this.city}}">
         <a href="{{../originalUrl}}/{{toLowerCase this.city}}">

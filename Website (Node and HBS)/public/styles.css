@@ -7,3 +7,10 @@
 .note-to-self:before {
     content: "// ";
 }
+
+.purchase-button {
+    display: inline-block;
+    width: 200px;
+    height: 50px;
+    background-color: turquoise;
+}
