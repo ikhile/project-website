@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS tours (
 
 CREATE TABLE IF NOT EXISTS venues (
     venue_id INT NOT NULL AUTO_INCREMENT,
-    venue_name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
     city VARCHAR(255) NOT NULL,
 
     PRIMARY KEY (venue_id)
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS venues (
 CREATE TABLE IF NOT EXISTS dates (
     date_id INT NOT NULL AUTO_INCREMENT,
     tour_id INT NOT NULL,
-    date DATE NOT NULL,
+    date_time DATETIME NOT NULL,
     venue_id INT NOT NULL,
 
     PRIMARY KEY (date_id),
@@ -90,6 +90,10 @@ CREATE TABLE IF NOT EXISTS sold_tickets (
 INSERT INTO artists (artist_name) VALUES("Beyonce");
 INSERT INTO tours (artist_id, tour_name) VALUES(LAST_INSERT_ID(), "Renaissance World Tour");
 
+show tables;
+
+SELECT * FROM artists INNER JOIN tours ON tours.artist_id = artists.artist_id;
+
 INSERT 
 INTO venues (name, city) 
 VALUES
@@ -99,13 +103,21 @@ VALUES
     ("BT Murrayfield Stadium", "Edinburgh");
 
 SET @tottenham_id = (SELECT venue_id FROM venues WHERE name="Tottenham Hotspur Stadium");
-SET @renaissance_id = (SELECT tour_id FROM tours WHERE name="Renaissance World Tour");
+SET @renaissance_id = (SELECT tour_id FROM tours WHERE tour_name="Renaissance World Tour");
+
+-- SELECT @tottenham_id
 
 INSERT
 INTO dates (tour_id, date, venue_id)
 VALUES
-    (@renaissance_id, "2023-05-29", @tottenham_id);
+    (@renaissance_id, "2023-05-29", @tottenham_id),
     (@renaissance_id, "2023-05-30", @tottenham_id),
     (@renaissance_id, "2023-06-01", @tottenham_id),
     (@renaissance_id, "2023-06-03", @tottenham_id),
     (@renaissance_id, "2023-06-04", @tottenham_id);
+    
+    
+SELECT `date`, venue_name, city, artist_name, tour_name FROM dates 
+    INNER JOIN venues ON dates.venue_id = venues.venue_id
+    INNER JOIN tours ON dates.tour_id = tours.tour_id
+    INNER JOIN artists ON tours.artist_id = artists.artist_id;
