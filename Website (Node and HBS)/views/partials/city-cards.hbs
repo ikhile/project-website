@@ -1,0 +1,26 @@
+{{#each cardContext.datesByVenue}}
+    <div 
+        class="city-card card" 
+        data-tour-id="{{../cardContext.event.tour_id}}"
+        data-venue-id="{{this.venue_id}}"
+        {{!-- onclick="location.href='{{addVenueIDToUrl ../cardContext.cardUrl this.venue_id}}'" --}}
+    >
+        <main>
+            <h3>{{this.city}}, {{this.venue}}</h3>
+            <ul>
+                {{#each (groupDates (venueDatesToDatesArray this.dates))}}
+                    <li>
+                        {{#each this}}
+                            {{formatDate this 'do'}}{{#unless @last}},{{/unless}}
+                        {{/each}}
+                        {{formatDate this.[0] 'LLLL'}}
+                    </li>
+                {{/each}}
+            </ul>
+        </main>
+
+        <aside>
+            <img src="" alt="Seat map showing current availability">
+        </div>
+    </div>
+{{/each}}

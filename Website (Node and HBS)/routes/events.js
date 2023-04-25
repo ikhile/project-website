@@ -1,31 +1,88 @@
-const express = require('express');
-const router = express.Router();
-const fs = require('fs');
+import express from 'express'
+import fs from 'fs'
+import * as db from '../database.js';
+import { groupDates } from '../index.js';
+
+export const router = express.Router();
 
 
-router.get('/', (req, res) => {
-    let context = getEventsIndexContext()
+router.get('/', async (req, res) => {
+    const context = {
+        events: await db.getAllEvents()
+    }
+
+    console.log(context.events)
+
     res.render('events', context)
 })
 
-router.route(['/test-1', '/test-2']).get((req, res) => {
-    res.send("multiple routes test")
+router.get('/artist/:artist_id', (req, res) => {
+    res.send("artist id: " + req.params.artist_id)
+    // let artist = loadArtist(req.params.artist)
+
+    // if (!artist) {
+    //     res.status(404).render('events/404');
+    //     return
+    // }
+
+    // let context = {
+    //     artist: artist[0].artist.label,
+    //     tours: loadArtist(req.params.artist),
+    // }
+
+    // res.render('events/artist', context)
 })
 
-router.get('/:artist', (req, res) => {
-    let artist = loadArtist(req.params.artist)
-
-    if (!artist) {
-        res.status(404).render('events/404');
-        return
-    }
-
+router.get('/tour/:tour_id', async (req, res) => {
     let context = {
-        artist: artist[0].artist.label,
-        tours: loadArtist(req.params.artist),
+        cardContext: {
+            event: await db.getEventById(req.params.tour_id),
+            datesByVenue: await db.getTourDatesGroupedByVenue(req.params.tour_id),
+            cardUrl: `/events/purchase/tour/${req.params.tour_id}/queue?venue=[VENUE_ID]`
+        }
     }
 
-    res.render('events/artist', context)
+    // will want to establish whether the tour is on sale yet - possibly render different templates
+    let isOnsale = true
+
+    if (isOnsale) res.render('events/tour-onsale', context)
+    else res.send("not on sale")
+})
+
+router.get('/purchase/tour/:tour_id/queue/', async (req, res) => {
+    let context = {
+        event: await db.getEventById(req.params.tour_id),
+        qry: req.query
+    }
+
+    res.render('queue', context)
+})
+
+// might want this to be city instead... or at least say city in url?
+// but tbh I'm not gonna do this in a way that has multiple venues per city lol
+router.get('/purchase/tour/:tour_id/venue/:venue_id', async (req, res) => {
+    // I assume I'll want to join in the seats for each date grouped by section etc.
+    let context = {
+        cardContext: {
+            event: await db.getEventById(req.params.tour_id),
+            datesByVenue: await db.getTourDatesGroupedByVenue(req.params.tour_id),
+            cardUrl: `/events/purchase/tour/${req.params.tour_id}/venue/[VENUE_ID]`
+        },
+        tour: await db.getEventById(req.params.tour_id),
+        venue: await db.getVenueById(req.params.venue_id),
+        venueDates: await db.getDatesByTourAndVenue(req.params.tour_id, req.params.venue_id)
+    }
+
+    const params = new URLSearchParams(req.query)
+    const qryDates = params.getAll("date")
+
+    if (qryDates.length == 0 || qryDates.length == context.venueDates.length) {
+        console.log("get all dates")
+        // use req.query to get ticket info for all selected dates and send in context
+    }
+
+    console.log(context.cardContext)
+    res.render('events/purchase/purchase-page', context)
 })
 
 router.get('/:artist/:tour', (req, res) => {
@@ -138,81 +195,79 @@ router.get('/:artist/:tour/purchase/:city/queue', (req, res) => {
 
 
 
-let db
-fs.readFile("./db.json", function (err, data){
-    db = JSON.parse(data)
-    // console.log("json" + JSON.stringify(db))
-})
+// let db
+// fs.readFile("./db.json", function (err, data){
+//     db = JSON.parse(data)
+//     // console.log("json" + JSON.stringify(db))
+// })
 
-let db2 = [
-    {
-        artist: {
-            key: "beyonce",
-            label: "Beyoncé"
-        },
-        tour: {
-            key: "renaissance",
-            label: "Renaissance World Tour"
-        },
-        cities: [
-            {
-                city: "London",
-                dates: [
-                    "2023-05-29",
-                    "2023-05-30",
-                    "2023-06-01",
-                    "2024-02-15",
-                    "2021-02-15",
-                    "2023-06-03",
-                    "2023-06-04"
-                ]
-            },
-            {
-                city: "Edinburgh",
-                dates: [
-                    "2023-05-23"
-                ]
-            }
-        ]
-    }
-]
+// let db2 = [
+//     {
+//         artist: {
+//             key: "beyonce",
+//             label: "Beyoncé"
+//         },
+//         tour: {
+//             key: "renaissance",
+//             label: "Renaissance World Tour"
+//         },
+//         cities: [
+//             {
+//                 city: "London",
+//                 dates: [
+//                     "2023-05-29",
+//                     "2023-05-30",
+//                     "2023-06-01",
+//                     "2024-02-15",
+//                     "2021-02-15",
+//                     "2023-06-03",
+//                     "2023-06-04"
+//                 ]
+//             },
+//             {
+//                 city: "Edinburgh",
+//                 dates: [
+//                     "2023-05-23"
+//                 ]
+//             }
+//         ]
+//     }
+// ]
 
-function getEventsIndexContext() {
-    let context = {
-        events: []
-    }
+// function getEventsIndexContext() {
+//     let context = {
+//         events: []
+//     }
 
-    db.forEach(a => {
-        context.events.push({
-            artist: a.artist,
-            tour: a.tour
-        })
-    })
+//     db.forEach(a => {
+//         context.events.push({
+//             artist: a.artist,
+//             tour: a.tour
+//         })
+//     })
 
-    // context.sort(/*sort by tour start date*/)
+//     // context.sort(/*sort by tour start date*/)
 
-    return context
-}
+//     return context
+// }
 
-function loadArtist(artistKey) {
-    let artist = db.filter(a => a.artist.key === artistKey)
-    if (artist.length === 0) return null
-    else return artist
-}
+// function loadArtist(artistKey) {
+//     let artist = db.filter(a => a.artist.key === artistKey)
+//     if (artist.length === 0) return null
+//     else return artist
+// }
 
-function loadTour(artistKey, tourKey) {
-    return db.find(a => a.artist.key === artistKey && a.tour.key === tourKey)
-}
+// function loadTour(artistKey, tourKey) {
+//     return db.find(a => a.artist.key === artistKey && a.tour.key === tourKey)
+// }
 
-function loadCity(artistKey, tourKey, city) {
-    let tour = loadTour(artistKey, tourKey)
-    let c = tour?.cities.find(a => a.city.toUpperCase() == city.toUpperCase())
-    console.log(c)
-    return c
-}
+// function loadCity(artistKey, tourKey, city) {
+//     let tour = loadTour(artistKey, tourKey)
+//     let c = tour?.cities.find(a => a.city.toUpperCase() == city.toUpperCase())
+//     console.log(c)
+//     return c
+// }
 
-function send404() {
+// function send404() {
     
-}
-
-module.exports = router;
+// }

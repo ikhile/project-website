@@ -4,7 +4,7 @@
 
 <aside>
     {{#if isOnsale}}
-        <a href="{{originalUrl}}/purchase" class="btn btn-primary">Find tickets</a>
+        <a href="{{originalUrl}}/purchase" class="btn btn-primary" role="button">Find tickets</a>
     {{else}}
         <h3>Sign up to purchase</h3>
         {{#each event.sale-times}}
@@ -16,7 +16,11 @@
 <main>
     <ul>
         {{#each cities}}
-            <li>{{this.city}}</li>
+            <li>{{this.city}} 
+                <span>
+                    {{#each this.city.dates}}
+                </span>
+            </li>
         {{/each}}
     </ul>
 </main>

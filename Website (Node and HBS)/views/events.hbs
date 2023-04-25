@@ -5,8 +5,8 @@
 <ul>
 {{#each events}}
     <li>
-        <a href="events/{{this.artist.key}}/{{this.tour.key}}">
-            {{this.artist.label}} - {{this.tour.label}}
+        <a href="{{this.tour_id}}"> <!-- if I just put the last part it tacks it on to events somehow -->
+            {{this.artist_name}} - {{this.tour_name}}
         </a>
         <span class="note-to-self">should also put dates</span>
     </li>

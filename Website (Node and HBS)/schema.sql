@@ -91,21 +91,23 @@ INSERT INTO artists (artist_name) VALUES("Beyonce");
 INSERT INTO tours (artist_id, tour_name) VALUES(LAST_INSERT_ID(), "Renaissance World Tour");
 
 INSERT 
-INTO venues (name, city) 
+INTO venues (venue_name, city) 
 VALUES
     ("Tottenham Hotspur Stadium", "London"),
     ("Principality Stadium", "Cardiff"),
     ("Stadium of Light", "Sunderland"),
     ("BT Murrayfield Stadium", "Edinburgh");
 
-SET @tottenham_id = (SELECT venue_id FROM venues WHERE name="Tottenham Hotspur Stadium");
-SET @renaissance_id = (SELECT tour_id FROM tours WHERE name="Renaissance World Tour");
+SET @tottenham_id = (SELECT venue_id FROM venues WHERE venue_name="Tottenham Hotspur Stadium");
+SET @renaissance_id = (SELECT tour_id FROM tours WHERE tour_name="Renaissance World Tour");
 
 INSERT
 INTO dates (tour_id, date, venue_id)
 VALUES
-    (@renaissance_id, "2023-05-29", @tottenham_id);
+    (@renaissance_id, "2023-05-29", @tottenham_id),
     (@renaissance_id, "2023-05-30", @tottenham_id),
     (@renaissance_id, "2023-06-01", @tottenham_id),
     (@renaissance_id, "2023-06-03", @tottenham_id),
     (@renaissance_id, "2023-06-04", @tottenham_id);
+    
+show databases

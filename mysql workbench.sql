@@ -121,3 +121,8 @@ SELECT `date`, venue_name, city, artist_name, tour_name FROM dates
     INNER JOIN venues ON dates.venue_id = venues.venue_id
     INNER JOIN tours ON dates.tour_id = tours.tour_id
     INNER JOIN artists ON tours.artist_id = artists.artist_id;
+    
+    
+SELECT tour_id, artist_name, tour_name
+FROM tours
+INNER JOIN artists ON tours.artist_id = artists.artist_id;
