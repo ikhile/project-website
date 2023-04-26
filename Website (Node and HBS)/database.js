@@ -50,14 +50,7 @@ export async function getTourDatesGroupedByVenue(tourID) {
         WHERE tour_id = ?
     `, tourID)
 
-    console.log(rows)
-
     let arr = []
-
-    let dbv = {
-        venue: "x",
-        dates: []
-    }
 
     // grouping dates
     for (let row of rows) {
@@ -100,13 +93,13 @@ export async function getVenueById(venueID) {
     return rows[0]
 }
 
-async function getNote(id) {
+export async function getAllArtists() {
     const [rows] = await pool.query(`
-        SELECT * 
-        FROM test_notes
-        WHERE id = ?
-    `, [id])
-    return rows[0]
+        SELECT *
+        FROM artists
+    `)
+
+    return rows
 }
 
 // const events = await getAllEvents()

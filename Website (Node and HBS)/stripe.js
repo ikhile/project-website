@@ -1,27 +1,29 @@
 import Stripe from "stripe"
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 
-export async function createCheckoutSession() {
-    let productIDs = ["prod_Nmi1R3RRdP2r5l"]
-    let products = []
+export async function createCheckoutSession(reqBody) {
 
-    for (let id of productIDs) {
-        const product = await stripe.products.retrieve(id)
-        products.push({
-            price: product.default_price,
-            quanity: 1
-        })
+    let lineItems = []
+
+    for (let id of reqBody["product-ids"].split(",")) {
+        try {
+            const product = await stripe.products.retrieve(id)
+
+            lineItems.push({
+                price: product.default_price,
+                quantity: 1
+            })
+        } catch (err) {
+            console.error(err)
+        }
+        
+        
     }
 
-    console.log(products)
+    // console.log(products)
 
     return stripe.checkout.sessions.create({
-        line_items: [
-            {
-                price: 'price_1N18bRJuWbWNbD9CJfa9UKB3',
-                quantity: 1
-            }
-        ],
+        line_items: lineItems,
         mode: "payment",
         success_url: "http://localhost:3000/events/payment-success",
         cancel_url: "http://localhost:3000/events/payment-cancel"

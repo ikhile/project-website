@@ -1,16 +1,19 @@
 import express from 'express'
 import fs from 'fs'
 import * as db from '../database.js';
-import { groupDates } from '../index.js';
+import { groupDates } from '../helpers.js';
 import { createCheckoutSession } from '../stripe.js';
+import api from '../index.js';
 
 export const router = express.Router();
 
 // might move payments to a "purchase" route... could move purchase page as well yep yep
 router.post('/create-checkout-session', async (req, res) => {
-    const session = await createCheckoutSession()
+    // console.log("body: ", req.body)
+    // console.log("params: ", req.params)
+    const session = await createCheckoutSession(req.body)
 
-    console.log(session)
+    // console.log(session)
 
     res.redirect(303, session.url)
 })
@@ -20,7 +23,7 @@ router.get('/payment-success', async (req, res) => {
 })
 
 router.get('/payment-cancel', async (req, res) => {
-    res.send("payment cancel")
+    res.send("payment cancelled")
 })
 
 router.get('/', async (req, res) => {
@@ -28,7 +31,7 @@ router.get('/', async (req, res) => {
         events: await db.getAllEvents()
     }
 
-    console.log(context.events)
+    // console.log(context.events)
 
     res.render('events', context)
 })
@@ -48,15 +51,19 @@ router.get('/artist/:artist_id', (req, res) => {
     // }
 
     // res.render('events/artist', context)
+    res.send(`artist page (artist = ${req.params.artist_id})`)
 })
 
 router.get('/tour/:tour_id', async (req, res) => {
+    
+    const event = await api.get(`tours/${req.params.tour_id}`).then((res) => res.data)
+
     let context = {
         cardContext: {
-            event: await db.getEventById(req.params.tour_id),
-            datesByVenue: await db.getTourDatesGroupedByVenue(req.params.tour_id),
-            cardUrl: `/events/purchase/tour/${req.params.tour_id}/queue?venue=[VENUE_ID]`
-        }
+            event: event,
+            venues: await api.get(`tours/${req.params.tour_id}/venues`).then((res) => res.data),
+        },
+        event: event
     }
 
     // will want to establish whether the tour is on sale yet - possibly render different templates
@@ -83,7 +90,6 @@ router.get('/purchase/tour/:tour_id/venue/:venue_id', async (req, res) => {
         cardContext: {
             event: await db.getEventById(req.params.tour_id),
             datesByVenue: await db.getTourDatesGroupedByVenue(req.params.tour_id),
-            cardUrl: `/events/purchase/tour/${req.params.tour_id}/venue/[VENUE_ID]`
         },
         tour: await db.getEventById(req.params.tour_id),
         venue: await db.getVenueById(req.params.venue_id),
@@ -94,42 +100,42 @@ router.get('/purchase/tour/:tour_id/venue/:venue_id', async (req, res) => {
     const qryDates = params.getAll("date")
 
     if (qryDates.length == 0 || qryDates.length == context.venueDates.length) {
-        console.log("get all dates")
+        // console.log("get all dates")
         // use req.query to get ticket info for all selected dates and send in context
     }
 
     // use req.query to return available seats for number of tickets
     // 
 
-    console.log(context.cardContext)
+    // console.log(context.cardContext)
     res.render('events/purchase/purchase-page', context)
 })
 
-router.get('/:artist/:tour', (req, res) => {
-    let event = loadTour(req.params.artist, req.params.tour)
+// router.get('/:artist/:tour', (req, res) => {
+//     let event = loadTour(req.params.artist, req.params.tour)
 
-    if (!event) {
-        res.status(404).render('events-404');
-        return
-    }
+//     if (!event) {
+//         res.status(404).render('events-404');
+//         return
+//     }
 
-    let isOnsale = false // later get from onsale date in database and compare to today
+//     let isOnsale = false // later get from onsale date in database and compare to today
 
-    // if (isOnsale) {
-        let context = {
-            originalUrl: req.originalUrl,
-            event: event,
-            artist: event.artist.label,
-            tour: event.tour.label,
-            cities: event.cities,
-        }
-        res.render('events/artist/tour', context)
-    // }
+//     // if (isOnsale) {
+//         let context = {
+//             originalUrl: req.originalUrl,
+//             event: event,
+//             artist: event.artist.label,
+//             tour: event.tour.label,
+//             cities: event.cities,
+//         }
+//         res.render('events/artist/tour', context)
+//     // }
 
-    // else {
-    //     res.render('tour-before-sale')
-    // }    
-})
+//     // else {
+//     //     res.render('tour-before-sale')
+//     // }    
+// })
 
 router.get('/:artist/:tour/purchase', (req, res) => {
     let event = loadTour(req.params.artist, req.params.tour)
