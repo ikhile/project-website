@@ -2,9 +2,26 @@ import express from 'express'
 import fs from 'fs'
 import * as db from '../database.js';
 import { groupDates } from '../index.js';
+import { createCheckoutSession } from '../stripe.js';
 
 export const router = express.Router();
 
+// might move payments to a "purchase" route... could move purchase page as well yep yep
+router.post('/create-checkout-session', async (req, res) => {
+    const session = await createCheckoutSession()
+
+    console.log(session)
+
+    res.redirect(303, session.url)
+})
+
+router.get('/payment-success', async (req, res) => {
+    res.send("payment success")
+})
+
+router.get('/payment-cancel', async (req, res) => {
+    res.send("payment cancel")
+})
 
 router.get('/', async (req, res) => {
     const context = {
@@ -80,6 +97,9 @@ router.get('/purchase/tour/:tour_id/venue/:venue_id', async (req, res) => {
         console.log("get all dates")
         // use req.query to get ticket info for all selected dates and send in context
     }
+
+    // use req.query to return available seats for number of tickets
+    // 
 
     console.log(context.cardContext)
     res.render('events/purchase/purchase-page', context)

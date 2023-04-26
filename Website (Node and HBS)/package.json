@@ -19,7 +19,8 @@
     "hbs": "^4.2.0",
     "jquery": "^3.6.4",
     "jsdom": "^21.1.1",
-    "mysql2": "^3.2.3"
+    "mysql2": "^3.2.3",
+    "stripe": "^12.2.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.21"

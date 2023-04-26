@@ -50,10 +50,9 @@
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
 }
-/* 
-#filters {
-    display: grid;
-    grid-template-rows: auto auto;
-    justify-content: center;
-    justify-items: center;
+
+/* .available-ticket-card {
+    display: grid !important;
+    grid-template: auto auto / auto auto auto;
+
 } */
