@@ -1,5 +1,9 @@
+// import { fetchData } from "./fetchData"
 const tourID = window.location.href.match(/tour\/(\d*)/)[1]
 const venueID = window.location.href.match(/venue\/(\d*)/)[1]
+let selectedDateIDs = []
+let ticketQty
+let qtyInput = $('input[name="qty"]')
 
 $(document).ready(async function () {
     console.log(tourID, venueID)
@@ -26,9 +30,9 @@ $(document).ready(async function () {
         $("input[name=date]").prop("checked", true)
     }
 
-    const qty = params.get("qty")
-    $("input[name=qty]").val(!!qty ? qty : 2)
-    $("#qty-span").text(!!qty ? qty : 2)
+    ticketQty = params.get("qty") ?? 2
+    $("input[name=qty]").val(ticketQty)
+    $("#qty-span").text(ticketQty)
     disableQtyBtns()
 
     // only allow date filter to be clicked when update needed
@@ -63,41 +67,37 @@ $(document).ready(async function () {
         let productIDs = allProductIDs.slice(0, parseInt($("input[name=qty]").val()))
         $("input[name='product-ids']").val(productIDs.join())
     })
+
+    updateDates()
 })
 
-let selectedDateIDs = []
+async function fetchData(url) {
+    return await fetch(url)
+             .then(res => res.json())
+             .then(data => data)
+ }
 
 async function updateDates() {
-    selectedDateIDs = []
-
     $("input[name=date]:checked").each((i, elem) => {
         selectedDateIDs.push($(elem).val())
     })
 
-    // console.log(selectedDates)
+    updateAvailableSeats()
+}
 
-    // let dates = await fetch(`/api/tours/${tourID}/venues/`)//${venueID}`)
-    // dates = await dates.json()
-    // console.log(dates)
+async function updateAvailableSeats() {
+    console.log("sc")
+    let dateQry = `[${selectedDateIDs.join(",")}]`
 
-    let dates = []
+    console.log("tickets " + $("input[name=qty]").val())
+    ticketQty = $("input[name=qty]").val() // constrain again just to be sure
+    // ticketQty = 
 
-    // if (selectedDateIDs)
+    let url = `/api/available-seats?tour=${tourID}&dates=${dateQry}&qty=${ticketQty}`
+    console.log(1, url)
 
-    for (let dateID of selectedDateIDs) {
-        let date = await fetch(`/api/tours/${tourID}/dates/${dateID}`)
-        date = await date.json()
-        dates.push(...date)
-    }
-
-    console.log(dates)
-    console.log("Selected dates: " + dates.map((date) => date.date))
-
-    // now I think about it I don't need to do any of that
-    // what I need to do is use selectedDatesIDs to get all available seats for this tour and this date that are available
-
-    // something like /api/tours/tourID/dates/[dateIDs]/available
-    // wondering if I should use query strings?
+    let response = fetchData(url)
+    console.log(await response)
 }
 
 function toggleCityPopup() {
@@ -115,7 +115,6 @@ function toggleCityPopup() {
 
 // can store a max quantity in the database for each tour
 let maxTickets = 4
-let qtyInput = $('input[name="qty"]')
 
 function increaseQty() {
     const oldVal = qtyInput.val()
@@ -123,9 +122,11 @@ function increaseQty() {
     if (newVal > maxTickets) newVal = maxTickets
 
     if (oldVal != newVal) {
-        qtyInput.val(newVal)
-        $("#filters").submit()
+        ticketQty = newVal
+        // $("#filters").submit()
     }
+
+    updateQtyVals()
 }
 
 function decreaseQty() {
@@ -134,9 +135,19 @@ function decreaseQty() {
     if (newVal < 1) newVal = 1
 
     if (oldVal != newVal) {
-        qtyInput.val(newVal)
-        $("#filters").submit()
+        // qtyInput.val(newVal)
+        ticketQty = newVal
+        // $("#filters").submit()
     }
+
+    updateQtyVals()
+}
+
+function updateQtyVals() {
+    qtyInput.val(ticketQty)
+    $("#qty-span").text(ticketQty)
+    disableQtyBtns()
+    updateAvailableSeats()
 }
 
 function disableQtyBtns() {
