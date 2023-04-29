@@ -1,4 +1,8 @@
+const tourID = window.location.href.match(/tour\/(\d*)/)[1]
+const venueID = window.location.href.match(/venue\/(\d*)/)[1]
+
 $(document).ready(async function () {
+    console.log(tourID, venueID)
     $("#change-city-btn").click(toggleCityPopup)
     $("#change-city-popup").click(toggleCityPopup)
 
@@ -29,6 +33,8 @@ $(document).ready(async function () {
 
     // only allow date filter to be clicked when update needed
     $("input[name=date]").on("input", function() {
+        updateDates()
+
         $("#date-filter button[type=submit]").attr("disabled", false)
     })
 
@@ -41,16 +47,16 @@ $(document).ready(async function () {
     })
 
     $("#filters input").on("input", function() {
-        $("#filters").submit()
+        // $("#filters").submit()
     })
 
     $("#purchase").click(function(e) {
         // temp solution - later get use seat ids from database both here and in stripe...
         let allProductIDs = [
             "prod_Nmi1R3RRdP2r5l",
-            "2",
-            "3",
-            "4",
+            "prod_Nmi1R3RRdP2r5l",
+            "prod_Nmi1R3RRdP2r5l",
+            "prod_Nmi1R3RRdP2r5l",
         ]
 
         // use seat ids as selected
@@ -58,6 +64,41 @@ $(document).ready(async function () {
         $("input[name='product-ids']").val(productIDs.join())
     })
 })
+
+let selectedDateIDs = []
+
+async function updateDates() {
+    selectedDateIDs = []
+
+    $("input[name=date]:checked").each((i, elem) => {
+        selectedDateIDs.push($(elem).val())
+    })
+
+    // console.log(selectedDates)
+
+    // let dates = await fetch(`/api/tours/${tourID}/venues/`)//${venueID}`)
+    // dates = await dates.json()
+    // console.log(dates)
+
+    let dates = []
+
+    // if (selectedDateIDs)
+
+    for (let dateID of selectedDateIDs) {
+        let date = await fetch(`/api/tours/${tourID}/dates/${dateID}`)
+        date = await date.json()
+        dates.push(...date)
+    }
+
+    console.log(dates)
+    console.log("Selected dates: " + dates.map((date) => date.date))
+
+    // now I think about it I don't need to do any of that
+    // what I need to do is use selectedDatesIDs to get all available seats for this tour and this date that are available
+
+    // something like /api/tours/tourID/dates/[dateIDs]/available
+    // wondering if I should use query strings?
+}
 
 function toggleCityPopup() {
     let popup = $('#change-city-popup')

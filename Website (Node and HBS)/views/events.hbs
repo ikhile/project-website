@@ -1,14 +1,14 @@
 <h2>Upcoming events</h2>
 <p class="note-to-self">maybe have some filters for date and city</p>
 <p class="note-to-self">these could be buttons e.g. today, tomorrow, this weekend, this month, etc...</p>
-<p class="note-to-self">see what crowdstrike has in their lil dropdowns</p>
+{{!-- <p class="note-to-self">see what crowdstrike has in their lil dropdowns</p> --}}
 <ul>
 {{#each events}}
     <li>
-        <a href="{{this.tour_id}}"> <!-- if I just put the last part it tacks it on to events somehow -->
+        <a href="tour/{{this.tour_id}}">
             {{this.artist_name}} - {{this.tour_name}}
         </a>
-        <span class="note-to-self">should also put dates</span>
+        <span class="d-block">{{formatDate this.firstDate.date "do LLL ''yy"}} to {{formatDate this.lastDate.date "do LLL ''yy"}}</span>
     </li>
 {{/each}}
 </ul>

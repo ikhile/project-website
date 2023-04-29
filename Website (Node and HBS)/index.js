@@ -4,6 +4,7 @@ import * as exphbs from 'express-handlebars'
 import * as db from './database.js';
 import { router as eventsRouter } from './routes/events.js'
 import { router as apiRouter } from './routes/api.js'
+import { router as accountRouter } from './routes/account.js'
 import * as datefns from 'date-fns'
 import * as helpers from './helpers.js'
 import bodyParser from 'body-parser' // https://stackoverflow.com/a/27855234
@@ -59,11 +60,17 @@ app.get('/', async (req, res) => {
         events: await db.getAllEvents() // need to sort by date (soonest first), then limit number of events used
     }
 
+    for (let event of context.events) {
+        event.firstDate = await api.get(`tours/${event.tour_id}/dates/first`).then((res) => res.data)
+        event.lastDate = await api.get(`tours/${event.tour_id}/dates/last`).then((res) => res.data)
+    }
+
     res.render('index', context)
 })
 
 app.use('/events', eventsRouter)
 app.use('/api', apiRouter)
+app.use('/account', accountRouter)
 
 // app.use('/search', require('./routes/search-results.js'))
 // app.use('/account', require('./routes/account.js'))

@@ -48,19 +48,21 @@ CREATE TABLE IF NOT EXISTS purchase_slots (
 CREATE TABLE IF NOT EXISTS seats (
     seat_id INT NOT NULL AUTO_INCREMENT,
     date_id INT NOT NULL,
-    venue_id INT NOT NULL,
+    -- venue_id INT NOT NULL,
     section VARCHAR(255),
     block VARCHAR(255),
+    general_admission BOOLEAN,
     row_name VARCHAR(255),
     seat_number INT,
     purchase_slot_id INT,
     onsale BOOLEAN,
     available BOOLEAN,
     price DECIMAL(4, 2),
+    
 
     PRIMARY KEY (seat_id),
     FOREIGN KEY (date_id) REFERENCES dates(date_id),
-    FOREIGN KEY (venue_id) REFERENCES venues(venue_id),
+    -- FOREIGN KEY (venue_id) REFERENCES venues(venue_id),
     FOREIGN KEY (purchase_slot_id) REFERENCES purchase_slots(purchase_slot_id)
 );
 
@@ -110,4 +112,15 @@ VALUES
     (@renaissance_id, "2023-06-03", @tottenham_id),
     (@renaissance_id, "2023-06-04", @tottenham_id);
     
-show databases
+show databases;
+
+INSERT 
+INTO seats (date_id, section, block, row_name, seat_number, onsale, available, price, general_admission)
+VALUES
+	(1, 100, "A1", "A", 1, true, true, 100, false),
+	(1, 100, "A1", "A", 2, true, true, 100, false),
+	(1, 100, "A1", "A", 3, true, true, 100, false),
+	(1, 100, "A1", "A", 6, true, true, 100, false),
+	(1, 100, "A1", "A", 7, true, true, 100, false),
+	(1, 100, "A1", "A", 8, true, true, 100, false),
+	(1, 100, "A1", "A", 9, true, true, 100, false);

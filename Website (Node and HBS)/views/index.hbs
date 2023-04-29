@@ -3,7 +3,12 @@
 </main>
 <aside>
     <h2>Upcoming Events</h2>
-    {{#each events}}
-        <li><a href="events/">{{this.artist_name}}: {{this.tour_name}}</a></li>
-    {{/each}}
+    <ul>
+        {{#each events}}
+            <li>
+                <a href="events/tour/{{this.tour_id}}">{{this.artist_name}}: {{this.tour_name}}</a>
+                <span class="d-block">{{formatDate this.firstDate.date "do LLL ''yy"}} to {{formatDate this.lastDate.date "do LLL ''yy"}}</span>
+            </li>
+        {{/each}}
+    </ul>
 </aside>

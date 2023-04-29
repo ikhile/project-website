@@ -31,7 +31,13 @@ router.get('/', async (req, res) => {
         events: await db.getAllEvents()
     }
 
-    // console.log(context.events)
+    for (let event of context.events) {
+        event.dates = await api.get(`tours/${event.tour_id}/dates`).then((res) => res.data)
+        event.firstDate = await api.get(`tours/${event.tour_id}/dates/first`).then((res) => res.data)
+        event.lastDate = await api.get(`tours/${event.tour_id}/dates/last`).then((res) => res.data)
+    }
+
+    console.log(context.events)
 
     res.render('events', context)
 })
@@ -88,8 +94,8 @@ router.get('/purchase/tour/:tour_id/venue/:venue_id', async (req, res) => {
     // I assume I'll want to join in the seats for each date grouped by section etc.
     let context = {
         cardContext: {
-            event: await db.getEventById(req.params.tour_id),
-            datesByVenue: await db.getTourDatesGroupedByVenue(req.params.tour_id),
+            event: await api.get(`tours/${req.params.tour_id}`).then((res) => res.data),
+            venues: await api.get(`tours/${req.params.tour_id}/venues`).then((res) => res.data),
         },
         tour: await db.getEventById(req.params.tour_id),
         venue: await db.getVenueById(req.params.venue_id),

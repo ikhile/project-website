@@ -2,7 +2,7 @@ import mysql from 'mysql2'
 import dotenv from 'dotenv'
 dotenv.config()
 
-const pool = mysql.createPool({
+export const pool = mysql.createPool({
     host: process.env.MYSQL_HOST,
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASSWORD,
@@ -40,6 +40,8 @@ export async function getEventDatesById(tourID) {
 
     return rows
 }
+
+// export async function
 
 // this is a really similar name to below lol
 export async function getTourDatesGroupedByVenue(tourID) {
