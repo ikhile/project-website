@@ -1,0 +1,42 @@
+<h2>
+    available tickets
+</h3>
+
+{{log availableTickets}}
+
+{{#each availableTickets}}
+    {{!-- <h2>Block {{this.block}} Section {{this.section}} Row {{this.row}}</h2> --}}
+    <div class="card available-ticket-card container p-3">
+        <div class="row mb-1">
+            <button class="col-1 btn btn-outline-secondary p-0 ml-3 mw-80">Details</button>
+            <h3 class="col-8 mb-0">Block {{this.block}} Section {{this.section}} Row {{this.row}}</h3>
+            <p class="col-3 text-end mb-0 align-self-center">Total Price</p>
+        </div>
+        <div class="row mt-1">
+            <p class="col-7 mb-0">date, date, date, date</p>
+            <p class="col-5 mb-0 text-end">price info</p>
+        </div>
+    </div>
+{{/each}}
+{{!-- {{#each availableTickets}}
+    <h2>Block {{@key}}</h2>
+    {{setVar ""}}
+    {{#each this}}
+        {{!-- <h3>Section {{@key}}</h3>
+        {{#each this}}
+            <h2>Block {{../@key}}</h2>
+        {{/each}}
+    {{/each}}
+{{/each}} --}}
+
+{{!-- <div class="card available-ticket-card container p-3">
+    <div class="row mb-1">
+        <button class="col-1 btn btn-outline-secondary p-0 ml-3 mw-80">Details</button>
+        <h3 class="col-8 mb-0">Section X Row X</h3>
+        <p class="col-3 text-end mb-0 align-self-center">Total Price</p>
+    </div>
+    <div class="row mt-1">
+        <p class="col-7 mb-0">date, date, date, date</p>
+        <p class="col-5 mb-0 text-end">price info</p>
+    </div>
+</div> --}}

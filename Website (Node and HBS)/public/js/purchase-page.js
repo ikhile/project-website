@@ -86,17 +86,23 @@ async function updateDates() {
 }
 
 async function updateAvailableSeats() {
-    console.log("sc")
     let dateQry = `[${selectedDateIDs.join(",")}]`
 
-    console.log("tickets " + $("input[name=qty]").val())
     ticketQty = $("input[name=qty]").val() // constrain again just to be sure
-    // ticketQty = 
 
     let url = `/api/available-seats?tour=${tourID}&dates=${dateQry}&qty=${ticketQty}`
-    console.log(1, url)
 
-    let response = fetchData(url)
+    let response = await fetchData(url)
+    let context = {
+        availableTickets: response
+    }
+
+    // https://stackoverflow.com/a/28452343
+    $.get("/views/available-tickets.hbs", function (data) {
+        console.log(data)
+        var template = Handlebars.compile(data);
+        $("#available-tickets").html(template(context));
+    }, 'html')
     console.log(await response)
 }
 

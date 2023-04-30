@@ -29,10 +29,11 @@
     </button>
 </form>
 
+<div id="available-tickets"></div>
 
 {{!-- #each availableRows or smth --}}
 
-<div class="card available-ticket-card container p-3">
+{{!-- <div class="card available-ticket-card container p-3">
     <div class="row mb-1">
         <button class="col-1 btn btn-outline-secondary p-0 ml-3 mw-80">Details</button>
         <h3 class="col-8 mb-0">Section X Row X</h3>
@@ -42,12 +43,12 @@
         <p class="col-7 mb-0">date, date, date, date</p>
         <p class="col-5 mb-0 text-end">price info</p>
     </div>
-</div>
+</div> --}}
 
 
 <div id="change-city-popup">
     {{> city-cards}}
 </div>
 
-<script src="fetchData.js"></script>
-<script type="module" src="/purchase-page.js"></script> <!--https://stackoverflow.com/a/55310399-->
+<script src="/js/fetchData.js"></script>
+<script type="module" src="/js/purchase-page.js"></script> <!--https://stackoverflow.com/a/55310399-->
