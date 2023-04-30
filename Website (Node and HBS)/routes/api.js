@@ -72,15 +72,15 @@ function areConsecutiveNumbers(arr) {
     arr = arr.sort((a, b) => a - b)
 
     return arr[arr.length - 1] - arr[0] == arr.length - 1
-
-    // console.log("!!!", arr, arr.reduce((a, b) => a + b) == (arr.length / 2) * (arr[0] + arr[arr.length - 1]))
-    // return arr.reduce((a, b) => a + b) == (arr.length / 2) * (arr[0] + arr[arr.length - 1])
 }
 
 function areNeighbouringSeats(seatsArr) {
-    console.log(seatsArr)
     let section = seatsArr[0].section, block = seatsArr[0].block, row_name = seatsArr[0].row_name
-    return seatsArr.every(a => a.section == section && a.block == block && a.row_name == row_name) && areConsecutiveNumbers(seatsArr.map(a => a.seat_number))
+    return (
+        seatsArr.every(seat => seat.section == section && seat.block == block && seat.row_name == row_name) 
+        && 
+        areConsecutiveNumbers(seatsArr.map(seat => seat.seat_number))
+    )
 }
 
 router.get("/available-seats", async (req, res) => {
@@ -107,51 +107,82 @@ router.get("/available-seats", async (req, res) => {
     let requiredQty = parseInt(req.query.qty)
 
 
-    if (requiredQty && requiredQty > 1) { // if quantity is 1 can return all seats
+    if (requiredQty) { // if asked for a specific quantity of tickets...
         let seatGroups = []
-
-        console.log(`need ${requiredQty} tickets`)
+        let suitableTickets = []
 
         for (let i = 0; i < rows.length; i++) {
-            // let seatGroup = [rows[i]]#
             // get required number of seats starting at i
-            // console.log(i, i + parseInt(requiredQty))
             let seatSlice = rows.slice(i, i + requiredQty)
+            let seat = rows[i]
 
-            // check if those seats have consecutive numbers and if there are enough seats (in case slice surpassed end of array)
-            // console.log(seatSlice.map(a => a.seat_number))
-            if (seatSlice.length == requiredQty && areNeighbouringSeats(seatSlice)) {
+            // if need 1 ticket will just return all available seats grouped by location
+            // if slice contains required number of seats and the seats are together, add to group to array of seats to return
+            if (requiredQty == 1 || (seatSlice.length == requiredQty && areNeighbouringSeats(seatSlice))) {
+                // let blockIndex = suitableTickets.findIndex(a =>  a.block == seat.block)
+                
+                // if (blockIndex < 0) {
+                //     blockIndex = suitableTickets.push({block: seat.block, sections: []}) - 1
+                // }
+
+                // // console.log(blockIndex, suitableTickets, suitableTickets[blockIndex])
+
+                // let sectionIndex = suitableTickets[blockIndex].sections.findIndex(a => a.section == seat.section)
+
+                // if (sectionIndex < 0) {
+                //     sectionIndex = suitableTickets[blockIndex].sections.push({section: seat.section, rows: []}) - 1
+                // }
+
+                // let rowIndex = suitableTickets[blockIndex].sections[sectionIndex].rows.findIndex(a => a.row = seat.row_name)
+
+                // if (rowIndex < 0) {
+                //     rowIndex = suitableTickets[blockIndex].sections[sectionIndex].rows.push({row: seat.row_name, availableTickets: []})
+                // }
+
+                console.log(seatGroups)
+                // if (!suitableTickets.hasOwnProperty(seat.section)) {
+                //     suitableTickets[seat.section] = {}
+                // }
+
+                // if (!suitableTickets[seat.section].hasOwnProperty(seat.block)) {
+                //     suitableTickets[seat.section][seat.block] = {}
+                // }
+
+                // if (!suitableTickets[seat.section][seat.block].hasOwnProperty(seat.row_name)) {
+                //     suitableTickets[seat.section][seat.block][seat.row_name] = []
+                // }
+
+                let ind = suitableTickets.findIndex(a => {
+                   return (
+                     a.block == seat.block &&
+                     a.section == seat.section &&
+                     a.row == seat.row_name
+                   )
+                })
+
+                if (ind < 0) {
+                    ind = suitableTickets.push({
+                        block: seat.block,
+                        section: seat.section,
+                        row: seat.row_name,
+                        tickets: []
+                    }) - 1
+                }
+
+                console.log(ind)
+
+                // suitableTickets[seat.section][seat.block][seat.row_name].push(seatSlice)
+                suitableTickets[ind].tickets.push(seatSlice)
                 seatGroups.push(seatSlice)
             }
-            // console.log(i, req.query.qty)
-            // console.log(seatSlice.length)
-            // for (let j = 0; j < req.query.qty; j++) {
-            //     if (i + j < rows.length - 1) {
-            //         let seatNum = rows[i + j].seat_number
-            //         let nextSeatNum = rows[i + j + 1].seat_number
-            //         if (nextSeatNum - seatNum == 1) {
-            //             console.log("yep")
-            //             seatGroup.push(rows[i + j])
-            //         } else {
-            //             // break
-            //         }
-            //         // console.log(i, i+j, j, seatNum, nextSeatNum)
-            //     }
-            // }
-            // if (seatGroup.length >= req.query.qty) console.log(seatGroup)
         }
 
-        return res.json(seatGroups)
+        
+
+        return res.json(suitableTickets)
     }
 
-    // console.log(seatGroups)
-    // for (let group of seatGroups) {
-    //     console.log(group.map(a => "Seat number:" + a.seat_number))
-    // }
-
     return res.json(rows)
-
-
 })
 
 

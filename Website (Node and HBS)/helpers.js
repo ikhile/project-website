@@ -79,3 +79,4 @@ export function venueDatesToDatesArray (venueDates) {
 export function addVenueIDToUrl(url, venue_id) {
     return url.replace('[VENUE_ID]', venue_id)
 }
+
