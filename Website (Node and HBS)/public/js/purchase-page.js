@@ -1,23 +1,26 @@
 // import { fetchData } from "./fetchData"
 const tourID = window.location.href.match(/tour\/(\d*)/)[1]
 const venueID = window.location.href.match(/venue\/(\d*)/)[1]
-let selectedDateIDs = []
-let ticketQty
-let qtyInput = $('input[name="qty"]')
+let selectedDateIDs = [], numDates = $("input[name=date]").length
+let ticketQty, qtyInput = $('input[name="qty"]')
+let ticketResponse, ticketResponseIndex
 
 $(document).ready(async function () {
-    console.log(tourID, venueID)
+    console.log("PAGE RELOADED")
+
     $("#change-city-btn").click(toggleCityPopup)
-    $("#change-city-popup").click(toggleCityPopup)
+    $("#change-city-modal").click(toggleCityPopup)
 
     // getting from API/db
-    const tours = await fetch('/api/tours')
-    console.log(await tours.json())//.then((res) => res.data))
-    console.log(await (await fetch('/api/tours')).json())//.then((res) => res.data))
+    // const tours = await fetch('/api/tours')
+    // console.log(await tours.json())//.then((res) => res.data))
+    // console.log(await (await fetch('/api/tours')).json())//.then((res) => res.data))
 
     $(".city-card").click(function () {
         // if data-venue-id == current venue id then just close popup without going to a new page
-        window.location.href = `/events/purchase/tour/${$(this).attr("data-tour-id")}/venue/${$(this).attr("data-venue-id")}`
+        if ($(this).attr("data-venue-id") != venueID) {
+            window.location.href = `/events/purchase/tour/${$(this).attr("data-tour-id")}/venue/${$(this).attr("data-venue-id")}`
+        }
     })
 
     const params = new URLSearchParams(window.location.search)
@@ -36,23 +39,10 @@ $(document).ready(async function () {
     disableQtyBtns()
 
     // only allow date filter to be clicked when update needed
-    $("input[name=date]").on("input", function() {
-        updateDates()
+    $("input[name=date]").on("input", updateDates)
+    $("#increase-tickets").click(increaseQty)
+    $("#decrease-tickets").click(decreaseQty)
 
-        $("#date-filter button[type=submit]").attr("disabled", false)
-    })
-
-    $("#increase-tickets").click(function() {
-        increaseQty()
-    })
-
-    $("#decrease-tickets").click(function() {
-        decreaseQty()
-    })
-
-    $("#filters input").on("input", function() {
-        // $("#filters").submit()
-    })
 
     $("#purchase").click(function(e) {
         // temp solution - later get use seat ids from database both here and in stripe...
@@ -73,14 +63,28 @@ $(document).ready(async function () {
 
 async function fetchData(url) {
     return await fetch(url)
-             .then(res => res.json())
-             .then(data => data)
- }
+                .then(res => res.json())
+                .then(data => data)
+}
 
 async function updateDates() {
+    selectedDateIDs = []
     $("input[name=date]:checked").each((i, elem) => {
         selectedDateIDs.push($(elem).val())
     })
+
+    // the below allows for refreshing the page to keep the same dates and qty selected (noticed because I constantly refresh this page, thought it'd be nice)
+    // https://stackoverflow.com/questions/824349/how-do-i-modify-the-url-without-reloading-the-page
+    // https://developer.mozilla.org/en-US/docs/Web/API/History/pushState#change_a_query_parameter
+    let url = new URL(location)
+    // if (url.searchParams.has("qty")) url.searchParams.set("qty", url.searchParams.get("qty"))
+    url.searchParams.delete("date")
+    if (selectedDateIDs.length < numDates) {
+        for (let dateID of selectedDateIDs) {
+            url.searchParams.append("date", dateID)
+        }
+    }
+    window.history.pushState({}, "", url)
 
     updateAvailableSeats()
 }
@@ -88,26 +92,84 @@ async function updateDates() {
 async function updateAvailableSeats() {
     let dateQry = `[${selectedDateIDs.join(",")}]`
 
-    ticketQty = $("input[name=qty]").val() // constrain again just to be sure
+    ticketQty = $("input[name=qty]").val() // TODO constrain again just to be sure
 
     let url = `/api/available-seats?tour=${tourID}&dates=${dateQry}&qty=${ticketQty}`
 
-    let response = await fetchData(url)
-    let context = {
-        availableTickets: response
+    ticketResponse = await fetchData(url)
+    $("#available-tickets").html("<p class='text-center h3 pt-5'>Loading...</p>")
+
+
+    if (ticketResponse.length > 0) {
+        let context = {
+            availableTickets: ticketResponse
+        }
+    
+        setTimeout(function() {
+            // https://stackoverflow.com/a/28452343
+            // $.get("/views/available-tickets.hbs", function (data) {
+            //     var template = Handlebars.compile(data);
+            //     $("#available-tickets").html(template(context));
+
+            renderTemplate($("#available-tickets"), "/views/available-tickets.hbs", context)
+                .then(() => {
+                    console.log("then")
+
+                    $(".available-ticket-card").click(function() {
+                        console.log("card clicked")
+                        // let context =  ticketResponse[$(this).attr("data-index")]
+                        // renderTemplate($("#select-seats-modal"), "/views/select-seats.hbs", context)
+                        //     .then(() => $("#select-seats-modal").show())
+            //         $.get("/views/select-seats.hbs", function(data) {
+            //             var template = Handlebars.compile(data)
+            //             $("#select-seats-modal").html(template(context))
+            //             $("#select-seats-modal").show()
+                    })
+                })
+
+
+            //     $("#available-tickets .card").click(function() {
+            //         // ticketResponseIndex = $(this).attr("data-index")
+            //         let context =  ticketResponse[$(this).attr("data-index")]
+            //         $.get("/views/select-seats.hbs", function(data) {
+            //             var template = Handlebars.compile(data)
+            //             $("#select-seats-modal").html(template(context))
+            //             $("#select-seats-modal").show()
+
+
+            //         })
+            //         console.log("open purchase modal for ticketResIndex: " + ticketResponseIndex)
+            //     })
+            // }, 'html')
+
+            
+                
+        }, Math.random() * 500) // I like the random so it doesn't seem fixed lol
+
+    } else {
+        let context = {}
+
+        setTimeout(function() {
+            // https://stackoverflow.com/a/28452343
+            $.get("/views/no-tickets.hbs", function (data) {
+                var template = Handlebars.compile(data);
+                $("#available-tickets").html(template(context));
+            }, 'html')
+                
+        }, Math.random() * 500)
     }
 
-    // https://stackoverflow.com/a/28452343
-    $.get("/views/available-tickets.hbs", function (data) {
-        console.log(data)
-        var template = Handlebars.compile(data);
-        $("#available-tickets").html(template(context));
+}
+
+async function renderTemplate(container, template, context) {
+    await $.get(template, (data) => {
+        template = Handlebars.compile(data)
+        container.html(template(context))
     }, 'html')
-    console.log(await response)
 }
 
 function toggleCityPopup() {
-    let popup = $('#change-city-popup')
+    let popup = $('#change-city-modal')
 
     switch(popup.css('display')) {
         case "none":
@@ -154,6 +216,10 @@ function updateQtyVals() {
     $("#qty-span").text(ticketQty)
     disableQtyBtns()
     updateAvailableSeats()
+
+    let url = new URL(location)
+    url.searchParams.set("qty", ticketQty)
+    window.history.pushState({}, "", url)
 }
 
 function disableQtyBtns() {

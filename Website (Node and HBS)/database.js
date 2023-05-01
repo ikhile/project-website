@@ -84,6 +84,16 @@ export async function getDatesByTourAndVenue(tourID, venueID) {
     return rows
 }
 
+export async function getDateFromID(dateID) {
+    const [rows] = await pool.query(`
+        SELECT date
+        FROM dates
+        WHERE date_id = ?
+    `, dateID)
+
+    return rows[0]
+}
+
 export async function getVenueById(venueID) {
     const [rows] = await pool.query(`
         SELECT *

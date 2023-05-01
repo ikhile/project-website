@@ -1,10 +1,10 @@
-.note-to-self {
+.note-to-self, .comment {
     color: grey;
     font-style: italic;
     display: block;
 }
 
-.note-to-self:before {
+.note-to-self:before, .comment:before {
     content: "// ";
 }
 
@@ -13,6 +13,14 @@
     width: 200px;
     height: 50px;
     background-color: turquoise;
+}
+
+.card {
+    transition: all 0.5s ease-in-out;
+}
+
+.card:hover {
+    transform: scale(1.05);
 }
 
 .city-card {
@@ -41,7 +49,7 @@
     grid-column: 2 / span 1;
 }
 
-#change-city-popup {
+/* #change-city-modal {
     display: none;
     position: absolute;
     top: 0;
@@ -49,6 +57,36 @@
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
+} */
+
+.pi-modal {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* div:hover > #increase-tickets {
+    background-color: pink !important;
+} */
+
+#increase-tickets + p {
+    position: fixed;
+    transform: translate(50px, -35px);
+    transition: opacity 0.5s ease-in-out;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-style: italic;
+}
+
+div:hover > #increase-tickets:disabled + p {
+    /* display: block !important; */
+    opacity: 1 !important;
 }
 
 /* .available-ticket-card {

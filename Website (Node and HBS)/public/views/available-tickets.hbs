@@ -1,20 +1,20 @@
-<h2>
-    available tickets
-</h3>
-
-{{log availableTickets}}
+{{!-- <p class="comment">Add a lil timeout so it's obvious when the db refreshes</p> --}}
 
 {{#each availableTickets}}
-    {{!-- <h2>Block {{this.block}} Section {{this.section}} Row {{this.row}}</h2> --}}
-    <div class="card available-ticket-card container p-3">
+    <div class="card available-ticket-card container p-3" data-index="{{@index}}">
         <div class="row mb-1">
             <button class="col-1 btn btn-outline-secondary p-0 ml-3 mw-80">Details</button>
-            <h3 class="col-8 mb-0">Block {{this.block}} Section {{this.section}} Row {{this.row}}</h3>
-            <p class="col-3 text-end mb-0 align-self-center">Total Price</p>
+            <h3 class="col-8 mb-0">Block {{this.block}}, Section {{this.section}}, Row {{this.row}}</h3>
+            <p class="col-3 text-end mb-0 align-self-center">{{this.price.total}}</p>
         </div>
         <div class="row mt-1">
-            <p class="col-7 mb-0">date, date, date, date</p>
-            <p class="col-5 mb-0 text-end">price info</p>
+            <p class="col-7 mb-0">
+                Available: 
+                {{#each this.dates}}
+                    {{this}}{{#unless @last}}, {{/unless}} {{! date formatting done at API}}
+                {{/each}}
+            </p>
+            <p class="col-5 mb-0 text-end">{{this.qty}} tickets at {{this.price.each}} each</p>
         </div>
     </div>
 {{/each}}

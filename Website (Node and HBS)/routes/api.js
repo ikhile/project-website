@@ -1,5 +1,6 @@
 import express from 'express'
 import * as db from '../database.js';
+import * as datefns from 'date-fns'
 
 export const router = express.Router();
 
@@ -108,7 +109,6 @@ router.get("/available-seats", async (req, res) => {
 
 
     if (requiredQty) { // if asked for a specific quantity of tickets...
-        let seatGroups = []
         let suitableTickets = []
 
         for (let i = 0; i < rows.length; i++) {
@@ -117,40 +117,8 @@ router.get("/available-seats", async (req, res) => {
             let seat = rows[i]
 
             // if need 1 ticket will just return all available seats grouped by location
-            // if slice contains required number of seats and the seats are together, add to group to array of seats to return
+            // if slice contains required number of seats and the seats are together, add group to seats to return
             if (requiredQty == 1 || (seatSlice.length == requiredQty && areNeighbouringSeats(seatSlice))) {
-                // let blockIndex = suitableTickets.findIndex(a =>  a.block == seat.block)
-                
-                // if (blockIndex < 0) {
-                //     blockIndex = suitableTickets.push({block: seat.block, sections: []}) - 1
-                // }
-
-                // // console.log(blockIndex, suitableTickets, suitableTickets[blockIndex])
-
-                // let sectionIndex = suitableTickets[blockIndex].sections.findIndex(a => a.section == seat.section)
-
-                // if (sectionIndex < 0) {
-                //     sectionIndex = suitableTickets[blockIndex].sections.push({section: seat.section, rows: []}) - 1
-                // }
-
-                // let rowIndex = suitableTickets[blockIndex].sections[sectionIndex].rows.findIndex(a => a.row = seat.row_name)
-
-                // if (rowIndex < 0) {
-                //     rowIndex = suitableTickets[blockIndex].sections[sectionIndex].rows.push({row: seat.row_name, availableTickets: []})
-                // }
-
-                console.log(seatGroups)
-                // if (!suitableTickets.hasOwnProperty(seat.section)) {
-                //     suitableTickets[seat.section] = {}
-                // }
-
-                // if (!suitableTickets[seat.section].hasOwnProperty(seat.block)) {
-                //     suitableTickets[seat.section][seat.block] = {}
-                // }
-
-                // if (!suitableTickets[seat.section][seat.block].hasOwnProperty(seat.row_name)) {
-                //     suitableTickets[seat.section][seat.block][seat.row_name] = []
-                // }
 
                 let ind = suitableTickets.findIndex(a => {
                    return (
@@ -165,24 +133,46 @@ router.get("/available-seats", async (req, res) => {
                         block: seat.block,
                         section: seat.section,
                         row: seat.row_name,
-                        tickets: []
+                        dates: [],
+                        tickets: [],
+                        qty: requiredQty
                     }) - 1
                 }
 
-                console.log(ind)
+                // JSON doesn't support sets - using set to ensure no duplicates then converting to array
+                // suitableTickets[ind].dates.add(seat.date_id)
+                // console.log(suitableTickets[ind].dates)
 
-                // suitableTickets[seat.section][seat.block][seat.row_name].push(seatSlice)
                 suitableTickets[ind].tickets.push(seatSlice)
-                seatGroups.push(seatSlice)
+                let datesSet = new Set(suitableTickets[ind].dates)
+                let date = (await db.getDateFromID(seat.date_id)).date
+                datesSet.add(datefns.format(date, 'do LLL'))
+                suitableTickets[ind].dates = Array.from(datesSet)
+
+                suitableTickets[ind].totalPrice = 0
+                let totalPrice = 0
+                for (let seat of seatSlice) totalPrice += parseFloat(seat.price)
+                let priceEach = totalPrice / requiredQty
+
+                suitableTickets[ind].price = {
+                    total: `£${totalPrice.toFixed(2)}`,
+                    each: `£${priceEach.toFixed(2)}`
+                }
+
             }
         }
 
-        
+
 
         return res.json(suitableTickets)
     }
 
     return res.json(rows)
+})
+
+
+router.get('/format-date', (req, res) => {
+    console.log()
 })
 
 
