@@ -1,0 +1,53 @@
+<h1>Sign up for waiting list</h1>
+
+{{log (stringify @root)}}
+
+<form id="waiting-list-form">
+    {{#each venues}}
+        <div>
+            <input type="checkbox" name="venues" id="venue-{{this.venue_id}}" value="{{this.venue_id}}">
+            <label for="{{this.venue_id}}">{{this.city}} - <i>{{this.venue}}</i></label>
+        </div>
+
+        <div class="dropdown">
+            <button type="button" id="venue-{{this.venue_id}}-toggle" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Select dates</button>
+            <div id="venue-{{this.venue_id}}-dates" class="dropdown-menu" aria-labelledby="venue-{{this.venue_id}}-toggle">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" name="dates" value="select-all">
+                    <label class="form-check-label">Select all</label>
+                </div>
+                {{#each this.dates}}
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" name="dates" value="{{this.date_id}}">
+                        <label class="form-check-label">{{formatDate this.date}}</label>
+                    </div>
+                {{/each}}
+            </div>
+        </div>
+
+
+
+        
+
+        {{!-- {{#if (compareValues this.dates.length '==' 1)}} --}}
+            {{!-- {{this.dates.0.date}}
+        {{else}} --}}
+            
+            {{!-- <select name="dates" multiple>
+                    {{log ../this.dates.length}}
+                        <option>{{this.date}}</option>
+                {{/each}}
+            </select> --}}
+        {{!-- {{/if}} --}}
+    {{/each}}
+
+
+</form>
+
+<select class="selectpicker">
+  <option>Mustard</option>
+  <option>Ketchup</option>
+  <option>Relish</option>
+</select>
+
+{{!-- <script src="/js/signup.js" type="module"></script> --}}

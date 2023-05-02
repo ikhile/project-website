@@ -4,27 +4,9 @@ import * as db from '../database.js';
 import { groupDates } from '../helpers.js';
 import { createCheckoutSession } from '../stripe.js';
 import api from '../index.js';
+import getApiData from '../index.js';
 
 export const router = express.Router();
-
-// might move payments to a "purchase" route... could move purchase page as well yep yep
-router.post('/create-checkout-session', async (req, res) => {
-    // console.log("body: ", req.body)
-    // console.log("params: ", req.params)
-    const session = await createCheckoutSession(req.body)
-
-    // console.log(session)
-
-    res.redirect(303, session.url)
-})
-
-router.get('/payment-success', async (req, res) => {
-    res.send("payment success")
-})
-
-router.get('/payment-cancel', async (req, res) => {
-    res.send("payment cancelled")
-})
 
 router.get('/', async (req, res) => {
     const context = {
@@ -39,11 +21,11 @@ router.get('/', async (req, res) => {
 
     console.log(context.events)
 
-    res.render('events', context)
+    res.render('events/events', context)
 })
 
 router.get('/artist/:artist_id', (req, res) => {
-    res.send("artist id: " + req.params.artist_id)
+    // res.send("artist id: " + req.params.artist_id)
     // let artist = loadArtist(req.params.artist)
 
     // if (!artist) {
@@ -77,6 +59,18 @@ router.get('/tour/:tour_id', async (req, res) => {
 
     if (isOnsale) res.render('events/tour-onsale', context)
     else res.send("not on sale")
+})
+
+router.get('/tour/:tour_id/waiting-list', async (req, res) => {
+    const tourID = req.params.tour_id
+    const venueID = req.query.venue
+    console.log(tourID, venueID)
+
+    let context = {
+        tour: await api.get(`tours/${req.params.tour_id}`).then((res) => res.data),
+        venues: await api.get(`tours/${req.params.tour_id}/venues`).then((res) => res.data)
+    }
+    res.render('events/waiting-list-signup', context)
 })
 
 router.get('/purchase/tour/:tour_id/queue/', async (req, res) => {
@@ -114,7 +108,7 @@ router.get('/purchase/tour/:tour_id/venue/:venue_id', async (req, res) => {
     // 
 
     // console.log(context.cardContext)
-    res.render('events/purchase/purchase-page', context)
+    res.render('events/purchase-page', context)
 })
 
 // router.get('/:artist/:tour', (req, res) => {

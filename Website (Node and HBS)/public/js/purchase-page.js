@@ -3,7 +3,7 @@ const tourID = window.location.href.match(/tour\/(\d*)/)[1]
 const venueID = window.location.href.match(/venue\/(\d*)/)[1]
 let selectedDateIDs = [], numDates = $("input[name=date]").length
 let ticketQty, qtyInput = $('input[name="qty"]')
-let ticketResponse, ticketResponseIndex
+let ticketResponse, ticketResIndex
 
 $(document).ready(async function () {
     console.log("PAGE RELOADED")
@@ -99,69 +99,76 @@ async function updateAvailableSeats() {
     ticketResponse = await fetchData(url)
     $("#available-tickets").html("<p class='text-center h3 pt-5'>Loading...</p>")
 
+    setTimeout(() => {
 
-    if (ticketResponse.length > 0) {
-        let context = {
-            availableTickets: ticketResponse
-        }
-    
-        setTimeout(function() {
-            // https://stackoverflow.com/a/28452343
-            // $.get("/views/available-tickets.hbs", function (data) {
-            //     var template = Handlebars.compile(data);
-            //     $("#available-tickets").html(template(context));
-
+        if (ticketResponse.length > 0) {
+            let context = {
+                availableTickets: ticketResponse
+            }
+        
             renderTemplate($("#available-tickets"), "/views/available-tickets.hbs", context)
-                .then(() => {
-                    console.log("then")
+            .then(() => {
 
-                    $(".available-ticket-card").click(function() {
-                        console.log("card clicked")
-                        // let context =  ticketResponse[$(this).attr("data-index")]
-                        // renderTemplate($("#select-seats-modal"), "/views/select-seats.hbs", context)
-                        //     .then(() => $("#select-seats-modal").show())
-            //         $.get("/views/select-seats.hbs", function(data) {
-            //             var template = Handlebars.compile(data)
-            //             $("#select-seats-modal").html(template(context))
-            //             $("#select-seats-modal").show()
-                    })
+                $(".available-ticket-card").click(function() {
+                    ticketResIndex = $(this).attr("data-index")
+                    let context =  {
+                        block: ticketResponse[ticketResIndex].block,
+                        section: ticketResponse[ticketResIndex].section,
+                        row: ticketResponse[ticketResIndex].row,
+                        dates: ticketResponse[ticketResIndex].dates,
+                        ticketGroups: ticketResponse[ticketResIndex].tickets,
+                        singleTicket: ticketQty == 1,
+                        tourID: tourID,
+                        venueID: venueID
+                    }
+
+                    renderTemplate($("#select-seats-modal"), "/views/select-seats.hbs", context)
+                        .then(() => {
+                            $("#select-seats-modal").css("display", "flex")
+                            selectFilterSeats()
+
+                            $("#select-seats-modal select[name=date]").on("input",function() {
+                                selectFilterSeats()
+                            })
+
+                            $("#close-select-seats").click(function() {
+                                $("#select-seats-modal").css("display", "none")
+                            })
+                        })
                 })
 
+            })            
+                    
 
-            //     $("#available-tickets .card").click(function() {
-            //         // ticketResponseIndex = $(this).attr("data-index")
-            //         let context =  ticketResponse[$(this).attr("data-index")]
-            //         $.get("/views/select-seats.hbs", function(data) {
-            //             var template = Handlebars.compile(data)
-            //             $("#select-seats-modal").html(template(context))
-            //             $("#select-seats-modal").show()
+        } else {
+            let context = {}
+            renderTemplate($("#available-tickets"), "/views/no-tickets.hbs", context)
+        }
 
-
-            //         })
-            //         console.log("open purchase modal for ticketResIndex: " + ticketResponseIndex)
-            //     })
-            // }, 'html')
-
-            
-                
-        }, Math.random() * 500) // I like the random so it doesn't seem fixed lol
-
-    } else {
-        let context = {}
-
-        setTimeout(function() {
-            // https://stackoverflow.com/a/28452343
-            $.get("/views/no-tickets.hbs", function (data) {
-                var template = Handlebars.compile(data);
-                $("#available-tickets").html(template(context));
-            }, 'html')
-                
-        }, Math.random() * 500)
-    }
+    }, Math.random() * 500)
 
 }
 
+function selectFilterSeats() {
+    const selectedDate = $("#select-seats-modal select[name=date] option:selected").val()
+
+    $("#select-seats-modal select[name=seats] option:first-of-type").attr("selected", "true")
+    $("#select-seats-modal select[name=seats] option:not(first-of-type)").each((i, elem) => {
+        $(elem).attr("hidden", true)
+        $(elem).removeAttr("selected")
+        if ($(elem).attr("data-date-id") == selectedDate) {
+            console.log("yep")
+            $(elem).removeAttr("hidden")
+        } 
+
+        
+    })
+
+    console.log($("#select-seats-modal select[name=seats]").val())
+}
+
 async function renderTemplate(container, template, context) {
+    // https://stackoverflow.com/a/28452343
     await $.get(template, (data) => {
         template = Handlebars.compile(data)
         container.html(template(context))

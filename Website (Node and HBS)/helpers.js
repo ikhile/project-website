@@ -80,3 +80,36 @@ export function addVenueIDToUrl(url, venue_id) {
     return url.replace('[VENUE_ID]', venue_id)
 }
 
+export function stringify(json) {
+    return JSON.stringify(json, null, 2)
+}
+
+export function compareValues(val1, operator, val2) {
+    console.log(val1, operator, val2)
+    let ret
+
+    switch(operator) {
+        case '<':
+            ret = val1 < val2
+            break
+        case '<=':
+            ret = val1 <= val2
+            break
+        case '>':
+            ret = val1 > val2
+            break
+        case '>=':
+            ret = val1 >= val2
+            break
+        case '==':
+            ret = val1 == val2
+            break
+        case '!=':
+            ret = val1 != val2
+            break
+    }
+
+    console.log(ret)
+    return ret
+}
+

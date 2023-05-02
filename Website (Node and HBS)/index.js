@@ -5,6 +5,7 @@ import * as db from './database.js';
 import { router as eventsRouter } from './routes/events.js'
 import { router as apiRouter } from './routes/api.js'
 import { router as accountRouter } from './routes/account.js'
+import { router as payRouter } from './routes/pay.js'
 import * as datefns from 'date-fns'
 import * as helpers from './helpers.js'
 import bodyParser from 'body-parser' // https://stackoverflow.com/a/27855234
@@ -18,6 +19,13 @@ const api = axios.create({
 })
 
 export default api
+
+export async function getApiData(path) {
+    let data, res = await api.get(path).then((res) => data = res.data)
+    console.log(data)
+}
+
+
 
 // just figuring out how to make my own modules lol
 // const um = require('./queue')
@@ -71,6 +79,7 @@ app.get('/', async (req, res) => {
 app.use('/events', eventsRouter)
 app.use('/api', apiRouter)
 app.use('/account', accountRouter)
+app.use('/pay', payRouter)
 
 // app.use('/search', require('./routes/search-results.js'))
 // app.use('/account', require('./routes/account.js'))

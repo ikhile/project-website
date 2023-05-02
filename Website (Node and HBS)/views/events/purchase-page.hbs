@@ -1,10 +1,12 @@
 <h1>{{tour.artist_name}} - {{tour.tour_name}}</h1>
 <h2>{{venue.city}}, {{venue.venue_name}} <button id="change-city-btn" class="btn btn-primary">Change</button></h2>
 
+{{log @root}}
+
 <form method="get" id="filters" class="d-flex flex-column align-items-center">
     <div>
         {{#each venueDates}}
-            <div class=" form-check form-check-inline">
+            <div class="form-check form-check-inline">
                 <input type="checkbox" class="form-check-input" id="date-check-{{this.date_id}}" name="date" value="{{this.date_id}}">
                 <label for="date-check-{{this.date_id}}">
                     {{formatDate this.date 'E do LLLL'}}
@@ -12,6 +14,8 @@
             </div>
         {{/each}}
     </div>
+
+    
 
     <h3 style="display: inline-block">Tickets</h3>
     <div class="d-flex">
@@ -27,12 +31,12 @@
     </div>
 </form>
 
-<form id="purchase-form" action="/events/create-checkout-session" method="POST" class="text-center">
+{{!-- <form id="purchase-form" action="/events/create-checkout-session" method="POST" class="text-center">
     <input name="product-ids" hidden value="">
     <button id="purchase" class="btn btn-primary m-auto">
         Purchase
     </button>
-</form>
+</form> --}}
 
 <div id="available-tickets"></div>
 

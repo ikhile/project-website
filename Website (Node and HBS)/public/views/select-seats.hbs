@@ -1,0 +1,55 @@
+{{log qty}}
+<div class="bg-white p-3 rounded col-10">
+    <div class="d-flex justify-content-between" >
+        <h1 class="">Block {{block}} Section {{section}} Row {{row}}</h1>
+        <button id="close-select-seats" class="btn-close"></button>
+    </div>
+
+    <hr>
+
+    <div class="container row m-auto p-0">
+
+        <div class="col-6">
+            <p class="comment">seat map/view goes here</p>
+        </div>
+
+        <form id="select-seats-form" action="/pay/create-checkout-session" method="POST" class="col-6 p-0">
+
+            <label for="date" class="h4 text-center d-block">Date</label>
+            <select class="form-select" name="date" required>
+                {{#each dates}}
+                    <option value="{{this.date_id}}" {{#if @first}}selected{{/if}}>{{this.fullDate}}</option>
+                {{/each}}
+            </select>
+
+            <label for="seats" class="h4 text-center d-block">Seat{{#unless singleTicket}}s{{/unless}}</label>
+            <select class="form-select" name="seats" required>
+                {{log ticketGroups}}
+                <option value="" hidden selected>Select your seat{{#unless singleTicket}}s{{/unless}}</option> {{! empty value for validation, hidden so doesn't appear in list, selected so shows like a placeholder}}
+                {{#each ticketGroups}}
+                    <option value="{{this.seat_ids}}" data-date-id="{{this.date_id}}">
+                        Seat{{#unless ../singleTicket}}s{{/unless}} {{this.seat_numbers}}
+                    </option>
+                {{/each}}
+            </select>
+
+        <p class="comment">Need to change /create-checkout-session to use seats value as prod ids, validate that seats != "select your seats"</p>
+
+        <button id="purchase" class="btn btn-primary col-12">
+            Purchase
+        </button>
+    </form>
+
+    <hr  class="mt-3 mb-1">
+    <p class="text-center my-2">No suitable tickets? Sign up for the waiting list to see when more tickets are released:</p>
+    <form action="/events/tour/{{tourID}}/waiting-list" method="get" class="d-block text-center">
+        <input name="venue" value="{{venueID}}" hidden>
+            <button class="btn btn-secondary col-4 m-auto">Waiting List</button>
+    </form>
+
+    </div>
+
+    
+</div>
+
+{{log @root}}

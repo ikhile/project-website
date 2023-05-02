@@ -143,11 +143,25 @@ router.get("/available-seats", async (req, res) => {
                 // suitableTickets[ind].dates.add(seat.date_id)
                 // console.log(suitableTickets[ind].dates)
 
-                suitableTickets[ind].tickets.push(seatSlice)
-                let datesSet = new Set(suitableTickets[ind].dates)
                 let date = (await db.getDateFromID(seat.date_id)).date
-                datesSet.add(datefns.format(date, 'do LLL'))
-                suitableTickets[ind].dates = Array.from(datesSet)
+                let fullDate = datefns.format(date, 'E do LLL yyyy')
+                let shortDate = datefns.format(date, 'do LLL')
+                let seatNums = seatSlice[0].seat_number + (requiredQty > 1 ? ` - ${seatSlice[seatSlice.length-1].seat_number}` : "" )
+
+                let seatGroup = {
+                    date_id: seat.date_id,
+                    fullDate: fullDate, 
+                    shortDate: shortDate,
+                    seat_numbers: seatNums,
+                    seat_ids: `[${seatSlice.map(a => a.seat_id).join()}]`,
+                    seats: seatSlice
+                }
+
+                suitableTickets[ind].tickets.push(seatGroup)
+
+                if (!suitableTickets[ind].dates.find(a => a.date_id == seat.date_id)) {
+                    suitableTickets[ind].dates.push({date_id: seat.date_id, fullDate: fullDate, shortDate: shortDate})
+                }
 
                 suitableTickets[ind].totalPrice = 0
                 let totalPrice = 0
@@ -162,7 +176,9 @@ router.get("/available-seats", async (req, res) => {
             }
         }
 
+        // need to collapse groups of same tickets for different dates e.g. seats 4-8 available dates 1, 2, and 4
 
+        // so instead of
 
         return res.json(suitableTickets)
     }
