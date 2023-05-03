@@ -1,53 +1,55 @@
-<h1>Sign up for waiting list</h1>
+<main class="m-auto text-center">
 
-{{log (stringify @root)}}
+    {{log (stringify @root)}}
 
-<form id="waiting-list-form">
-    {{#each venues}}
-        <div>
-            <input type="checkbox" name="venues" id="venue-{{this.venue_id}}" value="{{this.venue_id}}">
-            <label for="{{this.venue_id}}">{{this.city}} - <i>{{this.venue}}</i></label>
-        </div>
+    <form id="waiting-list-form" class="m-auto border rounded d-inline-block p-3">
+        <h2 class="mt-2 mb-3">Sign up for waiting list</h2>
 
-        <div class="dropdown">
-            <button type="button" id="venue-{{this.venue_id}}-toggle" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Select dates</button>
-            <div id="venue-{{this.venue_id}}-dates" class="dropdown-menu" aria-labelledby="venue-{{this.venue_id}}-toggle">
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" name="dates" value="select-all">
-                    <label class="form-check-label">Select all</label>
-                </div>
-                {{#each this.dates}}
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" name="dates" value="{{this.date_id}}">
-                        <label class="form-check-label">{{formatDate this.date}}</label>
-                    </div>
-                {{/each}}
-            </div>
-        </div>
+        <hr>
+
+        <section id="waiting-list-dates">
+            <h3 style="grid-column: 1 / -1">Dates</h3>
+            {{#each venues}}
+                <div class="form-check mr-3">
+                    <input 
+                        type="checkbox" 
+                        name="venues" 
+                        class="form-check-input" 
+                        id="venue-{{this.venue_id}}" 
+                        value="{{this.venue_id}}"
+                        data-venue-id="{{this.venue_id}}"
+                    >
+                    <label for="{{this.venue_id}}">{{this.city}} - <i>{{this.venue}}</i></label>
+                </div>        
+
+                {{!-- {{#if (compareValues this.dates.length '==' 1)}}
+                    {{this.dates.0.date}}
+                {{else}} --}}
+                    <label for="" data-venue-id="{{this.venue_id}}" class="ml-3" hidden>Dates</label>
+                    <select
+                        name="dates-venue-{{this.venue_id}}"
+                        class="selectpicker"
+                        title="Select dates for {{this.city}}"
+                        data-selected-text-format="count > 2"
+                        data-count-selected-text="{0} dates selected"
+                        data-venue-id="{{this.venue_id}}"
+                        multiple
+                    >
+                        {{#each this.dates}}
+                                <option title="{{formatDate this.date 'do LLL'}}">{{formatDate this.date 'EEE do LLLL'}}</option>
+                        {{/each}}
+                    </select>
+                {{!-- {{/if}} --}}
+            {{/each}}
+        </section>
+
+        <hr>
+
+        <button type="submit" class="btn btn-primary btn-block">
+            Sign Up
+        </button>
+    </form>
+</main>
 
 
-
-        
-
-        {{!-- {{#if (compareValues this.dates.length '==' 1)}} --}}
-            {{!-- {{this.dates.0.date}}
-        {{else}} --}}
-            
-            {{!-- <select name="dates" multiple>
-                    {{log ../this.dates.length}}
-                        <option>{{this.date}}</option>
-                {{/each}}
-            </select> --}}
-        {{!-- {{/if}} --}}
-    {{/each}}
-
-
-</form>
-
-<select class="selectpicker">
-  <option>Mustard</option>
-  <option>Ketchup</option>
-  <option>Relish</option>
-</select>
-
-{{!-- <script src="/js/signup.js" type="module"></script> --}}
+<script src="/js/signup.js" type="module"></script>
