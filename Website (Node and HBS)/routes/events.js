@@ -6,11 +6,21 @@ import { createCheckoutSession } from '../stripe.js';
 import api from '../index.js';
 import getApiData from '../index.js';
 
+export function stringifyLog(input) {
+    console.log(JSON.stringify(input, null, 2))
+}
+
 export const router = express.Router();
+
+// router.get('/', (req, res, next) => {
+    
+// })
 
 router.get('/', async (req, res) => {
     const context = {
-        events: await db.getAllEvents()
+        isAuth: req.isAuthenticated(),
+        user: req.user,
+        events: await db.getAllEvents(),
     }
 
     for (let event of context.events) {
@@ -19,7 +29,7 @@ router.get('/', async (req, res) => {
         event.lastDate = await api.get(`tours/${event.tour_id}/dates/last`).then((res) => res.data)
     }
 
-    console.log(context.events)
+    // stringifyLog(context.events)
 
     res.render('events/events', context)
 })
@@ -45,20 +55,39 @@ router.get('/artist/:artist_id', (req, res) => {
 router.get('/tour/:tour_id', async (req, res) => {
     
     const event = await api.get(`tours/${req.params.tour_id}`).then((res) => res.data)
+    const venues = await api.get(`tours/${req.params.tour_id}/venues`).then((res) => res.data)
 
-    let context = {
-        cardContext: {
-            event: event,
-            venues: await api.get(`tours/${req.params.tour_id}/venues`).then((res) => res.data),
-        },
-        event: event
-    }
+
 
     // will want to establish whether the tour is on sale yet - possibly render different templates
-    let isOnsale = true
+    // let isOnsale = true
 
-    if (isOnsale) res.render('events/tour-onsale', context)
-    else res.send("not on sale")
+    // if is on sale, all seats for that tour will have onsale = true
+    let isOnsale = await api.get(`tours/${req.params.tour_id}/all-onsale`).then(res => res.data.allOnsale)
+
+    if (isOnsale) {
+        let context = {
+            cardContext: {
+                event: event,
+                venues: venues,
+            },
+            event: event
+        }
+
+        res.render('events/tour-onsale', context)
+    }
+
+    else {
+        let context = {
+            event: event,
+            venues: venues,
+            slots: await api.get(`/tours/${req.params.tour_id}/purchase-slots`).then(res => res.data)
+        }
+        
+        console.log(context)
+        res.render('events/tour-not-onsale', context)
+    }
+    
 })
 
 router.get('/tour/:tour_id/waiting-list', async (req, res) => {

@@ -90,14 +90,13 @@ async function updateDates() {
 }
 
 async function updateAvailableSeats() {
-    let dateQry = `[${selectedDateIDs.join(",")}]`
+    $("#available-tickets").html("<p class='text-center h3 pt-5'>Loading...</p>")
 
     ticketQty = $("input[name=qty]").val() // TODO constrain again just to be sure
+    let dateQry = `[${selectedDateIDs.join(",")}]`
 
     let url = `/api/available-seats?tour=${tourID}&dates=${dateQry}&qty=${ticketQty}`
-
     ticketResponse = await fetchData(url)
-    $("#available-tickets").html("<p class='text-center h3 pt-5'>Loading...</p>")
 
     setTimeout(() => {
 
@@ -143,6 +142,8 @@ async function updateAvailableSeats() {
         } else {
             let context = {}
             renderTemplate($("#available-tickets"), "/views/no-tickets.hbs", context)
+            $("#waiting-list-dates").val(dateQry)
+            $("#waiting-list-dates").text(dateQry)
         }
 
     }, Math.random() * 500)
@@ -157,14 +158,13 @@ function selectFilterSeats() {
         $(elem).attr("hidden", true)
         $(elem).removeAttr("selected")
         if ($(elem).attr("data-date-id") == selectedDate) {
-            console.log("yep")
             $(elem).removeAttr("hidden")
         } 
 
         
     })
 
-    console.log($("#select-seats-modal select[name=seats]").val())
+    // console.log($("#select-seats-modal select[name=seats]").val())
 }
 
 async function renderTemplate(container, template, context) {

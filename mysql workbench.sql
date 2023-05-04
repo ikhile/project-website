@@ -126,3 +126,66 @@ SELECT `date`, venue_name, city, artist_name, tour_name FROM dates
 SELECT tour_id, artist_name, tour_name
 FROM tours
 INNER JOIN artists ON tours.artist_id = artists.artist_id;
+
+SELECT *
+FROM tours
+INNER JOIN artists ON tours.artist_id = artists.artist_id
+WHERE tour_id = 1;
+
+
+SELECT * 
+FROM dates 
+INNER JOIN venues ON dates.venue_id = venues.venue_id
+WHERE tour_id = 1;
+
+SELECT *
+FROM dates
+WHERE tour_id = 1 AND venue_id = 1;
+
+SELECT *
+FROM venues
+WHERE venue_id = 1
+LIMIT 1;
+
+
+DROP TABLE seats;
+
+CREATE TABLE IF NOT EXISTS seats (
+    seat_id INT NOT NULL AUTO_INCREMENT,
+    date_id INT NOT NULL,
+    section VARCHAR(255),
+    block VARCHAR(255),
+    general_admission BOOLEAN,
+    row_name VARCHAR(255),
+    seat_number INT,
+    purchase_slot_id INT,
+    onsale BOOLEAN,
+    available BOOLEAN,
+    price DECIMAL(4, 2),
+
+    PRIMARY KEY (seat_id),
+    FOREIGN KEY (date_id) REFERENCES dates(date_id),
+    FOREIGN KEY (purchase_slot_id) REFERENCES purchase_slots(purchase_slot_id)
+);
+
+ALTER TABLE seats
+ADD general_admission BOOLEAN;
+
+ALTER TABLE seats
+DROP FOREIGN KEY fk_venue_id;
+
+
+-- INSERT 
+-- INTO seats (date_id, 
+
+SELECT date(date), date_id from dates;
+
+SELECT *, date(date)
+FROM dates 
+INNER JOIN venues ON dates.venue_id = venues.venue_id
+WHERE date_id = 1;
+
+SELECT COUNT(onsale) FROM seats INNER JOIN dates ON dates.date_id = seats.date_id WHERE tour_id = 1;
+SELECT COUNT(onsale) FROM seats INNER JOIN dates ON dates.date_id = seats.date_id WHERE tour_id = 1 AND onsale = true;
+
+SELECT * FROM seats INNER JOIN dates ON dates.date_id = seats.date_id WHERE tour_id = 1;

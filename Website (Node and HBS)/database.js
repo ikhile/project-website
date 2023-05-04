@@ -7,6 +7,7 @@ export const pool = mysql.createPool({
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASSWORD,
     database: process.env.MYSQL_DATABASE,
+    dateStrings: true // https://stackoverflow.com/a/52398828
 }).promise()
 
 export async function getAllEvents() {

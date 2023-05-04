@@ -48,7 +48,6 @@ CREATE TABLE IF NOT EXISTS purchase_slots (
 CREATE TABLE IF NOT EXISTS seats (
     seat_id INT NOT NULL AUTO_INCREMENT,
     date_id INT NOT NULL,
-    -- venue_id INT NOT NULL,
     section VARCHAR(255),
     block VARCHAR(255),
     general_admission BOOLEAN,
@@ -57,12 +56,10 @@ CREATE TABLE IF NOT EXISTS seats (
     purchase_slot_id INT,
     onsale BOOLEAN,
     available BOOLEAN,
-    price DECIMAL(4, 2),
+    price DECIMAL(7, 2),
     
-
     PRIMARY KEY (seat_id),
     FOREIGN KEY (date_id) REFERENCES dates(date_id),
-    -- FOREIGN KEY (venue_id) REFERENCES venues(venue_id),
     FOREIGN KEY (purchase_slot_id) REFERENCES purchase_slots(purchase_slot_id)
 );
 
@@ -91,6 +88,7 @@ CREATE TABLE IF NOT EXISTS sold_tickets (
 
 INSERT INTO artists (artist_name) VALUES("Beyonce");
 INSERT INTO tours (artist_id, tour_name) VALUES(LAST_INSERT_ID(), "Renaissance World Tour");
+-- SET @renaissance_id = last_insert_id();
 
 INSERT 
 INTO venues (venue_name, city) 
@@ -112,15 +110,50 @@ VALUES
     (@renaissance_id, "2023-06-03", @tottenham_id),
     (@renaissance_id, "2023-06-04", @tottenham_id);
     
-show databases;
-
 INSERT 
 INTO seats (date_id, section, block, row_name, seat_number, onsale, available, price, general_admission)
 VALUES
-	(1, 100, "A1", "A", 1, true, true, 100, false),
-	(1, 100, "A1", "A", 2, true, true, 100, false),
-	(1, 100, "A1", "A", 3, true, true, 100, false),
-	(1, 100, "A1", "A", 6, true, true, 100, false),
-	(1, 100, "A1", "A", 7, true, true, 100, false),
-	(1, 100, "A1", "A", 8, true, true, 100, false),
-	(1, 100, "A1", "A", 9, true, true, 100, false);
+	(1, 100, "A1", "A", 1, true, true, 100.00, false),
+	(1, 100, "A1", "A", 2, true, true, 100.00, false),
+	(1, 100, "A1", "A", 3, true, true, 100.00, false),
+	(1, 100, "A1", "A", 6, true, true, 100.00, false),
+	(1, 100, "A1", "A", 7, true, true, 100.00, false),
+	(1, 100, "A1", "A", 8, true, true, 100.00, false),
+	(1, 100, "A1", "A", 9, true, true, 100.00, false);
+    
+INSERT INTO artists (artist_name) VALUES("Sabrina Carpenter");
+INSERT INTO tours (artist_id, tour_name) VALUES(LAST_INSERT_ID(), "Emails I Can't Send Tour");
+SET @emails_tour_id = last_insert_id();
+
+INSERT INTO venues (venue_name, city) VALUES ("O2 Apollo", "Manchester");
+SET @o2_mcr_id = last_insert_id();
+
+INSERT INTO venues (venue_name, city) VALUES ("Eventim Apollo", "London");
+SET @eventim_apollo_id = last_insert_id();
+
+SELECT @o2_mcr_id;
+
+INSERT INTO dates (tour_id, venue_id, date)
+VALUES
+	(@emails_tour_id, @o2_mcr_id, "2023-06-14"),
+	(@emails_tour_id, @eventim_apollo_id, "2023-06-19");
+    
+SET @mcr_date_id = (SELECT date_id FROM dates WHERE tour_id = @emails_tour_id AND date = "2023-06-14");
+SELECT @mcr_date_id;
+
+INSERT INTO purchase_slots (tour_id, start, end)
+VALUES
+	(@emails_tour_id, "2023-05-05 10:00:00", "2023-05-05 22:00:00");
+    
+SET @slot_id = last_insert_id();
+
+INSERT INTO seats (date_id, section, block, general_admission, purchase_slot_id, onsale, available, price)
+VALUES
+	(@mcr_date_id, "Stalls Standing", "Stalls Standing", true, @slot_id, false, true, 33.33),
+	(@mcr_date_id, "Stalls Standing", "Stalls Standing", true, @slot_id, false, true, 33.33),
+	(@mcr_date_id, "Stalls Standing", "Stalls Standing", true, @slot_id, false, true, 33.33),
+	(@mcr_date_id, "Stalls Standing", "Stalls Standing", true, @slot_id, false, true, 33.33),
+	(@mcr_date_id, "Stalls Standing", "Stalls Standing", true, @slot_id, false, true, 33.33),
+	(@mcr_date_id, "Stalls Standing", "Stalls Standing", true, @slot_id, false, true, 33.33);
+    
+

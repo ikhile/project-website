@@ -1,3 +1,9 @@
+.navbar-nav {
+    flex-direction: row !important;
+    flex: 1;
+    gap: 10px
+}
+
 .note-to-self, .comment {
     color: grey;
     font-style: italic;
@@ -19,9 +25,9 @@
     transition: all 0.5s ease-in-out;
 }
 
-.card:hover {
+/* .card:hover {
     transform: scale(1.05);
-}
+} */
 
 .city-card {
     cursor: pointer;
@@ -34,7 +40,7 @@
 }
 
 .city-card:hover {
-    transform: scale(1.1);
+    transform: scale(1.05);
 }
 
 .city-card ul {

@@ -1,0 +1,13 @@
+<h1>Log In</h1>
+
+{{#if messages.error}}
+    {{messages.error}}
+{{/if}}
+
+<form action="login" method="POST">
+    <label for="email">Email</label><input type="email" name="email" id="email" required value="test@test"><br>
+    <label for="password">Password</label><input type="password" name="password" id="password" required value="test"><br>
+    <button type="submit">Login</button>
+</form>
+
+<a href="register">Register</a>

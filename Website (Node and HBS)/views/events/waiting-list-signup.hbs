@@ -1,14 +1,14 @@
 <main class="m-auto text-center">
 
-    {{log (stringify @root)}}
-
     <form id="waiting-list-form" class="m-auto border rounded d-inline-block p-3">
         <h2 class="mt-2 mb-3">Sign up for waiting list</h2>
+        <p>Complete the form below to be notified when more tickets are released for</p>
+        <p class="h4">{{tour.artist_name}} - {{tour.tour_name}}</p>
 
         <hr>
 
         <section id="waiting-list-dates">
-            <h3 style="grid-column: 1 / -1">Dates</h3>
+            <h3 style="grid-column: 1 / -1">Venues & Dates</h3>
             {{#each venues}}
                 <div class="form-check mr-3">
                     <input 
@@ -19,33 +19,30 @@
                         value="{{this.venue_id}}"
                         data-venue-id="{{this.venue_id}}"
                     >
-                    <label for="{{this.venue_id}}">{{this.city}} - <i>{{this.venue}}</i></label>
+                    <label for="venue-{{this.venue_id}}">{{this.city}} - <i>{{this.venue}}</i></label>
                 </div>        
 
-                {{!-- {{#if (compareValues this.dates.length '==' 1)}}
-                    {{this.dates.0.date}}
-                {{else}} --}}
-                    <label for="" data-venue-id="{{this.venue_id}}" class="ml-3" hidden>Dates</label>
-                    <select
-                        name="dates-venue-{{this.venue_id}}"
-                        class="selectpicker"
-                        title="Select dates for {{this.city}}"
-                        data-selected-text-format="count > 2"
-                        data-count-selected-text="{0} dates selected"
-                        data-venue-id="{{this.venue_id}}"
-                        multiple
-                    >
-                        {{#each this.dates}}
-                                <option title="{{formatDate this.date 'do LLL'}}">{{formatDate this.date 'EEE do LLLL'}}</option>
-                        {{/each}}
-                    </select>
-                {{!-- {{/if}} --}}
+                <label for="" data-venue-id="{{this.venue_id}}" class="ml-3" hidden>Dates</label>
+                <select
+                    name="dates-venue-{{this.venue_id}}"
+                    class="selectpicker"
+                    title="Select dates for {{this.city}}"
+                    data-selected-text-format="count > 2"
+                    data-count-selected-text="{0} dates selected"
+                    data-venue-id="{{this.venue_id}}"
+                    data-actions-box="true"
+                    multiple
+                >
+                    {{#each this.dates}}
+                            <option title="{{formatDate this.date 'do LLL'}}">{{formatDate this.date 'EEE do LLLL'}}</option>
+                    {{/each}}
+                </select>
             {{/each}}
         </section>
 
         <hr>
 
-        <button type="submit" class="btn btn-primary btn-block">
+        <button type="submit" class="btn btn-primary {{!btn-block w-100}}">
             Sign Up
         </button>
     </form>

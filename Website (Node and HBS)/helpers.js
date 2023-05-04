@@ -1,4 +1,5 @@
 import * as datefns from 'date-fns'
+import * as htmlparser from 'htmlparser2'
 
 export function formatDate(date, format) {
     const defaultFormat = "do LLL"    
@@ -8,6 +9,22 @@ export function formatDate(date, format) {
         new Date(date), 
         args.length == 1 ? defaultFormat : format
     )
+}
+
+export function isPast(date) {
+    return datefns.isPast(new Date(date))
+}
+
+export function isFuture(date) {
+    return datefns.isFuture(new Date(date))
+}
+
+export function isThisYear(date) {
+    return datefns.isSameYear(new Date(date), new Date())
+}
+
+export function addPluralS(value) {
+    return value == 1 ? "" : "s"
 }
 
 export function replaceSymbols(str) {
@@ -84,8 +101,26 @@ export function stringify(json) {
     return JSON.stringify(json, null, 2)
 }
 
+export function htmlify(string) {
+    // https://stackoverflow.com/a/21870431
+    // const parser = new DOMParser()
+    // return parser.parseFromString(string, "text/html")
+
+    // const parser = new htmlparser.Parser()
+    // console.log(parser.write(string))
+    // return parser.write(string)
+
+    console.log(htmlparser.parseDocument(string))
+
+    return htmlparser.parseDocument(string)
+}
+
+export function isAuthenticated(req) {
+    console.log("???", req.isAuthenticated())
+    return req.isAuthenticated()
+}
+
 export function compareValues(val1, operator, val2) {
-    console.log(val1, operator, val2)
     let ret
 
     switch(operator) {

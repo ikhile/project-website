@@ -1,0 +1,36 @@
+<h2>{{event.artist_name}} - {{event.tour_name}}</h2>
+<p>This event is not on sale yet</p>
+{{!-- <p>Tickets will be released in {{slots.length}} stage{{addPluralS slots.length}} - sign up to a purchase window below to be notified and buy tickets at a time that suits you!</p> --}}
+<p>Tickets will be released at the below times - sign up to be notified and buy tickets at a time that suits you!</p>
+
+{{#each slots}}
+    <div class="m-auto col-6 text-center">
+        {{#if (isFuture this.start)}}
+            {{!-- <h3>{{htmlify (formatDate this.start "EEE do LLL '<span>'HH:mm'</span>'")}}</h3> --}}
+            <h3>
+                {{#if (isThisYear this.start)}}
+                    {{formatDate this.start "EEEE do LLLL"}}
+                {{else}}
+                    {{formatDate this.start "EEEE do LLLL yyyy"}}
+                {{/if}}
+                <p class="fs-4">
+                    <span class="text-uppercase text-muted small">Start</span> {{formatDate this.start "HH:mm"}}
+                    <span class="text-uppercase text-muted small">End</span> {{formatDate this.end "HH:mm"}}
+                </p>
+            </h3>
+            <button class="btn btn-secondary btn-block">Sign Up</button>
+        {{else}}
+            {{#if (isFuture this.end)}}
+                <p>Slot happening now</p>
+                <button>Purchase</button>
+            {{else}}
+                <p>Slot has ended</p>
+                <button disabled="disabled">Purchase</button>
+            {{/if}}
+        {{/if}}
+    </div>
+
+
+{{/each}}
+
+{{!-- thought: to update exactly at a certain time, set a timeout for remaining seconds of minute then a minutely interval --}}
