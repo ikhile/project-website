@@ -10,13 +10,37 @@ export const pool = mysql.createPool({
     dateStrings: true // https://stackoverflow.com/a/52398828
 }).promise()
 
-export async function getAllEvents() {
-    const [rows] = await pool.query(`
+export async function getAllEvents(limit = null) {
+    let query = `
         SELECT tour_id, artist_name, tour_name
         FROM tours
-        INNER JOIN artists ON tours.artist_id = artists.artist_id;`
-    )
+        INNER JOIN artists ON tours.artist_id = artists.artist_id
+    `
+
+    let values
+    if (!!limit) {
+        query += "LIMIT "
+        values = [limit]
+    }
+    const [rows] = await pool.query(query, values)
     return rows
+}
+
+export async function getPurchaseSlots(tourID) {
+    const [slots] = await pool.query(`
+        SELECT * 
+        FROM purchase_slots
+        WHERE tour_id = ?
+        ORDER BY start ASC
+    `, tourID)
+
+    return slots
+}
+
+export async function tourSalesStart(tourID) {
+    const slots = await getPurchaseSlots(tourID)
+    if (slots.length == 0) return new Date("2000-01-01") // random past date to compare to
+    else return (new Date(slots[0].start))
 }
 
 export async function getEventById(tourID) {
@@ -115,6 +139,59 @@ export async function getAllArtists() {
     return rows
 }
 
+export async function search(searchTerm) {
+    // https://stackoverflow.com/questions/28717868/sql-server-select-where-any-column-contains-x#comment-105517868
+    // https://www.w3schools.com/sql/sql_like.asp
+
+    // let value = `%${searchTerm}%`
+    // let values = ("%" + searchTerm + "%").repeat(4)
+    // let values = new Array(4).fill(`%${searchTerm}%`, 0, 4)
+
+    const [results] = await pool.query(` 
+        SELECT *
+        FROM tours 
+            INNER JOIN artists ON tours.artist_id = artists.artist_id
+            INNER JOIN dates ON tours.tour_id = dates.tour_id
+            INNER JOIN venues ON dates.venue_id = venues.venue_id
+        WHERE 
+            tour_name LIKE ?
+            OR artist_name LIKE ?
+            OR venue_name LIKE ?
+            OR city LIKE ?
+    `, new Array(4).fill(`%${searchTerm}%`, 0, 4))
+
+    let grouped = []
+
+    function getResultIndex(result) {
+        return grouped.findIndex(a => {
+            a.tour_id == result.tour_id
+            && a.venue_id == result.venue_id
+        })
+    }
+
+    for (let result of results) {
+        let resultIndex = grouped.findIndex(a =>  a.tour_id == result.tour_id && a.venue_id == result.venue_id)
+
+        if (resultIndex < 0) {
+            grouped.push({
+                tour_id: result.tour_id,
+                tour_name: result.tour_name,
+                artist_id: result.artist_id,
+                artist_name: result.artist_name,
+                venue_id: result.venue_id,
+                venue_name: result.venue_name,
+                city: result.city,
+                dates: []
+            })
+            resultIndex = grouped.length - 1
+        }
+
+        grouped[resultIndex].dates.push(result.date)
+    }
+
+    return grouped
+}
+
 // const events = await getAllEvents()
-console.log(await getVenueById(1))
+// console.log(await getVenueById(1))
 // process.exit()

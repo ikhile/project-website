@@ -98,8 +98,9 @@ VALUES
     ("Stadium of Light", "Sunderland"),
     ("BT Murrayfield Stadium", "Edinburgh");
 
-SET @tottenham_id = (SELECT venue_id FROM venues WHERE venue_name="Tottenham Hotspur Stadium");
 SET @renaissance_id = (SELECT tour_id FROM tours WHERE tour_name="Renaissance World Tour");
+SET @tottenham_id = (SELECT venue_id FROM venues WHERE venue_name="Tottenham Hotspur Stadium");
+SET @sunderland_id = (SELECT venue_id FROM venues WHERE venue_name="Stadium of Light");
 
 INSERT
 INTO dates (tour_id, date, venue_id)
@@ -108,7 +109,8 @@ VALUES
     (@renaissance_id, "2023-05-30", @tottenham_id),
     (@renaissance_id, "2023-06-01", @tottenham_id),
     (@renaissance_id, "2023-06-03", @tottenham_id),
-    (@renaissance_id, "2023-06-04", @tottenham_id);
+    (@renaissance_id, "2023-06-04", @tottenham_id),
+    (@renaissance_id, "2023-05-23", @sunderland_id);
     
 INSERT 
 INTO seats (date_id, section, block, row_name, seat_number, onsale, available, price, general_admission)

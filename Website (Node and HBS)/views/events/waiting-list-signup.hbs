@@ -1,4 +1,4 @@
-<main class="m-auto text-center">
+<main class="text-center bg-white w-75 m-auto">
 
     <form id="waiting-list-form" class="m-auto border rounded d-inline-block p-3">
         <h2 class="mt-2 mb-3">Sign up for waiting list</h2>
@@ -9,35 +9,47 @@
 
         <section id="waiting-list-dates">
             <h3 style="grid-column: 1 / -1">Venues & Dates</h3>
-            {{#each venues}}
-                <div class="form-check mr-3">
-                    <input 
-                        type="checkbox" 
-                        name="venues" 
-                        class="form-check-input" 
-                        id="venue-{{this.venue_id}}" 
-                        value="{{this.venue_id}}"
-                        data-venue-id="{{this.venue_id}}"
-                    >
-                    <label for="venue-{{this.venue_id}}">{{this.city}} - <i>{{this.venue}}</i></label>
-                </div>        
+            <table class="m-auto">
+                {{#each venues}}
+                    <tr>
+                        <td>
+                            <div class="form-check text-left">
+                                <input 
+                                    type="checkbox" 
+                                    name="venues" 
+                                    class="form-check-input" 
+                                    id="venue-{{this.venue_id}}" 
+                                    value="{{this.venue_id}}"
+                                    data-venue-id="{{this.venue_id}}"
+                                >
+                                <label for="venue-{{this.venue_id}}" class="control-label position-relative">{{this.city}} - <i>{{this.venue}}</i></label>
+                            </div>
+                        </td>        
 
-                <label for="" data-venue-id="{{this.venue_id}}" class="ml-3" hidden>Dates</label>
-                <select
-                    name="dates-venue-{{this.venue_id}}"
-                    class="selectpicker"
-                    title="Select dates for {{this.city}}"
-                    data-selected-text-format="count > 2"
-                    data-count-selected-text="{0} dates selected"
-                    data-venue-id="{{this.venue_id}}"
-                    data-actions-box="true"
-                    multiple
-                >
-                    {{#each this.dates}}
-                            <option title="{{formatDate this.date 'do LLL'}}">{{formatDate this.date 'EEE do LLLL'}}</option>
-                    {{/each}}
-                </select>
-            {{/each}}
+                        {{!-- <label for="" data-venue-id="{{this.venue_id}}" class="ml-3" hidden>Dates</label> --}}
+                        <td>
+                            <select
+                                {{!-- id="select-dates-venue-{{this.venue_id}}" --}}
+                                name="dates-venue-{{this.venue_id}}"
+                                class="selectpicker"
+                                title="Select dates for {{this.city}}"
+                                data-selected-text-format="count > 2"
+                                data-count-selected-text="{0} dates selected"
+                                data-venue-id="{{this.venue_id}}"
+                                data-actions-box="true"
+                                multiple
+                            >
+                                {{#each this.dates}}
+                                        <option title="{{formatDate this.date 'do LLL'}}" value={{this.date_id}}>{{formatDate this.date 'EEE do LLLL'}}</option>
+                                {{/each}}
+                            </select>
+                        </td>
+                    </tr>
+                {{/each}}
+
+                </table>
+                
+                {{!-- <p class="comment">Would love some "All dates selected" text but can't see how to do that UNLESS I set max options to all and set some max options text...?</p> --}}
         </section>
 
         <hr>

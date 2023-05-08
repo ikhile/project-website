@@ -90,15 +90,17 @@ async function updateDates() {
 }
 
 async function updateAvailableSeats() {
-    $("#available-tickets").html("<p class='text-center h3 pt-5'>Loading...</p>")
+    $("#available-tickets").html("<p class='text-center h3 pt-5'>Loading...</p>") // this + timeout used as an indicator to the user that the information has updated
 
     ticketQty = $("input[name=qty]").val() // TODO constrain again just to be sure
     let dateQry = `[${selectedDateIDs.join(",")}]`
 
+    console.log(dateQry)
+
     let url = `/api/available-seats?tour=${tourID}&dates=${dateQry}&qty=${ticketQty}`
     ticketResponse = await fetchData(url)
 
-    setTimeout(() => {
+    setTimeout(() => { 
 
         if (ticketResponse.length > 0) {
             let context = {
@@ -140,10 +142,14 @@ async function updateAvailableSeats() {
                     
 
         } else {
-            let context = {}
+            let context = {
+                tour_id: tourID,
+                venue_id: venueID,
+                date_value: dateQry
+            }
             renderTemplate($("#available-tickets"), "/views/no-tickets.hbs", context)
             $("#waiting-list-dates").val(dateQry)
-            $("#waiting-list-dates").text(dateQry)
+            // $("#waiting-list-dates").text(dateQry)
         }
 
     }, Math.random() * 500)

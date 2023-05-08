@@ -5,6 +5,8 @@ export function formatDate(date, format) {
     const defaultFormat = "do LLL"    
     let args = Array.from(arguments); args.pop()
 
+    console.log(args.length)
+
     return datefns.format(
         new Date(date), 
         args.length == 1 ? defaultFormat : format
@@ -70,6 +72,8 @@ export function groupDates(dates) {
         grouped[year][month].push(date)
         
     }        
+
+    // console.log(grouped)
     return groupedDatesToArray(grouped)
     
 }
@@ -83,6 +87,43 @@ function groupedDatesToArray(groupedDates) {
       }
     
     return arr
+}
+
+export function groupFormatDates(dates, groupFormat, dateFormat) {
+    let args = Array.from(arguments); args.pop()
+    groupFormat = args.length < 2 ? "startEnd" : groupFormat
+    // dateFormat = args.length < 3 ? "do LLL"  : dateFormat
+
+    if (dates.length == 1) {
+        return datefns.format(new Date(dates[0]), "do LLL yyyy")
+    }
+    
+    if (groupFormat == "commaSeparated") {
+        let arr = []
+        let groupedDates = groupDates(dates)
+
+        // need to add an and in
+        for (let group of groupedDates) {
+            arr.push(`${group.map(a => datefns.format(new Date(a), "do")).join(", ")} ${datefns.format(new Date(group[0]), "LLL")}`)
+        }
+
+        return arr.join(", ")
+
+    }
+
+    dates = dates.sort((a, b) => new Date(a) - new Date(b))
+    let start = new Date(dates[0]), end = new Date(dates[dates.length -1])
+
+    if (start.getFullYear == end.getFullYear) {
+        if (start.getMonth() == end.getMonth()) {
+            return `${datefns.format(start, "do")} - ${datefns.format(end, "do LLL yyyy")}`
+        } else {
+            return `${datefns.format(start, "do LLL")} - ${datefns.format(end, "do LLL yyyy")}`
+        }
+    }
+
+    return `${datefns.format(start, "do LLL yyyy")} - ${datefns.format(end, "do LLL yyyy")}`
+    
 }
 
 // export function groupDates (dates)  {
@@ -121,30 +162,25 @@ export function isAuthenticated(req) {
 }
 
 export function compareValues(val1, operator, val2) {
-    let ret
-
     switch(operator) {
         case '<':
-            ret = val1 < val2
-            break
+            return val1 < val2
+            
         case '<=':
-            ret = val1 <= val2
-            break
+            return val1 <= val2
+            
         case '>':
-            ret = val1 > val2
-            break
+            return val1 > val2
+            
         case '>=':
-            ret = val1 >= val2
-            break
+            return val1 >= val2
+            
         case '==':
-            ret = val1 == val2
-            break
+            return val1 == val2
+            
         case '!=':
-            ret = val1 != val2
-            break
+            return val1 != val2
+            
     }
-
-    console.log(ret)
-    return ret
 }
 

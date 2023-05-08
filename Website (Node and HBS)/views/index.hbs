@@ -17,13 +17,22 @@
 
 <section class="text-center">
         <h2>Upcoming Events</h2>
+        <p class="comment">Need to make these equal width - grid?</p>
         <div class="d-flex flex-wrap justify-content-center">
             {{#each events}}
-                <div class="m-1 card">
+                <div class="m-1 card hover-scale">
                     <img class="card-img-top" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJiT-UHSm6w0Jperb8SitpfoAKeMUE3uynPg5YO-2Drw&s" alt="">
                     <p class="h5 card-title px-3 mb-1 mt-2">{{this.artist_name}}</p>
                     <a href="events/tour/{{this.tour_id}}" class="stretched-link px-3">{{this.tour_name}}</a>
                     <p class="d-block mb-0 mt-1 px-3 pb-2">{{formatDate this.firstDate.date "do LLL ''yy"}} to {{formatDate this.lastDate.date "do LLL ''yy"}}</p>
+                    <p class="fw-bold px-3">
+                        {{#if (isFuture this.salesStart)}}
+                            Sales start {{formatDate this.salesStart "HH:mm EEE do LLL"}}
+                        {{else}}
+                            On sale now
+                        {{/if}}
+                    </p>
+                    {{!-- <p class="fw-bold">On sale now<br>Sales start dd-mm-yy <span class="comment fw-normal">get on sale times from database and make this conditional</span></p> --}}
                 </div>
             {{/each}}
         </div>

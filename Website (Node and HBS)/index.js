@@ -59,7 +59,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
 // https://www.youtube.com/watch?v=-RCnNyD0L-s
-console.log(process.env.SESSION_SECRET)
+// console.log(process.env.SESSION_SECRET)
 app.use(flash())
 app.use(session({
     secret: process.env.SESSION_SECRET,
@@ -95,14 +95,18 @@ function mapHelpers() {
 
 app.get('/', async (req, res) => {
     
-    const context = {
-        events: await db.getAllEvents() // need to sort by date (soonest first), then limit number of events used
-    }
+    let events = await db.getAllEvents()
 
-    for (let event of context.events) {
+    for (let event of events) {
         event.firstDate = await api.get(`tours/${event.tour_id}/dates/first`).then((res) => res.data)
         event.lastDate = await api.get(`tours/${event.tour_id}/dates/last`).then((res) => res.data)
+        event.purchaseSlots = await db.getPurchaseSlots(event.tour_id)
+        event.salesStart = await db.tourSalesStart(event.tour_id)
     }
+
+    const context = {
+        events: events // need to sort by date (soonest first), then limit number of events used
+    } 
 
     res.render('index', context)
 })

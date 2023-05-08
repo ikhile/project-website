@@ -17,19 +17,23 @@ export const router = express.Router();
 // })
 
 router.get('/', async (req, res) => {
-    const context = {
-        isAuth: req.isAuthenticated(),
-        user: req.user,
-        events: await db.getAllEvents(),
-    }
-
-    for (let event of context.events) {
+    let events =  await db.getAllEvents()
+    
+    for (let event of events) {
         event.dates = await api.get(`tours/${event.tour_id}/dates`).then((res) => res.data)
         event.firstDate = await api.get(`tours/${event.tour_id}/dates/first`).then((res) => res.data)
         event.lastDate = await api.get(`tours/${event.tour_id}/dates/last`).then((res) => res.data)
+        event.purchaseSlots = await db.getPurchaseSlots(event.tour_id)
+        event.salesStart = await db.tourSalesStart(event.tourID)
     }
 
-    // stringifyLog(context.events)
+    const context = {
+        isAuth: req.isAuthenticated(),
+        user: req.user,
+        events: events
+    }
+
+    stringifyLog(context.events)
 
     res.render('events/events', context)
 })
@@ -99,6 +103,8 @@ router.get('/tour/:tour_id/waiting-list', async (req, res) => {
         tour: await api.get(`tours/${req.params.tour_id}`).then((res) => res.data),
         venues: await api.get(`tours/${req.params.tour_id}/venues`).then((res) => res.data)
     }
+
+    stringifyLog(context)
     res.render('events/waiting-list-signup', context)
 })
 
