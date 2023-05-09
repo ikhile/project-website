@@ -1,11 +1,16 @@
 import * as datefns from 'date-fns'
 import * as htmlparser from 'htmlparser2'
 
+// 
+export function section (name, options) {
+    if(!this._sections) this._sections = {};
+    this._sections[name] = options.fn(this);
+    return null;
+}
+
 export function formatDate(date, format) {
     const defaultFormat = "do LLL"    
     let args = Array.from(arguments); args.pop()
-
-    console.log(args.length)
 
     return datefns.format(
         new Date(date), 
@@ -156,7 +161,7 @@ export function htmlify(string) {
     return htmlparser.parseDocument(string)
 }
 
-export function isAuthenticated(req) {
+export function isAuth(req) {
     console.log("???", req.isAuthenticated())
     return req.isAuthenticated()
 }

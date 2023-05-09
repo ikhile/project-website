@@ -5,27 +5,68 @@
             <li class="nav-item"><a href="/events" class="nav-link">Events</a></li>
             <li class="nav-item dropdown btn-group">
                 <a href="/account" class="nav-link">Account</a>
-                <button type="button" class="btn btn-dark dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                <button 
+                    type="button" 
+                    class="btn btn-dark dropdown-toggle dropdown-toggle-split" 
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                >
                     <span class="visually-hidden">Toggle Dropdown</span>
                 </button>
+
                 <ul class="dropdown-menu position-absolute">
-                    {{!-- need to put some logic in here soon - links depend on auth --}}
-                    <li><a class="dropdown-item" href="/account/login">Login</a></li>
-                    <li><a class="dropdown-item" href="/account/register">Register</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                        <form method="POST" action="/account/logout?_method=DELETE"><button type="submit">Logout</button></form>
-                    </li>
-                    <li><a class="dropdown-item" href="#">Logout</a></li>
+                    {{#if (isAuth req)}}
+                        <li class="dropdown-item">Purchase History</li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form method="POST" action="/account/logout?_method=DELETE">
+                                <button 
+                                    type="submit" 
+                                    {{!-- styling button as link (must be form for delete method) --}}
+                                    class="btn btn-light bg-transparent ms-1 col-11 border-0"
+                                    style="text-align: left !important;"
+                                >Logout</button>
+                            </form>
+                        </li>
+                        
+                    {{else}}
+                        <li><a class="dropdown-item" href="/account/login">Login</a></li>
+                        <li><a class="dropdown-item" href="/account/register">Register</a></li>
+                    {{/if}}
                 </ul>
             </li>
         </ul>
 
-        <form action="/search" method="get" class="d-flex">
-            <input class="form-control mx-2" type="search" id="search" name="query" placeholder="Search for an artist, city, or tour" required>
+        <form action="/search" method="get" class="d-flex col-5">
+            <input 
+                class="form-control mx-2" 
+                type="search" 
+                id="search" 
+                name="query" 
+                placeholder="Search for an artist, city, venue, or tour" 
+                minlength="3" 
+                pattern=".{3,}"
+                title="Search term must be 3 or more characters long"
+                required
+            >
             <button type="submit" class="btn btn-outline-light">Go</button>
         </form>
     </div>
 
 </nav>
+
+<script>
+    // add active class to current url link
+    $("document").ready(function() {
+        let pathName = window.location.pathname
+
+        if (/^\/account/.test(pathName)) {
+            $(".navbar-nav a[href='/account']").addClass("active")
+        }
+
+        else if (/\/events/.test(pathName)) {
+            $(".navbar-nav a[href='/events']").addClass("active")
+        }
+    })
+</script>
 

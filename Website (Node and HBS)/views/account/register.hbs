@@ -1,10 +1,89 @@
 <h1>Register</h1>
-
-<form action="register" method="POST">
-    <label for="name">Name</label><input type="text" name="name" id="name" required><br>
+<section id="validation-errors" class="d-none alert alert-danger">
+    <p id="name-validation-empty" class="d-none my-1">Please enter your name.</p>
+    <p id="email-validation-empty" class="d-none my-1">Please enter an email address.</p>
+    <p id="email-validation-format" class="d-none my-1">Please enter an email address in the standard format, e.g. name@example.com</p>
+    <p id="email-validation-used" class="d-none my-1">Email already in use. Please use another email address or <a href="/login">log in to your account</a>.</p>
+    <p id="password-validation-length">Password must contain at least 6 characters</p>
+    <p id="password-validation-chars">Password must contain a lowercase letter, a uppercase letter, and a number.</p>
+</section>
+<form id="register-form" action="register" method="POST">
+    <label for="firstName">Forename</label><input type="text" name="firstName" id="firstName" required><br>
+    <label for="lastName">Surname</label><input type="text" name="lastName" id="lastName" required><br>
     <label for="email">Email</label><input type="email" name="email" id="email" required><br>
     <label for="password">Password</label><input type="password" name="password" id="password" required><br>
-    <button type="submit">Register</button>
+    <button id="reg-submit" type="submit">Register</button> {{! submit can't be ID or $.submit() won't work https://stackoverflow.com/a/22982900 }}
 </form>
 
-<a href="/login">Login</a>
+<p>Alread registered? Click here to <a href="login">log in</a></p>
+
+<script type="module">
+
+    $(document).ready(async () => {
+
+        $("#validation-errors p").addClass("d-none my-1")
+
+        const emailRegex = /^\w+@\w+\.[\w.]+$/
+        const passwordRegex = /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/ // https://stackoverflow.com/a/470602
+        
+        $("#reg-submit").click(async (e) => {           
+            e.preventDefault()
+
+            let valid = true
+            $("#validation-errors, #validation-errors p").addClass("d-none")
+
+            const fName = $("#firstName").val()
+            const lName = $("#lastName").val()
+
+            if (!fName.length || !lName.length) {
+                $("#validation-errors, #name-validation-empty").removeClass("d-none")
+                valid = false
+                e.preventDefault()
+            }
+
+            const email = $("#email").val()
+
+            if (email.length == 0) {
+                $("#validation-errors, #email-validation-empty").removeClass("d-none")
+                valid = false
+                e.preventDefault()
+
+            } else if (!emailRegex.test(email)) {
+                // alert("Please enter an email in the standard format.")
+                $("#validation-errors, #email-validation-format").removeClass("d-none")
+                valid = false
+                e.preventDefault()
+            } 
+
+            const { emailAvailable } = await (fetch(`/api/email-available?email=${email}`).then(res => res.json()).then(data => data))
+            
+            if (await !emailAvailable) {
+                //alert("Email already in use. Please use another email address or click the link at the bottom of the page to log in to your existing account.")
+                $("#validation-errors, #email-validation-used").removeClass("d-none")
+                console.log("email used")
+                valid = false
+                e.preventDefault()
+            }
+
+            const password = $("#password").val()
+            const minlength = $("#password").attr("minlength") ?? 6
+
+            if (password.length < minlength) {
+                $("#validation-errors, #password-validation-length").removeClass("d-none")
+                valid = false
+                e.preventDefault()
+            }
+            
+            // works perfectly just effort when testing lol
+            //else if (!passwordRegex.test(password)) {
+            //    $("#validation-errors, #password-validation-chars").removeClass("d-none")
+            //    e.preventDefault()
+            //}
+
+            console.log(valid)
+            if (valid) $("#register-form").submit()
+
+        })
+    })
+
+</script>

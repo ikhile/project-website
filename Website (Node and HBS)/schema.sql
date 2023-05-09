@@ -159,3 +159,16 @@ VALUES
 	(@mcr_date_id, "Stalls Standing", "Stalls Standing", true, @slot_id, false, true, 33.33);
     
 
+CREATE TABLE IF NOT EXISTS users (
+    customer_id INT NOT NULL AUTO_INCREMENT,
+    stripe_id VARCHAR(255), -- use to store IDs from Stripe payments
+    first_name VARCHAR(255),
+    last_name VARCHAR(255),
+    email VARCHAR(255),
+    password VARCHAR(255),
+
+    PRIMARY KEY (customer_id),
+    UNIQUE (email)
+);
+
+

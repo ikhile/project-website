@@ -59,7 +59,6 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
 // https://www.youtube.com/watch?v=-RCnNyD0L-s
-// console.log(process.env.SESSION_SECRET)
 app.use(flash())
 app.use(session({
     secret: process.env.SESSION_SECRET,
@@ -68,13 +67,11 @@ app.use(session({
 }))
 app.use(passport.initialize())
 app.use(passport.session())
-
 app.use(methodOverride('_method'))
 
-app.use(function(req, res, next) {
-    // console.log(2, "req", req.originalUrl)
-
+app.use((req, res, next) => {
     app.locals.req = req
+    app.locals.title = "Tickets"
     // app.locals.isAuthenticated = !!req.user
     // console.log("isauth " + !!req.user, req.isAuthenticated())
     // if (!!req.user) app.locals.user = req.user
@@ -94,8 +91,7 @@ function mapHelpers() {
 }
 
 app.get('/', async (req, res) => {
-    
-    let events = await db.getAllEvents()
+    let events = await db.getAllEvents(10)
 
     for (let event of events) {
         event.firstDate = await api.get(`tours/${event.tour_id}/dates/first`).then((res) => res.data)
@@ -105,7 +101,7 @@ app.get('/', async (req, res) => {
     }
 
     const context = {
-        events: events // need to sort by date (soonest first), then limit number of events used
+        events: events
     } 
 
     res.render('index', context)

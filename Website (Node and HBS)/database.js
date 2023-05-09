@@ -11,19 +11,42 @@ export const pool = mysql.createPool({
 }).promise()
 
 export async function getAllEvents(limit = null) {
+    // let query = `
+    //     SELECT tour_id, artist_name, tour_name
+    //     FROM tours
+    //     INNER JOIN artists ON tours.artist_id = artists.artist_id
+    //     ORDER BY 
+    // `
+
+    // using a combination of group concat and substring index to order by start date of tour
+    // https://stackoverflow.com/a/10986929
+    // https://stackoverflow.com/a/276949  
+    // https://stackoverflow.com/a/8631273
+    // might be better to order by sale start date ah well
+
     let query = `
-        SELECT tour_id, artist_name, tour_name
+        SELECT 
+            tours.tour_id, 
+            tour_name, 
+            artists.artist_id, 
+            artist_name, 
+            SUBSTRING_INDEX(
+                GROUP_CONCAT(date ORDER BY date ASC SEPARATOR ','), ",", 1
+            ) AS first_date
         FROM tours
         INNER JOIN artists ON tours.artist_id = artists.artist_id
+        INNER JOIN dates ON tours.tour_id = dates.tour_id
+        GROUP BY tour_id
+        ORDER BY first_date ASC
     `
 
     let values
     if (!!limit) {
-        query += "LIMIT "
+        query += "LIMIT ?"
         values = [limit]
     }
-    const [rows] = await pool.query(query, values)
-    return rows
+    const [events] = await pool.query(query, values)
+    return events
 }
 
 export async function getPurchaseSlots(tourID) {
@@ -191,6 +214,101 @@ export async function search(searchTerm) {
 
     return grouped
 }
+
+export async function getSeats(...seatIDs) {
+
+    let query = `
+        SELECT 
+            seat_id, seats.date_id, date, 
+            section, block, row_name, seat_number, general_admission, 
+            available, price, 
+            tours.tour_id, tour_name, 
+            artists.artist_id, artist_name, 
+            venues.venue_id, venue_name, city
+        FROM seats
+        INNER JOIN dates ON seats.date_id = dates.date_id
+        INNER JOIN tours ON dates.tour_id = tours.tour_id
+        INNER JOIN artists ON tours.artist_id = artists.artist_id
+        INNER JOIN venues ON dates.venue_id = venues.venue_id
+    `
+    let values = []
+
+    for (let [i, seatID] of seatIDs.entries()) { // https://stackoverflow.com/a/41221424
+        // ohhh it's just destructuring array.entries
+        query += `\n${i == 0 ? "WHERE" : "OR"} seat_id = ?`
+        values.push(seatID)
+    }
+
+    const [seats] = await pool.query(query, values)
+
+    if (seats.length == seatIDs.length) {
+        return seats
+
+    } else if (seats.length < seatIDs.length) {
+        throw new Error("Not all seats found - may be an issue with one or more seat IDs")
+
+    } else if (seats.length > seatIDs.length) {
+        throw new Error("Somehow found more seats than expected...")
+    }
+}
+
+console.log(await getSeats(1, 2, 3))
+
+export async function addUser(firstName, lastName, email, hashedPassword) {
+    
+    try {
+    return await pool.query(`
+        INSERT INTO users (first_name, last_name, email, password)
+        VALUES (?, ?, ?, ?)
+    `, [firstName, lastName, email, hashedPassword], 
+        async (error, result) => { 
+        if (error) {
+            console.log("!!!", "error")
+            return error
+        } else {
+            return await result[0].insertId
+        }
+    })
+    } catch (error) {
+        console.error(error)
+    }
+
+}
+
+export async function getUsers() {
+    const [users] = await pool.query(`SELECT * FROM users`)
+    return users
+}
+
+export async function getUserByEmail(email) {
+    const [[user]] = await pool.query(`
+        SELECT * 
+        FROM users
+        WHERE email = ?
+        LIMIT 1
+    `, email)
+
+    return user
+}
+
+export async function getUserById(id) {
+    const [[user]] = await pool.query(`
+        SELECT * 
+        FROM users
+        WHERE user_id = ?
+        LIMIT 1
+    `, id)
+
+    return user
+}
+
+export async function checkEmailAvailable(email) {
+    const [[{exists}]] = await pool.query(`SELECT EXISTS(SELECT * FROM users WHERE email = ?) as "exists"`, email)
+    return !exists // not exists == available
+}
+
+// console.log(await addUser(1, 2, 0, 4))
+// console.log(await getUserByEmail("PHILLIPAI@HOTMAIL.COM"))
 
 // const events = await getAllEvents()
 // console.log(await getVenueById(1))

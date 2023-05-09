@@ -218,4 +218,10 @@ router.get("/tours/:tour_id/purchase-slots", async (req, res) => {
     res.json(slots)
 })
 
+router.get("/email-available", async (req, res) => {
+    res.json({
+        emailAvailable: await db.checkEmailAvailable(req.query.email)
+    })
+})
+
 

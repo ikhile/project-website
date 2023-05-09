@@ -1,13 +1,17 @@
 <h1>Log In</h1>
 
 {{#if messages.error}}
-    {{messages.error}}
+    <p class="alert alert-danger">
+        {{messages.error}}
+    </p>
 {{/if}}
 
 <form action="login" method="POST">
-    <label for="email">Email</label><input type="email" name="email" id="email" required value="test@test"><br>
-    <label for="password">Password</label><input type="password" name="password" id="password" required value="test"><br>
+    <label for="email">Email</label><input type="email" name="email" id="email" required>
+    <br>
+    <label for="password">Password</label><input type="password" name="password" id="password" required>
+    <br>
     <button type="submit">Login</button>
 </form>
 
-<a href="register">Register</a>
+<p></p>Don't have an ccount? Click here to <a href="register">register</a></p>

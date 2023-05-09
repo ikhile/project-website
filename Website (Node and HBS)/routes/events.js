@@ -1,20 +1,12 @@
 import express from 'express'
-import fs from 'fs'
 import * as db from '../database.js';
 import { groupDates } from '../helpers.js';
 import { createCheckoutSession } from '../stripe.js';
 import api from '../index.js';
 import getApiData from '../index.js';
 
-export function stringifyLog(input) {
-    console.log(JSON.stringify(input, null, 2))
-}
-
 export const router = express.Router();
-
-// router.get('/', (req, res, next) => {
-    
-// })
+export const stringifyLog = (input) => console.log(JSON.stringify(input, null, 2))
 
 router.get('/', async (req, res) => {
     let events =  await db.getAllEvents()
@@ -24,7 +16,7 @@ router.get('/', async (req, res) => {
         event.firstDate = await api.get(`tours/${event.tour_id}/dates/first`).then((res) => res.data)
         event.lastDate = await api.get(`tours/${event.tour_id}/dates/last`).then((res) => res.data)
         event.purchaseSlots = await db.getPurchaseSlots(event.tour_id)
-        event.salesStart = await db.tourSalesStart(event.tourID)
+        event.salesStart = await db.tourSalesStart(event.tour_id)
     }
 
     const context = {
@@ -61,37 +53,55 @@ router.get('/tour/:tour_id', async (req, res) => {
     const event = await api.get(`tours/${req.params.tour_id}`).then((res) => res.data)
     const venues = await api.get(`tours/${req.params.tour_id}/venues`).then((res) => res.data)
 
-
-
     // will want to establish whether the tour is on sale yet - possibly render different templates
     // let isOnsale = true
+
+
+
 
     // if is on sale, all seats for that tour will have onsale = true
     let isOnsale = await api.get(`tours/${req.params.tour_id}/all-onsale`).then(res => res.data.allOnsale)
 
+    let context = {
+        event: event,
+        venues: venues,
+        onsale: isOnsale
+    }
+
     if (isOnsale) {
-        let context = {
-            cardContext: {
-                event: event,
-                venues: venues,
-            },
-            event: event
-        }
-
-        res.render('events/tour-onsale', context)
-    }
-
-    else {
-        let context = {
+        context.cardContext = {
             event: event,
-            venues: venues,
-            slots: await api.get(`/tours/${req.params.tour_id}/purchase-slots`).then(res => res.data)
+            venues: venues
         }
-        
-        console.log(context)
-        res.render('events/tour-not-onsale', context)
+
+    } else {
+        context.slots = await api.get(`/tours/${req.params.tour_id}/purchase-slots`).then(res => res.data)
     }
-    
+
+    // if (isOnsale) {
+    //     let context = {
+    //         cardContext: {
+    //         },
+    //         event: event
+    //     }
+
+    //     // res.render('events/tour-onsale', context)
+    // }
+
+    // else {
+    //     let context = {
+    //         event: event,
+    //         venues: venues,
+    //         slots: await api.get(`/tours/${req.params.tour_id}/purchase-slots`).then(res => res.data)
+    //     }
+        
+    //     console.log(context)
+    //     // res.render('events/tour-not-onsale', context)
+
+    // }
+
+    // res.json(context)
+    res.render('events/tour', context)
 })
 
 router.get('/tour/:tour_id/waiting-list', async (req, res) => {

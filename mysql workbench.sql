@@ -189,3 +189,76 @@ SELECT COUNT(onsale) FROM seats INNER JOIN dates ON dates.date_id = seats.date_i
 SELECT COUNT(onsale) FROM seats INNER JOIN dates ON dates.date_id = seats.date_id WHERE tour_id = 1 AND onsale = true;
 
 SELECT * FROM seats INNER JOIN dates ON dates.date_id = seats.date_id WHERE tour_id = 1;
+
+SELECT * FROM purchase_slots WHERE tour_id = 2;
+
+SELECT tour_id, artist_name, tour_name
+FROM tours
+INNER JOIN artists ON tours.artist_id = artists.artist_id;
+
+
+SELECT * 
+FROM purchase_slots
+WHERE tour_id = 2
+ORDER BY start ASC;
+
+
+-- https://stackoverflow.com/a/28717925
+
+SELECT *
+FROM tours 
+	INNER JOIN artists ON tours.artist_id = artists.artist_id
+    INNER JOIN dates ON tours.tour_id = dates.tour_id
+    INNER JOIN venues ON dates.venue_id = venues.venue_id
+WHERE tour_name LIKE "%Sab%"
+OR artist_name LIKE "%Sab%"
+OR venue_name LIKE "%Sab%"
+OR city LIKE "%Sab%";
+
+CREATE TABLE temp 
+	(
+		tour_id INT, 
+		tour_name VARCHAR(255),
+		artist_id INT,
+        artist_name VARCHAR(255),
+        date_id INT,
+        date DATE,
+        venue_id INT
+    );
+
+-- INSERT INTO temp (tour_id, artist_id, tour_name, artist_name, date)
+-- https://stackoverflow.com/a/10986929
+-- https://stackoverflow.com/a/276949  
+-- https://stackoverflow.com/a/8631273
+SELECT tours.tour_id, tour_name, artists.artist_id, artist_name, SUBSTRING_INDEX(GROUP_CONCAT(date ORDER BY date ASC SEPARATOR ','), ",", 1) AS first_date
+FROM tours
+INNER JOIN artists ON tours.artist_id = artists.artist_id
+INNER JOIN dates ON tours.tour_id = dates.tour_id
+GROUP BY tour_id
+ORDER BY first_date DESC;
+
+SELECT DISTINCT tours.tour_id, artist_name, tour_name
+FROM temp;
+
+INNER JOIN artists ON tours.artist_id = artists.artist_id
+INNER JOIN dates ON tours.tour_id = dates.tour_id
+ORDER BY date ASC;
+
+
+SELECT *
+FROM  
+WHERE 'foo' in ();
+
+
+TRUNCATE TABLE users;
+
+SELECT EXISTS(SELECT * FROM users WHERE email = 103948);
+
+-- using this to get info for ticket product
+-- if I add fee info to tour, can join this in/pull these columns as well
+SELECT seat_id, seats.date_id, date, section, block, row_name, seat_number, general_admission, available, price, tours.tour_id, tour_name, artists.artist_id, artist_name, venues.venue_id, venue_name, city
+FROM seats
+INNER JOIN dates ON seats.date_id = dates.date_id
+INNER JOIN tours ON dates.tour_id = tours.tour_id
+INNER JOIN artists ON tours.artist_id = artists.artist_id
+INNER JOIN venues ON dates.venue_id = venues.venue_id;

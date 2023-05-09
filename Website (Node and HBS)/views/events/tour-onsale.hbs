@@ -1,14 +1,8 @@
 <h2>{{event.artist_name}} - {{event.tour_name}}</h2>
+<p>Wanna restructure (maybe combine with tour-not-onsale) so city cards are a popup under a purchase button and this page has event info</p>
 
 {{> city-cards}}
 
-<script>
-    $(document).ready(() => {
-        $(".city-card").click(function () {
-            window.location.href = `/events/purchase/tour/${$(this).attr("data-venue-id")}/queue?venue=${$(this).attr("data-venue-id")}`
-        })
-    })
-</script>
 
 {{!-- {{#each datesByVenue}}
 <div 
