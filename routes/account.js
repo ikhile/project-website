@@ -30,18 +30,27 @@ router.get('/', (req, res) => {
 })
 
 router.get('/login', (req, res) => {
-    
     res.render('account/login', { query: req.query })
 })
 
 let successRedirect = '/account'
 
-router.post('/login', loginRedirect, passport.authenticate('local', {
+router.post('/login', passport.authenticate('local', {
     // successRedirect: successRedirect,
     failureRedirect: 'login',
     failureFlash: true,
-}), (req, res) => {
-    console.log("sanity check")
+}), (req, res) => { // https://stackoverflow.com/a/70171106
+    console.log(req.body)
+    // if (!!req.body.redirect) {
+        res.redirect(req.body.redirect ?? '/account')
+    //     switch (req.body.redirect) {
+    //         case "purchase":
+    //             res.redirect(`/events/purchase/tour/${req.body.tour}`)
+    //             break
+    //         default:
+    //             res.redirect("/account")
+    //     }
+    // }
 })
 
 function loginRedirect(req, res, next) {
@@ -63,7 +72,7 @@ function loginRedirect(req, res, next) {
 }
 
 router.get('/register', (req, res) => {
-    res.render('account/register')
+    res.render('account/register', {query: req.query})
 })
 
 router.post('/register', async (req, res) => {
@@ -79,7 +88,8 @@ router.post('/register', async (req, res) => {
 
         // could be a good place to add a stripe customer ID? or just when they reach checkout if not got one
 
-        res.redirect('login')
+        // redirect to login, with redirect parameters for login
+        res.redirect(`login${!!req.body.redirect ? "?redirect=" + req.body.redirect : ""}`)
 
     } catch (err) {
         console.error(err) // need to handle the error maybe add a query string?

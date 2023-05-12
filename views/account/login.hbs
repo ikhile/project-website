@@ -6,10 +6,15 @@
     </p>
 {{/if}}
 
+{{#if (compareValues query.alert '==' 'to-purchase')}}
+    <p class="alert alert-primary">Please log in to purchase tickets.</p>
+{{/if}}
+
 <form action="login" method="POST">
-    {{#each query}}
+    <input name="redirect" value={{query.redirect}} hidden>
+    {{!-- {{#each query}}
         <input name={{@key}} value={{this}} hidden> {{! to pass query through to login post page }}
-    {{/each}}
+    {{/each}} --}}
     <label for="email">Email</label><input type="email" name="email" id="email" required>
     <br>
     <label for="password">Password</label><input type="password" name="password" id="password" required>
@@ -17,4 +22,4 @@
     <button type="submit">Login</button>
 </form>
 
-<p></p>Don't have an ccount? Click here to <a href="register">register</a></p>
+<p></p>Don't have an ccount? Click here to <a href="register?redirect={{query.redirect}}">register</a></p>

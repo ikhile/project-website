@@ -24,6 +24,6 @@ function purchaseClick(isAuth, tour) {
     } else {
         console.log("not auth")
         // window.location.href = `/events/purchase/tour`
-        window.location.href = `/account/login?redirect=purchase&tour=${tour}`
+        window.location.href = `/account/login?alert=to-purchase&redirect=/events/purchase/tour/${tour}&tour=${tour}`
     }
 }
