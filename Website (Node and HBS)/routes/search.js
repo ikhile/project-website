@@ -9,7 +9,5 @@ router.get('/', async (req, res) => {
         results: await db.search(req.query.query)
     }
 
-    stringifyLog(context)
-
     res.render('search', context)
 })

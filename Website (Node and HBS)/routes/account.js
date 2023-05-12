@@ -23,9 +23,6 @@ const users = [
 ]
 
 router.get('/', (req, res) => {
-    console.log(req.isAuthenticated())
-    console.log(req.user)
-
     if (!req.isAuthenticated()) return res.redirect('/account/login')
 
     res.render('account/account')
@@ -33,14 +30,37 @@ router.get('/', (req, res) => {
 })
 
 router.get('/login', (req, res) => {
-    res.render('account/login')
+    
+    res.render('account/login', { query: req.query })
 })
 
-router.post('/login', passport.authenticate('local', {
-    successRedirect: '/account',
+let successRedirect = '/account'
+
+router.post('/login', loginRedirect, passport.authenticate('local', {
+    // successRedirect: successRedirect,
     failureRedirect: 'login',
     failureFlash: true,
-}))
+}), (req, res) => {
+    console.log("sanity check")
+})
+
+function loginRedirect(req, res, next) {
+    console.log("!!!", req.query, req.body)
+    console.log(!!req.body.redirect)
+
+    // req.vars.successRedirect = !!req.body.redirect ? 
+    // successRedirect = "null"
+
+
+    if (!!req.body.redirect) {
+        if (req.body.redirect == "purchase")
+        successRedirect = `/events/purchase/tour/${req.body.tour}`
+    }
+
+    console.log(successRedirect)
+
+    next()
+}
 
 router.get('/register', (req, res) => {
     res.render('account/register')

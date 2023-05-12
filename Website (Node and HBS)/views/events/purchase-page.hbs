@@ -1,8 +1,6 @@
 <h1>{{tour.artist_name}} - {{tour.tour_name}}</h1>
 <h2>{{venue.city}}, {{venue.venue_name}} <button id="change-city-btn" class="btn btn-primary">Change</button></h2>
 
-{{log @root}}
-
 <form method="get" id="filters" class="d-flex flex-column align-items-center">
     <div>
         {{#each venueDates}}
@@ -38,7 +36,7 @@
     </button>
 </form> --}}
 
-<div id="available-tickets"></div>
+<div id="available-tickets" class="m-auto w-75"></div>
 
 <div id="change-city-modal" class="modal flex-column">
     {{> city-cards}}

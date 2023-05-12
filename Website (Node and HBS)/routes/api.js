@@ -1,6 +1,7 @@
 import express from 'express'
 import * as db from '../database.js';
 import * as datefns from 'date-fns'
+import { stringifyLog } from './events.js';
 
 export const router = express.Router();
 
@@ -29,7 +30,7 @@ router.get("/tours/:tour_id/venues/:venue_id", async (req, res) => {
 const dateFields = "date_id, date, tour_id, venue_id"
 
 router.get("/tours/:tour_id/dates", async (req, res) => {
-    res.json(await db.getEventDatesById(req.params.tour_id))
+    res.json(await db.getTourDates(req.params.tour_id))
 })
 
 router.get("/tours/:tour_id/dates/first", async (req, res) => {
@@ -110,6 +111,7 @@ router.get("/available-seats", async (req, res) => {
     let dates = req.query.dates.replace(/\[|\]/g, "").split(",").map(a => parseInt(a))
     let onsale = req.query.onsale == "false" ? false : true
 
+
     let sql = `
         SELECT * 
         FROM seats 
@@ -118,10 +120,17 @@ router.get("/available-seats", async (req, res) => {
         AND ( `
     let values = [onsale]
 
-    for (let i in dates) {
-        if (i != 0) sql += "OR "
-        sql += "date_id = ? "
-        values.push(dates[i])
+    console.log(dates)
+
+
+
+    for (let [i, dateID] of dates.entries()) {
+        console.log(i, dateID)
+        if (Number.isInteger(parseInt(dateID))) {
+            if (i != 0) sql += "\nOR "
+            sql += "date_id = ?"
+            values.push(dateID)
+        }
     }
 
     sql += ") ORDER BY block, section, row_name, seat_number" // so I can check for consecutive seats
@@ -199,12 +208,19 @@ router.get("/available-seats", async (req, res) => {
             }
         }
 
-        // need to collapse groups of same tickets for different dates e.g. seats 4-8 available dates 1, 2, and 4
+        // stringifyLog(suitableTickets)
 
-        // so instead of
+        suitableTickets.sort((a, b) => {
+            if (req.query.orderby == "ASC") {
+                return a.tickets.seats[0].price - b.tickets.seats[0].price
+            } else /*if (req.query.orderby == "DESC")*/ {
+                return b.tickets.seats[0].price - a.tickets.seats[0].price
+            }
+        })
 
         return res.json(suitableTickets)
     }
+
 
     return res.json(rows)
 })

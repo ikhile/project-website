@@ -7,6 +7,7 @@ import { router as apiRouter } from './routes/api.js'
 import { router as accountRouter } from './routes/account.js'
 import { router as payRouter } from './routes/pay.js'
 import { router as searchRouter } from './routes/search.js'
+import { router as webhooksRouter } from './routes/webhooks.js'
 import * as datefns from 'date-fns'
 import * as helpers from './helpers.js'
 import bodyParser from 'body-parser' // https://stackoverflow.com/a/27855234
@@ -112,6 +113,7 @@ app.use('/events', eventsRouter)
 app.use('/api', apiRouter)
 app.use('/pay', payRouter)
 app.use('/search', searchRouter)
+app.use('/webhooks', webhooksRouter)
 
 // app.use('/search', require('./routes/search-results.js'))
 // app.use('/account', require('./routes/account.js'))

@@ -7,6 +7,9 @@
 {{/if}}
 
 <form action="login" method="POST">
+    {{#each query}}
+        <input name={{@key}} value={{this}} hidden> {{! to pass query through to login post page }}
+    {{/each}}
     <label for="email">Email</label><input type="email" name="email" id="email" required>
     <br>
     <label for="password">Password</label><input type="password" name="password" id="password" required>

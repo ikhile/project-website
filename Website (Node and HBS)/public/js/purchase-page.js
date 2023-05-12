@@ -4,22 +4,18 @@ const venueID = window.location.href.match(/venue\/(\d*)/)[1]
 let selectedDateIDs = [], numDates = $("input[name=date]").length
 let ticketQty, qtyInput = $('input[name="qty"]')
 let ticketResponse, ticketResIndex
+let availableSort = "DESC"
 
 $(document).ready(async function () {
-    console.log("PAGE RELOADED")
-
     $("#change-city-btn").click(toggleCityPopup)
     $("#change-city-modal").click(toggleCityPopup)
-
-    // getting from API/db
-    // const tours = await fetch('/api/tours')
-    // console.log(await tours.json())//.then((res) => res.data))
-    // console.log(await (await fetch('/api/tours')).json())//.then((res) => res.data))
-
     $(".city-card").click(function () {
         // if data-venue-id == current venue id then just close popup without going to a new page
         if ($(this).attr("data-venue-id") != venueID) {
             window.location.href = `/events/purchase/tour/${$(this).attr("data-tour-id")}/venue/${$(this).attr("data-venue-id")}`
+
+        } else {
+            $('#change-city-modal').css('display', 'none')
         }
     })
 
@@ -59,6 +55,23 @@ $(document).ready(async function () {
     })
 
     updateDates()
+
+    // if reached page from stripe cancel url, will alert user that their purchase has been cancelled and remove cancelled parameter from url so it does not stay on refresh
+    if (params.has("cancelled")) {
+        let url = new URL(window.location)
+        url.searchParams.delete("cancelled")
+        window.history.pushState({}, "", url)
+
+        alert("You cancelled your previous purchase and have not been charged.")
+    }
+
+    if (params.has("error")) {
+        let url = new URL(window.location)
+        url.searchParams.delete("error")
+        window.history.pushState({}, "", url)
+
+        alert("There was an error while trying to process your purchase. Please try again.")
+    }
 })
 
 async function fetchData(url) {
@@ -95,16 +108,14 @@ async function updateAvailableSeats() {
     ticketQty = $("input[name=qty]").val() // TODO constrain again just to be sure
     let dateQry = `[${selectedDateIDs.join(",")}]`
 
-    console.log(dateQry)
-
-    let url = `/api/available-seats?tour=${tourID}&dates=${dateQry}&qty=${ticketQty}`
+    let url = `/api/available-seats?tour=${tourID}&dates=${dateQry}&qty=${ticketQty}&orderby=${availableSort}`
     ticketResponse = await fetchData(url)
 
     setTimeout(() => { 
 
         if (ticketResponse.length > 0) {
             let context = {
-                availableTickets: ticketResponse
+                availableTickets: ticketResponse,
             }
         
             renderTemplate($("#available-tickets"), "/views/available-tickets.hbs", context)
@@ -120,7 +131,8 @@ async function updateAvailableSeats() {
                         ticketGroups: ticketResponse[ticketResIndex].tickets,
                         singleTicket: ticketQty == 1,
                         tourID: tourID,
-                        venueID: venueID
+                        venueID: venueID,
+                        currentURL: window.location.href
                     }
 
                     renderTemplate($("#select-seats-modal"), "/views/select-seats.hbs", context)
@@ -136,6 +148,10 @@ async function updateAvailableSeats() {
                                 $("#select-seats-modal").css("display", "none")
                             })
                         })
+                })
+
+                $(".sort-tix").click(function() {
+                    availableSort = $(this).attr("data-sort-order")
                 })
 
             })            
@@ -169,8 +185,6 @@ function selectFilterSeats() {
 
         
     })
-
-    // console.log($("#select-seats-modal select[name=seats]").val())
 }
 
 async function renderTemplate(container, template, context) {

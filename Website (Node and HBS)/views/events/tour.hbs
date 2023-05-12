@@ -8,10 +8,13 @@
 {{#if onsale}}
     <p>
         Tickets for this event are on sale now!
-        <button id="purchase" class="btn btn-primary">Find tickets</button>
+        {{!-- <a href=" class="btn btn-primary""></a>
+        {{if (isAuth req)}} --}}
+        <button id="purchase" class="btn btn-primary" onclick="purchaseClick({{isAuth req}}, {{event.tour_id}})">Find tickets</button>
+        {{!-- {{/else}} --}}
     </p>
 
-    <div id="change-city-modal" class="modal flex-column">
+    <div id="change-city-modal" class="modal d-none flex-column">
         {{> city-cards}}
     </div>
 
@@ -20,16 +23,55 @@
     <p>Tickets will be released at the below times - sign up to be notified and buy tickets at a time that suits you!</p>
 
     {{! Open a grid layout for not onsale only}}
-    <div class="container-fluid row">
-        <main class="col-6">
+    {{!-- <div class="container-fluid row">
+        <main class="col-6"> --}}
+
+    {{#each slots}}
+            <div class="m-auto col-6 text-center">
+                {{#if (isFuture this.start)}}
+                    <h3>
+                        {{#if (isThisYear this.start)}}
+                            {{formatDate this.start "EEEE do LLLL"}}
+                        {{else}}
+                            {{formatDate this.start "EEEE do LLLL yyyy"}}
+                        {{/if}}
+                        <p class="fs-4">
+                            <span class="text-uppercase text-muted small">Start</span> {{formatDate this.start "HH:mm"}}
+                            <span class="text-uppercase text-muted small">End</span> {{formatDate this.end "HH:mm"}}
+                        </p>
+                    </h3>
+                    <button class="btn btn-secondary btn-block">Sign Up</button>
+                {{else}}
+                    {{#if (isFuture this.end)}}
+                        <p>Slot happening now</p>
+                        <button>Purchase</button>
+                    {{else}}
+                        <p>Slot has ended</p>
+                        <button disabled="disabled">Purchase</button>
+                    {{/if}}
+                {{/if}}
+            </div>
+        {{/each}}
 {{/if}}
 
 <h3>Dates & Venues</h3>
 <p>Info goes here</p>
 <p class="comment">If tour is on sale there should be links direct to purchase tickets maybe? Or find tickets button shows city cards? Idk but something</p>
+<table class="m-auto">
+    {{#each dates}}
+        {{!-- <div class="row"> --}}
+            <tr>
+                <td class="text-end pe-2" style="vertical-align: top">{{formatDate this.date 'EEE do LLL'}}</td>
+                <td class="ps-1 pb-2">{{this.city}}<br>{{this.venue_name}}</td>
+            </tr>
+            
+        {{!-- </div> --}}
+    {{/each}}
+</table>
+
 {{!-- <p class="comment">Actually fuck that maybe the city cards should be here</p> --}}
 
-{{#unless onsale}} {{! continue the grid layout opened before}}
+{{!-- {{#unless onsale}} {{! continue the grid layout opened before}}
 
     </main> {{! close the main opened in first if block}}
 
@@ -62,7 +104,7 @@
         {{/each}}
     </aside>
 </div>
-{{/unless}}
+{{/unless}} --}}
 
 {{!-- Should put scripts in a section but didn't work... figure out later --}}
 <script src="/js/tour-{{#unless onsale}}not-{{/unless}}onsale.js"></script>

@@ -78,12 +78,13 @@ export async function getEventById(tourID) {
     return rows[0]
 }
 
-export async function getEventDatesById(tourID) {
+export async function getTourDates(tourID) {
     const [rows] = await pool.query(`
         SELECT * 
         FROM dates 
         INNER JOIN venues ON dates.venue_id = venues.venue_id
         WHERE tour_id = ?
+        ORDER BY date ASC
     `, tourID)
 
     return rows
@@ -245,14 +246,36 @@ export async function getSeats(...seatIDs) {
         return seats
 
     } else if (seats.length < seatIDs.length) {
+        console.log("Not all seats found - may be an issue with one or more seat IDs")
         throw new Error("Not all seats found - may be an issue with one or more seat IDs")
 
     } else if (seats.length > seatIDs.length) {
+        console.log("Somehow found more seats than expected...")
         throw new Error("Somehow found more seats than expected...")
     }
 }
 
-console.log(await getSeats(1, 2, 3))
+export async function setSeatStatus(status, seatIDs) {
+    let query = `
+        UPDATE seats
+        SET status = ?
+    `
+
+    let values = [status]
+
+    for (let [i, seatID] of seatIDs.entries()) {
+        query += `\n${i == 0 ? "WHERE" : "OR"} seat_id = ?`
+        values.push(seatID)
+    }
+
+    const [{affectedRows}] = await pool.query(query, values)
+
+    return affectedRows
+}
+
+// console.log(await setSeatStatus("test", [2]))
+
+// USERS
 
 export async function addUser(firstName, lastName, email, hashedPassword) {
     
@@ -263,7 +286,6 @@ export async function addUser(firstName, lastName, email, hashedPassword) {
     `, [firstName, lastName, email, hashedPassword], 
         async (error, result) => { 
         if (error) {
-            console.log("!!!", "error")
             return error
         } else {
             return await result[0].insertId
@@ -273,6 +295,18 @@ export async function addUser(firstName, lastName, email, hashedPassword) {
         console.error(error)
     }
 
+}
+
+// STRIPE
+
+export async function updateStripeID(userID, stripeID) {
+    await pool.query(`
+        UPDATE users
+        SET stripe_id = ?
+        WHERE user_id = ?
+    `, [stripeID, userID])
+
+    return await getUserById(stripeID)
 }
 
 export async function getUsers() {

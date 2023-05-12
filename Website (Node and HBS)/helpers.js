@@ -156,13 +156,12 @@ export function htmlify(string) {
     // console.log(parser.write(string))
     // return parser.write(string)
 
-    console.log(htmlparser.parseDocument(string))
+    // console.log(htmlparser.parseDocument(string))
 
     return htmlparser.parseDocument(string)
 }
 
 export function isAuth(req) {
-    console.log("???", req.isAuthenticated())
     return req.isAuthenticated()
 }
 

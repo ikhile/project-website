@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS seats (
     onsale BOOLEAN,
     available BOOLEAN,
     price DECIMAL(7, 2),
+    status VARCHAR(255),
     
     PRIMARY KEY (seat_id),
     FOREIGN KEY (date_id) REFERENCES dates(date_id),
@@ -170,5 +171,4 @@ CREATE TABLE IF NOT EXISTS users (
     PRIMARY KEY (customer_id),
     UNIQUE (email)
 );
-
 

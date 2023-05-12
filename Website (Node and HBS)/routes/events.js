@@ -25,8 +25,6 @@ router.get('/', async (req, res) => {
         events: events
     }
 
-    stringifyLog(context.events)
-
     res.render('events/events', context)
 })
 
@@ -52,12 +50,10 @@ router.get('/tour/:tour_id', async (req, res) => {
     
     const event = await api.get(`tours/${req.params.tour_id}`).then((res) => res.data)
     const venues = await api.get(`tours/${req.params.tour_id}/venues`).then((res) => res.data)
+    const dates = await db.getTourDates(req.params.tour_id)
 
     // will want to establish whether the tour is on sale yet - possibly render different templates
     // let isOnsale = true
-
-
-
 
     // if is on sale, all seats for that tour will have onsale = true
     let isOnsale = await api.get(`tours/${req.params.tour_id}/all-onsale`).then(res => res.data.allOnsale)
@@ -65,7 +61,8 @@ router.get('/tour/:tour_id', async (req, res) => {
     let context = {
         event: event,
         venues: venues,
-        onsale: isOnsale
+        onsale: isOnsale,
+        dates: dates
     }
 
     if (isOnsale) {
@@ -77,44 +74,19 @@ router.get('/tour/:tour_id', async (req, res) => {
     } else {
         context.slots = await api.get(`/tours/${req.params.tour_id}/purchase-slots`).then(res => res.data)
     }
-
-    // if (isOnsale) {
-    //     let context = {
-    //         cardContext: {
-    //         },
-    //         event: event
-    //     }
-
-    //     // res.render('events/tour-onsale', context)
-    // }
-
-    // else {
-    //     let context = {
-    //         event: event,
-    //         venues: venues,
-    //         slots: await api.get(`/tours/${req.params.tour_id}/purchase-slots`).then(res => res.data)
-    //     }
-        
-    //     console.log(context)
-    //     // res.render('events/tour-not-onsale', context)
-
-    // }
-
-    // res.json(context)
+    
     res.render('events/tour', context)
 })
 
 router.get('/tour/:tour_id/waiting-list', async (req, res) => {
     const tourID = req.params.tour_id
     const venueID = req.query.venue
-    console.log(tourID, venueID)
 
     let context = {
         tour: await api.get(`tours/${req.params.tour_id}`).then((res) => res.data),
         venues: await api.get(`tours/${req.params.tour_id}/venues`).then((res) => res.data)
     }
 
-    stringifyLog(context)
     res.render('events/waiting-list-signup', context)
 })
 

@@ -1,4 +1,3 @@
-{{log qty}}
 <div class="bg-white p-3 rounded col-10">
     <div class="d-flex justify-content-between" >
         <h1 class="">Block {{block}} Section {{section}} Row {{row}}</h1>
@@ -24,7 +23,6 @@
 
             <label for="seats" class="h4 text-center d-block">Seat{{#unless singleTicket}}s{{/unless}}</label>
             <select class="form-select" name="seats" required>
-                {{log ticketGroups}}
                 <option value="" hidden selected>Select your seat{{#unless singleTicket}}s{{/unless}}</option> {{! empty value for validation, hidden so doesn't appear in list, selected so shows like a placeholder}}
                 {{#each ticketGroups}}
                     <option value="{{this.seat_ids}}" data-date-id="{{this.date_id}}">
@@ -34,6 +32,11 @@
             </select>
 
         <p class="comment">Need to change /create-checkout-session to use seats value as prod ids, validate that seats != "select your seats"</p>
+
+        {{!-- hidden inputs for session cancel redirect values --}}
+        <input name="tourID" value={{tourID}} hidden>
+        <input name="venueID" value={{venueID}} hidden>
+        <input name="currentUrl" value={{currentURL}} hidden>
 
         <button id="purchase" class="btn btn-primary col-12">
             Purchase
@@ -51,5 +54,3 @@
 
     
 </div>
-
-{{log @root}}
