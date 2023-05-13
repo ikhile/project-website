@@ -16,14 +16,10 @@ $(document).ready(() => {
 })
 
 function purchaseClick(isAuth, tour) {
-    console.log(isAuth, tour)
     if (isAuth) {
-        console.log("auth")
         $("#change-city-modal").removeClass("d-none")
         $("#change-city-modal").addClass("d-flex")
     } else {
-        console.log("not auth")
-        // window.location.href = `/events/purchase/tour`
         window.location.href = `/account/login?alert=to-purchase&redirect=/events/purchase/tour/${tour}&tour=${tour}`
     }
 }

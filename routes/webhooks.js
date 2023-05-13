@@ -1,13 +1,13 @@
 import express from 'express'
-import * as db from '../database.js';
-// import { createCheckoutSession, createStripeCustomer, constructWebhookEvent } from '../stripe.js';
-import api from '../index.js';
+import * as db from '../database.js'
+// import { createCheckoutSession, createStripeCustomer, constructWebhookEvent } from '../stripe.js'
+import api from '../index.js'
 import Stripe from "stripe"
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 
 
-export const router = express.Router();
+export const router = express.Router()
 
 router.post("/", express.raw({type: 'application/json'}), async (req, res) => {
 

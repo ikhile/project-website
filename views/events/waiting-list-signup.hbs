@@ -1,14 +1,39 @@
-<main class="text-center bg-white w-75 m-auto">
+<main class="text-center bg-white w-75 mx-auto my-4">
 
-    <form id="waiting-list-form" class="m-auto border rounded d-inline-block p-3">
+    <p id="alert-error" class="alert alert-danger d-none">There was an error. Please try again.</p>
+
+    <form id="waiting-list-form" method="POST" class="m-auto border rounded d-inline-block p-3">
         <h2 class="mt-2 mb-3">Sign up for waiting list</h2>
-        <p>Complete the form below to be notified when more tickets are released for</p>
+        <p id="info">Complete the form below to be notified when more tickets are released for:</p>
         <p class="h4">{{tour.artist_name}} - {{tour.tour_name}}</p>
 
-        <hr>
+        <p id="alert-success" class="alert alert-success d-none">Thank you for signing up!</p>
+
+        <hr class="col-11 mx-auto">
+
+        <section>
+            {{!-- <h3>Number of Tickets</h3> --}}
+            <label for="ticket-qty" class="col-9 m-auto">Please enter the minimum number of tickets you would like. You will be notified each time a group of at least this many tickets is released.<br>Maximum: {{tour.ticket_limit}}</label>
+            {{!-- <br> --}}
+            {{!-- <label for="ticket-qty">Tickets wanted (max: 4)</label>{{! later use tour.ticketLimit}} --}}
+            <input 
+                id="ticket-qty" 
+                name="qty" 
+                type="number"
+                max="4" {{! later use tour.ticketLimit}}
+                {{!-- oninvalid="this.setCustomValidity('Please enter the minimum number of tickets you would like')" --}} {{!https://stackoverflow.com/a/41357883}}
+                required
+                class="my-3 text-center"
+            >  
+        </section>
+
+        <hr class="col-11 mx-auto">
 
         <section id="waiting-list-dates">
-            <h3 style="grid-column: 1 / -1">Venues & Dates</h3>
+            <h3>Venues & Dates</h3>
+            <p id="venue-error" class="d-none alert alert-danger d-none p-3 col-10 mx-auto">
+                Please select 1 or more venues. 
+            </p>
             <table class="m-auto">
                 {{#each venues}}
                     <tr>
@@ -21,8 +46,10 @@
                                     id="venue-{{this.venue_id}}" 
                                     value="{{this.venue_id}}"
                                     data-venue-id="{{this.venue_id}}"
+                                    {{!-- oninvalid="this.setCustomValidity('Please choose at least one venue.')"
+                                    required --}}
                                 >
-                                <label for="venue-{{this.venue_id}}" class="control-label position-relative">{{this.city}} - <i>{{this.venue}}</i></label>
+                                <label for="venue-{{this.venue_id}}" class="control-label position-relative d-flex">{{this.city}} -&nbsp;<i>{{this.venue}}</i></label>
                             </div>
                         </td>        
 
@@ -30,7 +57,8 @@
                         <td>
                             <select
                                 {{!-- id="select-dates-venue-{{this.venue_id}}" --}}
-                                name="dates-venue-{{this.venue_id}}"
+                                name="dates"
+                                {{!-- name="dates-venue-{{this.venue_id}}" --}}
                                 class="selectpicker"
                                 title="Select dates for {{this.city}}"
                                 data-selected-text-format="count > 2"
@@ -40,7 +68,7 @@
                                 multiple
                             >
                                 {{#each this.dates}}
-                                        <option title="{{formatDate this.date 'do LLL'}}" value={{this.date_id}}>{{formatDate this.date 'EEE do LLLL'}}</option>
+                                        <option title="{{formatDate this.date 'do LLL'}}" value={{this.date_id}}>{{formatDate this.date "EEEE do LLLL yyyy"}}</option>
                                 {{/each}}
                             </select>
                         </td>
@@ -52,9 +80,9 @@
                 {{!-- <p class="comment">Would love some "All dates selected" text but can't see how to do that UNLESS I set max options to all and set some max options text...?</p> --}}
         </section>
 
-        <hr>
+        <hr class="col-11 mx-auto">
 
-        <button type="submit" class="btn btn-primary {{!btn-block w-100}}">
+        <button type="submit" class="btn btn-primary my-2 {{!btn-block w-100}}">
             Sign Up
         </button>
     </form>

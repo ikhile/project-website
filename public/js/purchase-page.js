@@ -40,7 +40,7 @@ $(document).ready(async function () {
     $("#decrease-tickets").click(decreaseQty)
 
 
-    $("#purchase").click(function(e) {
+    $("#purchase").click(function(e) { // don't think I need ANY of this
         // temp solution - later get use seat ids from database both here and in stripe...
         let allProductIDs = [
             "prod_Nmi1R3RRdP2r5l",
@@ -201,7 +201,7 @@ function toggleCityPopup() {
     switch(popup.css('display')) {
         case "none":
             popup.css('display', 'flex')
-            break;
+            break
         default:
             popup.css('display', 'none')
     }

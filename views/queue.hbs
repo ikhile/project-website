@@ -1,3 +1,38 @@
 <h2>Queue</h2>
 
 <a href="venue/{{qry.venue}}" class="btn btn-primary">Purchase</a>
+
+<script type="application/javascript">
+    $(document).ready(function() {
+        //const tour_id = 
+        //const user = JSON.stringify({{req.user}})
+        //console.log(tour_id) 
+        $.post('/api/user-join-queue', {
+            "tour_id": {{req.params.tour_id}},
+            //"user": user
+        })
+    })
+
+    $(window).on("pagehide", function(event) {
+        $.post('/api/queue-test', {val: "page hide"})
+        console.log("page hide")
+    })
+
+    // beforeunload seems to work best - used db so it doesn't immediately disappear after console log
+    // async causes a "are you sure you want to leave" alert
+    // actually pagehide works too and is recommended by mozilla
+    // also this is on wrong page... 
+    // wanna use on of these events to update the queue, then probably use a setinterval on this page to let users know when they reach front of the queue
+    $(window).on('beforeunload', function(event) {
+        $.post('/api/queue-test', {val: "before unload"})
+        console.log("before unload")
+
+        // REMOVE USER FROM QUEUE
+        
+    })
+
+    /*$(window).on('unload', async function(event) {
+        await $.post('/api/queue-test', {val: "unload"})
+        console.log("unload")
+    })*/
+</script>

@@ -1,5 +1,5 @@
 import Stripe from "stripe"
-import * as db from './database.js';
+import * as db from './database.js'
 import * as datefns from 'date-fns'
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)

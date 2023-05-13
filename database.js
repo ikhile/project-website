@@ -347,3 +347,103 @@ export async function checkEmailAvailable(email) {
 // const events = await getAllEvents()
 // console.log(await getVenueById(1))
 // process.exit()
+
+export async function getTourQueue(tourID) {
+    let [queue] = await pool.query(`
+        SELECT * from queues WHERE tour_id = ?
+    `, tourID)
+
+    if (!queue.length) {
+        [queue] = await pool.query(`
+            INSERT INTO queues (tour_id) VALUES(?)
+        `, tourID)
+    }
+
+    return queue
+}
+
+export async function addUserToQueue(tourID, userID) {
+    const [queueObj] = await getTourQueue(tourID)
+
+    // this doesn't work - if user is already in queue it keeps them at earlier position rather than moving to end
+    // let queueSet = new Set((queueObj.queue?.split(",") ?? []).map(a => parseInt(a)))
+    // queueSet.add(userID)
+    // let queueVal = Array.from(queueSet).join(",")
+
+    let queueArr = queueObj.queue?.replace(/\[|\]/g, "").split(",").map(a => parseInt(a)) ?? []
+    console.log(queueArr)
+
+    queueArr = queueArr.filter(a => a != userID)
+    console.log(queueArr)
+
+    queueArr.push(userID)
+
+    await pool.query(`
+        UPDATE queues
+        SET queue = ?
+        WHERE queue_id = ?
+    `, [`[${queueArr.join(",")}]` ,queueObj.queue_id])
+    console.log(queueArr)
+}
+
+export async function removeUserFromQueue(tourID, userID) {
+    const [queueObj] = await getTourQueue(tourID)
+
+    let queueArr = queueObj.queue?.replace(/\[|\]/g, "").split(",").map(a => parseInt(a)) ?? []
+
+    if (queueArr.length) {
+        queueArr = queueArr.filter(a => a != userID)
+    }
+
+    await pool.query(`
+        UPDATE queues
+        SET queue = ?
+        WHERE queue_id = ?
+    `, [`[${queueArr.join(",")}]` ,queueObj.queue_id])
+
+    console.log(queueArr)
+}
+
+// addUserToQueue(1, 6)
+
+export async function addUserToWaitingList(userID, dateIDs, qty) {
+
+    let [[{waiting_lists: waitingLists}]] = await pool.query(`
+        SELECT (waiting_lists) FROM users WHERE user_id = ?
+    `, userID)
+
+    // console.log(!!waitingLists)
+
+    // if (!!waitingLists) waitingLists = JSON.parse(waitingLists)
+    // waitingLists = !!waitingLists
+
+    waitingLists = !!waitingLists ? JSON.parse(waitingLists) : []
+
+    for (let dateID of dateIDs) {
+        let insertObj = { date_id: dateID, qty: qty }
+        let ind = waitingLists.findIndex(a => a.date_id == dateID)
+        if (ind >= 0) waitingLists[ind] = insertObj
+        else waitingLists.push(insertObj)
+    }
+
+    waitingLists = JSON.stringify(waitingLists)
+
+    await pool.query(`
+        UPDATE users
+        SET waiting_lists = ?
+        WHERE user_id = ?
+    `, [waitingLists, userID])
+
+    // EMAIL USER
+    const { email } = await getUserById(userID)
+    console.log(await email)
+} 
+
+// addUserToWaitingList(1, [2, 3, 5], 3)
+
+export async function findUsersOnWaitingListByDateId(dateID) {
+    const [users] = await pool.query(`SELECT * FROM users WHERE waiting_lists REGEXP '\"date_id\":?'`, dateID)
+    return users
+}
+
+// console.log(await findUsersOnWaitingListByDateId(5))

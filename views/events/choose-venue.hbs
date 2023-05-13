@@ -1,1 +1,9 @@
 {{> city-cards}}
+
+<script>
+    $(document).ready(() => {
+        $(".city-card").click(function () {
+            window.location.href = `/events/purchase/tour/${$(this).attr("data-tour-id")}/venue/${$(this).attr("data-venue-id")}`
+        })
+    })
+</script>

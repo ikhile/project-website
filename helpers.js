@@ -3,9 +3,9 @@ import * as htmlparser from 'htmlparser2'
 
 // 
 export function section (name, options) {
-    if(!this._sections) this._sections = {};
-    this._sections[name] = options.fn(this);
-    return null;
+    if(!this._sections) this._sections = {}
+    this._sections[name] = options.fn(this)
+    return null
 }
 
 export function formatDate(date, format) {

@@ -1,9 +1,11 @@
 import express from 'express'
-import * as db from '../database.js';
+import * as db from '../database.js'
 import * as datefns from 'date-fns'
-import { stringifyLog } from './events.js';
+import { stringifyLog } from './events.js'
 
-export const router = express.Router();
+export const router = express.Router()
+
+
 
 router.get("/tours", async (req, res) => {
     res.json(await db.getAllEvents())
@@ -120,12 +122,8 @@ router.get("/available-seats", async (req, res) => {
         AND ( `
     let values = [onsale]
 
-    console.log(dates)
-
-
 
     for (let [i, dateID] of dates.entries()) {
-        console.log(i, dateID)
         if (Number.isInteger(parseInt(dateID))) {
             if (i != 0) sql += "\nOR "
             sql += "date_id = ?"
@@ -228,7 +226,7 @@ router.get("/available-seats", async (req, res) => {
 
 router.get("/tours/:tour_id/purchase-slots", async (req, res) => {
     const [slots] = await db.pool.query(`
-        SELECT * FROM purchase_slots WHERE tour_id = ?;
+        SELECT * FROM purchase_slots WHERE tour_id = ?
     `, req.params.tour_id)
 
     res.json(slots)
@@ -238,6 +236,45 @@ router.get("/email-available", async (req, res) => {
     res.json({
         emailAvailable: await db.checkEmailAvailable(req.query.email)
     })
+})
+
+router.post("/queue-test/", async (req, res) => {
+    console.log(req.body, req.body.val)
+    await db.pool.query(`
+        INSERT INTO queue_test (test) VALUES("${req.body.val}")
+    `)
+})
+
+router.post("/user-join-queue", async (req, res) => {
+    console.log("sanity check")
+    // console.log(req.body.tour_id)
+    // const queue = await db.getTourQueue(req.body.tour_id)
+
+    // console.log(req.user.user_id)
+
+    if (!req.user) {
+        return res.redirect(req.originalUrl)
+    }
+    await db.addUserToQueue(req.body.tour_id, req.user.user_id)
+    
+    
+    // if (await db.getQu)
+    // const [queue] = await.db.
+    // await db.pool.query(`
+    //     INSERT INTO queue ()
+    // `)
+})
+
+router.post("/user-leave-queue", async (req, res) => {
+    if (!req.user) {
+        return res.redirect(req.originalUrl)
+    }
+
+    try {
+        await db.removeUserFromQueue(req.body.tour_id, req.user.user_id)
+    } catch (err) {
+        console.error(err)
+    }
 })
 
 

@@ -8,6 +8,8 @@
 
 {{#if (compareValues query.alert '==' 'to-purchase')}}
     <p class="alert alert-primary">Please log in to purchase tickets.</p>
+{{else if (compareValues query.alert '==' 'login-required')}}
+    <p class="alert alert-primary">You must be logged in to access this page.</p>
 {{/if}}
 
 <form action="login" method="POST">

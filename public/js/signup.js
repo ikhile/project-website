@@ -5,7 +5,16 @@ $(document).ready(function() {
     let params = new URLSearchParams(window.location.search)
     let paramVenues = params.getAll('venue')
 
-    // console.log(paramVenues)
+    if (params.has("alert")) {
+        switch (params.get("alert")) {
+            case "success":
+                $("p#info").addClass("d-none")
+                $("p#alert-success").removeClass("d-none")
+                break
+            case "error":
+                $("p#alert-error").removeClass("d-none")
+        }
+    }
 
     // check any pre-selected venues from query string
     for (let venue of paramVenues) {
@@ -26,20 +35,40 @@ $(document).ready(function() {
     $("input[name=venues]").on("input", function(e) {
         // console.log(e.target)
         showHideDateSelect(e.target)
+        $("#venue-error").addClass("d-none")
 
         // console.log($(e.target).is(":checked"))
     })
 
-    $("#waiting-list-form").on("submit", function(e) {
+    if (params.has("qty")) {
+        $("#ticket-qty").val(params.get("qty"))
+        limitQtyInput()
+    }
 
-        if ($("input[name=venues]:checked").length < 1) {
-            alert("Please select one or more venues")
-            e.preventDefault()
-        }
-
-    })
+    $("#ticket-qty").on("focusout", limitQtyInput)
+    $("#waiting-list-form").on("submit", (e) => formSubmit(e))
 })
 
+function limitQtyInput() {
+    if (parseInt($("#ticket-qty").val()) > parseInt($("#ticket-qty").attr("max"))) {
+        $("#ticket-qty").val($("#ticket-qty").attr("max"))
+    }
+
+    if (parseInt($("#ticket-qty").val()) < 1) {
+        $("#ticket-qty").val(1)
+    }
+}
+
+function formSubmit(e) {
+    limitQtyInput()
+
+    if ($("input[name=venues]:checked").length < 1) {
+        // alert("Please select one or more venues")
+        $("#venue-error").removeClass("d-none")
+        e.preventDefault()
+    }
+
+}
 
 function showHideDateSelect(eventTarget, transition = true, openDates = true) {
     // console.log(new Date())

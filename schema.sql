@@ -167,8 +167,23 @@ CREATE TABLE IF NOT EXISTS users (
     last_name VARCHAR(255),
     email VARCHAR(255),
     password VARCHAR(255),
+    waiting_lists VARCHAR(255),
 
     PRIMARY KEY (customer_id),
     UNIQUE (email)
 );
 
+CREATE TABLE IF NOT EXISTS queue_test (
+	test VARCHAR(255)
+);
+
+CREATE TABLE IF NOT EXISTS queues (
+	queue_id INT NOT NULL AUTO_INCREMENT,
+	tour_id INT UNIQUE,
+    queue TEXT, -- square bracket wrapped, comma separated array of user ids that are currently in queue
+    capacity INT DEFAULT 1, -- number allowed on page at once, default is 1
+    headcount INT, -- number of people on page. if less than capacity, can let next person in queue onto the page
+    
+    PRIMARY KEY (queue_id),
+    FOREIGN KEY (tour_id) references tours(tour_id)
+);

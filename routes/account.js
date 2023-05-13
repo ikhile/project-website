@@ -1,11 +1,12 @@
 import express from 'express'
-export const router = express.Router();
-import * as bcrypt from 'bcrypt'
 import passport from 'passport'
+import * as bcrypt from 'bcrypt'
 import * as pconfig from '../passport-config.js'
 import * as flash from 'express-flash'
 import * as session from 'express-session'
 import * as db from '../database.js'
+
+export const router = express.Router()
 
 pconfig.passportInit(
     passport, 
@@ -35,41 +36,11 @@ router.get('/login', (req, res) => {
 
 let successRedirect = '/account'
 
-router.post('/login', passport.authenticate('local', {
-    // successRedirect: successRedirect,
-    failureRedirect: 'login',
-    failureFlash: true,
-}), (req, res) => { // https://stackoverflow.com/a/70171106
-    console.log(req.body)
-    // if (!!req.body.redirect) {
-        res.redirect(req.body.redirect ?? '/account')
-    //     switch (req.body.redirect) {
-    //         case "purchase":
-    //             res.redirect(`/events/purchase/tour/${req.body.tour}`)
-    //             break
-    //         default:
-    //             res.redirect("/account")
-    //     }
-    // }
-})
-
-function loginRedirect(req, res, next) {
-    console.log("!!!", req.query, req.body)
-    console.log(!!req.body.redirect)
-
-    // req.vars.successRedirect = !!req.body.redirect ? 
-    // successRedirect = "null"
-
-
-    if (!!req.body.redirect) {
-        if (req.body.redirect == "purchase")
-        successRedirect = `/events/purchase/tour/${req.body.tour}`
-    }
-
-    console.log(successRedirect)
-
-    next()
-}
+router.post(
+    '/login', 
+    passport.authenticate('local', { failureRedirect: 'login', failureFlash: true, }), 
+    (req, res) => res.redirect(req.body.redirect ?? '/account') // https://stackoverflow.com/a/70171106 
+)
 
 router.get('/register', (req, res) => {
     res.render('account/register', {query: req.query})

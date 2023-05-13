@@ -1,8 +1,8 @@
 import express from 'express'
-import api, { checkAuthRedirect } from '../index.js';
-import * as db from '../database.js';
+import api, { checkAuthRedirect } from '../index.js'
+import * as db from '../database.js'
 
-export const router = express.Router();
+export const router = express.Router()
 export const stringifyLog = (input) => console.log(JSON.stringify(input, null, 2))
 
 router.get('/', async (req, res) => {
@@ -54,7 +54,7 @@ router.get('/tour/:tour_id', async (req, res) => {
     res.render('events/tour', context)
 })
 
-router.get('/tour/:tour_id/waiting-list', async (req, res) => {
+router.get('/tour/:tour_id/waiting-list', checkAuthRedirect, async (req, res) => {
     const tourID = req.params.tour_id
     const venueID = req.query.venue
 
@@ -71,7 +71,26 @@ router.get('/tour/:tour_id/waiting-list', async (req, res) => {
     res.render('events/waiting-list-signup', context)
 })
 
+router.post('/tour/:tour_id/waiting-list', checkAuthRedirect, async(req, res) => {
+    // const redirectUrl = new URL(req.originalUrl) // can't set search params and only using relative path
+    let redirectUrl = req.originalUrl
+
+    console.log(req.search) // could use that to check if there's params already
+
+    try {
+        await db.addUserToWaitingList(req.user.user_id, req.body.dates, req.body.qty)
+        redirectUrl += (/\?/.test(req.originalUrl) ? "&" : "?") + "alert=success"
+
+    } catch (err) {
+        console.error(err)
+        redirectUrl += (/\?/.test(req.originalUrl) ? "&" : "?") + "alert=error"
+    }
+
+    res.redirect(redirectUrl)
+})
+
 router.get('/purchase/tour/:tour_id/queue/', checkAuthRedirect, async (req, res) => {
+    console.log(req.user)
     let context = {
         event: await db.getEventById(req.params.tour_id),
         qry: req.query
@@ -81,7 +100,6 @@ router.get('/purchase/tour/:tour_id/queue/', checkAuthRedirect, async (req, res)
 })
 
 router.get('/purchase/tour/:tour_id/', checkAuthRedirect, async (req, res) => {
-    console.log(req.originalUrl)
     let context = {
         cardContext: {
             event: await api.get(`tours/${req.params.tour_id}`).then((res) => res.data),
@@ -123,7 +141,7 @@ router.get('/artist/:artist_id', (req, res) => {
     // let artist = loadArtist(req.params.artist)
 
     // if (!artist) {
-    //     res.status(404).render('events/404');
+    //     res.status(404).render('events/404')
     //     return
     // }
 

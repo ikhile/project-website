@@ -1,8 +1,8 @@
-import * as db from './database.js';
+import * as db from './database.js'
 import * as helpers from './helpers.js'
 import * as exphbs from 'express-handlebars'
 import express from 'express'
-import axios from 'axios';
+import axios from 'axios'
 import flash from 'express-flash'
 import session from 'express-session'
 import passport from 'passport'
@@ -15,8 +15,8 @@ import { router as payRouter } from './routes/pay.js'
 import { router as searchRouter } from './routes/search.js'
 import { router as webhooksRouter } from './routes/webhooks.js'
 
-const app = express();
-const port = 3000;
+const app = express()
+const port = 3000
 const api = axios.create({ baseURL: 'http://localhost:3000/api/' })
 export default api
 
@@ -30,7 +30,7 @@ export default api
 
 // https://stackabuse.com/guide-to-handlebars-templating-engine-for-node/
 // const { engine } = require('express-handlebars')
-// const fs = require("fs");
+// const fs = require("fs")
 
 var hbs = exphbs.create({
     defaultLayout: 'main',
@@ -71,8 +71,9 @@ function mapHelpers() {
 }
 
 export function checkAuthRedirect(req, res, next) {
+    console.log("redirect")
     if (!req.user) {
-        res.redirect('/account/login?redirect=' + req.originalUrl)
+        res.redirect(`/account/login?alert=login-required&redirect=${req.originalUrl}`)
 
     } else {
         next()
@@ -101,4 +102,4 @@ app.use('/pay', payRouter)
 app.use('/search', searchRouter)
 app.use('/webhooks', webhooksRouter)
 
-app.listen(port, () => console.log(`App listening to port ${port}`))
+app.listen(port, 'localhost', () => console.log(`App listening to port ${port}`))
