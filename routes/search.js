@@ -5,6 +5,7 @@ import { stringifyLog } from './events.js'
 
 router.get('/', async (req, res) => {
     const context = {
+        req,
         query: req.query.query,
         results: await db.search(req.query.query)
     }

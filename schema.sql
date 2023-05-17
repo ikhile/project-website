@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS tours (
     tour_id INT NOT NULL AUTO_INCREMENT,
     artist_id INT NOT NULL,
     tour_name VARCHAR(255) NOT NULL,
+    ticket_limit INT NOT NULL DEFAULT 4,
 
     PRIMARY KEY (tour_id),
     FOREIGN KEY (artist_id) REFERENCES artists(artist_id)
@@ -36,12 +37,12 @@ CREATE TABLE IF NOT EXISTS dates (
 );
 
 CREATE TABLE IF NOT EXISTS purchase_slots (
-    purchase_slot_id INT NOT NULL AUTO_INCREMENT,
+    slot_id INT NOT NULL AUTO_INCREMENT,
     tour_id INT NOT NULL,
     start DATETIME,
     end DATETIME,
 
-    PRIMARY KEY (purchase_slot_id),
+    PRIMARY KEY (slot_id),
     FOREIGN KEY (tour_id) REFERENCES tours(tour_id)
 );
 
@@ -53,15 +54,15 @@ CREATE TABLE IF NOT EXISTS seats (
     general_admission BOOLEAN,
     row_name VARCHAR(255),
     seat_number INT,
-    purchase_slot_id INT,
+    slot_id INT,
     onsale BOOLEAN,
     available BOOLEAN,
     price DECIMAL(7, 2),
-    status VARCHAR(255),
+    status VARCHAR(255) DEFAULT "available",
     
     PRIMARY KEY (seat_id),
     FOREIGN KEY (date_id) REFERENCES dates(date_id),
-    FOREIGN KEY (purchase_slot_id) REFERENCES purchase_slots(purchase_slot_id)
+    FOREIGN KEY (slot_id) REFERENCES purchase_slots(slot_id)
 );
 
 CREATE TABLE IF NOT EXISTS customers (
@@ -146,11 +147,13 @@ SELECT @mcr_date_id;
 
 INSERT INTO purchase_slots (tour_id, start, end)
 VALUES
-	(@emails_tour_id, "2023-05-05 10:00:00", "2023-05-05 22:00:00");
+	(@emails_tour_id, "2023-05-15 00:00:00", "2023-05-15 22:00:00"),
+	(@emails_tour_id, "2023-05-23 9:00:00", "2023-05-05 15:00:00"),
+	(@emails_tour_id, "2023-05-30 20:00:00", "2023-05-30 9:00:00");
     
 SET @slot_id = last_insert_id();
 
-INSERT INTO seats (date_id, section, block, general_admission, purchase_slot_id, onsale, available, price)
+INSERT INTO seats (date_id, section, block, general_admission, slot_id, onsale, available, price)
 VALUES
 	(@mcr_date_id, "Stalls Standing", "Stalls Standing", true, @slot_id, false, true, 33.33),
 	(@mcr_date_id, "Stalls Standing", "Stalls Standing", true, @slot_id, false, true, 33.33),
@@ -182,8 +185,39 @@ CREATE TABLE IF NOT EXISTS queues (
 	tour_id INT UNIQUE,
     queue TEXT, -- square bracket wrapped, comma separated array of user ids that are currently in queue
     capacity INT DEFAULT 1, -- number allowed on page at once, default is 1
-    headcount INT, -- number of people on page. if less than capacity, can let next person in queue onto the page
+    headcount INT DEFAULT 0, -- number of people on page. if less than capacity, can let next person in queue onto the page
     
     PRIMARY KEY (queue_id),
-    FOREIGN KEY (tour_id) references tours(tour_id)
+    FOREIGN KEY (tour_id) REFERENCES tours(tour_id)
+);
+
+CREATE TABLE IF NOT EXISTS orders (
+	order_id INT NOT NULL AUTO_INCREMENT,
+    purchased_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    user_id INT,
+	date_id INT,
+    seat_ids VARCHAR(255),
+    tour_id INT,
+    venue_id INT,
+ --   status VARCHAR(255), -- set pending from success page, use webhook to set complete
+	stripe_session_id VARCHAR(255),
+    stripe_metadata TEXT,
+    on_waiting_list BOOLEAN DEFAULT false,
+    price_paid DECIMAL(7, 2),
+    
+    PRIMARY KEY (order_id),    
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (tour_id) REFERENCES tours(tour_id),
+    FOREIGN KEY (venue_id) REFERENCES venues(venue_id),
+    FOREIGN KEY (date_id) REFERENCES dates(date_id)
+);
+
+CREATE TABLE IF NOT EXISTS slot_registrations (
+	slot_reg_id INT NOT NULL AUTO_INCREMENT,
+	slot_id INT NOT NULL,
+    user_id INT NOT NULL,
+    
+    PRIMARY KEY (slot_reg_id), -- only here so I can alter data in mysql workbench
+    FOREIGN KEY (slot_id) REFERENCES purchase_slots(slot_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
 );

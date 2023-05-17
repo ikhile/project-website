@@ -1,11 +1,13 @@
 import Stripe from "stripe"
 import * as db from './database.js'
 import * as datefns from 'date-fns'
+import { stringifyArray } from "./index.js"
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 const expireAtMins = 30 // has to be at least 30 mins annoyingly
 
-export async function createCheckoutSession(seatIDs, customerID, prevUrl) {
+export async function createCheckoutSession(seatIDs, customerID, req) {
+    // const prevUrl = req.body.currentUrl
 
     let lineItems = []
 
@@ -50,7 +52,7 @@ export async function createCheckoutSession(seatIDs, customerID, prevUrl) {
             console.error(err)
         }
     }
-    prevUrl = new URL(prevUrl)
+    let prevUrl = new URL(req.body.currentUrl)
     const baseUrl = prevUrl.origin
 
     let cancelRedirect = prevUrl
@@ -59,24 +61,26 @@ export async function createCheckoutSession(seatIDs, customerID, prevUrl) {
 
     const cancelUrl = new URL(baseUrl + "/pay/cancel")
     cancelUrl.searchParams.set("cancelRedirect", cancelRedirect)
-    cancelUrl.searchParams.set("seatIDs", `[${seatIDs.join(",")}]`)
+    cancelUrl.searchParams.set("seatIDs", stringifyArray(seatIDs))
 
 
     try {
         return stripe.checkout.sessions.create({
             line_items: lineItems,
             mode: "payment",
-            success_url: baseUrl + "/pay/success",
+            success_url: baseUrl + "/pay/success?session={CHECKOUT_SESSION_ID}&tour=",
             cancel_url: cancelUrl.toString(),
             customer: customerID,
             expires_at: datefns.addSeconds(Date.now(), expireAtMins * 60), // expiry time of checkout sesh in epoch seconds
             // should work but doesn't seem to
-            // metadata: {
-            //     "seat_ids": [...seatIDs]
-            // }
+            metadata: {
+                user_id: req.user.user_id,
+                tour_id: req.body.tourID,
+                venue_id: req.body.venueID,
+                date_id: req.body.date,
+                seat_ids: stringifyArray(seatIDs)
+            }
         })
-
-        // sinc
 
     } catch(err) {
         console.error(err)
@@ -112,3 +116,7 @@ export async function constructWebhookEvent(body, signature) {
         // return false
     }
 }
+
+// export async function getPurchaseHistory(stripeID) {
+
+// }

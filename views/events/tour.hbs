@@ -1,5 +1,6 @@
 {{#section 'head'}}
     <title>{{event.artist_name}} | {{event.tour_name}} | {{title}}</title>
+    <meta name="user-id" content="{{req.user.user_id}}">
 {{/section}}
 
 <h2>{{event.artist_name}} - {{event.tour_name}}</h2>
@@ -8,10 +9,7 @@
 {{#if onsale}}
     <p>
         Tickets for this event are on sale now!
-        {{!-- <a href=" class="btn btn-primary""></a>
-        {{if (isAuth req)}} --}}
         <button id="purchase" class="btn btn-primary" onclick="purchaseClick({{isAuth req}}, {{event.tour_id}})">Find tickets</button>
-        {{!-- {{/else}} --}}
     </p>
 
     <div id="change-city-modal" class="modal d-none flex-column">
@@ -19,92 +17,115 @@
     </div>
 
 {{else}}
-    <p>This event is not yet on sale</p>
     <p>Tickets will be released at the below times - sign up to be notified and buy tickets at a time that suits you!</p>
 
-    {{! Open a grid layout for not onsale only}}
-    {{!-- <div class="container-fluid row">
-        <main class="col-6"> --}}
+    {{#if (isAuth req)}}
+    <p id="alert-success" class="alert alert-success d-none">
+        <span id="signed-up" class="d-none">You have signed up for a purchase slot.</span>
+        <span id="signup-removed" class="d-none">You are no longer registered for this purchase slot.</span>
+        <span id="future-slots" class="d-none">Tickets are not currently on sale for this tour. Please sign up for one of the upcoming purchase slots below.</span>
+        <span id="not-authorised" class="d-none">You are not authorised to purchase tickets in this slot. Please sign up for another or wait until general sale.</span>
+    </p>
 
-    {{#each slots}}
-            <div class="m-auto col-6 text-center">
-                {{#if (isFuture this.start)}}
-                    <h3>
-                        {{#if (isThisYear this.start)}}
-                            {{formatDate this.start "EEEE do LLLL"}}
-                        {{else}}
-                            {{formatDate this.start "EEEE do LLLL yyyy"}}
-                        {{/if}}
-                        <p class="fs-4">
-                            <span class="text-uppercase text-muted small">Start</span> {{formatDate this.start "HH:mm"}}
-                            <span class="text-uppercase text-muted small">End</span> {{formatDate this.end "HH:mm"}}
-                        </p>
-                    </h3>
-                    <button class="btn btn-secondary btn-block">Sign Up</button>
-                {{else}}
-                    {{#if (isFuture this.end)}}
-                        <p>Slot happening now</p>
-                        <button>Purchase</button>
+    {{/if}}
+
+    <p>General sale will begin after the final slot closes.</p>
+
+    {{!-- {{#if req.query}}
+        {{#if (compareValues req.query.alert '==' 'signed-up')}}
+            <p class="alert alert-success">You have signed up for a purchase slot.</p>
+        {{else if (compareValues req.query.alert '==' 'removed-reg')}}
+            <p class="alert alert-success">You are no longer registered for this purchase slot.</p>
+        {{/if}}
+    {{/if}} --}}
+
+    <div class="d-flex flex-wrap">
+        {{#each slots}}
+            <div class="mx-auto text-center d-flex flex-column justify-content-between" data-slot-id="{{this.slot_id}}">
+                {{! DATE }}
+                <h4 class="mb-0 {{#if (slotPast this)}}text-muted{{/if}}">
+                    {{#if (isThisYear this.start)}}
+                        {{formatDate this.start "EEEE do LLLL"}}
                     {{else}}
-                        <p>Slot has ended</p>
-                        <button disabled="disabled">Purchase</button>
+                        {{formatDate this.start "EEEE do LLLL yyyy"}}
                     {{/if}}
+                </h4>
+
+                {{! TIME}}
+                {{!-- {{#if (slotPast this)}}
+                    <p class="my-1">This slot has ended</p>
+                {{else if (slotOngoing this)}} --}}
+                {{#if (slotOngoing this)}}
+                    <p class="fs-4 fw-500 mb-0 ms-2 text-uppercase ">
+                        Now
+                        <span class="text-muted small">until</span>
+                        {{formatDate this.end "HH:mm"}}
+                    </p>
+                {{else }}
+                    <p class="fs-4 fw-500 mb-0 {{#if (slotPast this)}}text-muted{{/if}}">
+                        <span class="text-uppercase text-muted small">Start</span> {{formatDate this.start "HH:mm"}}
+                        <span class="text-uppercase text-muted small">End</span> {{formatDate this.end "HH:mm"}}
+                    </p>
                 {{/if}}
+
+                {{! BUTTONS }}
+
+                {{! past}} {{!position of this depends on whether users should be able to sign up for another slot if theirs has ended}}
+                {{#if (slotPast this) }}
+                    <button class="btn btn-outline-secondary" disabled>Sales have ended</button>
+
+                {{! user signed up for this slot}}
+                {{else if (arrayIncludes @root.userSignedUpSlots this.slot_id)}}
+                    {{#if (slotOngoing this)}}
+                        <button class="btn btn-secondary">Purchase</button>
+                    {{else if (slotFuture this)}}
+                        <button class="unsignup-btn btn btn-secondary">Cancel registration</button>
+                    {{else if (slotPast this)}}
+                        <button class="btn btn-secondary" disabled>Purchase</button>
+                    {{/if}}
+
+                {{! user signed up for a different slot}}
+                {{else if (compareValues @root.userSignedUpSlots.length '>' 0)}}
+                    <button class="mb-0 btn btn-outline-secondary" disabled>You have already signed up for another slot.</button>
+
+                {{!user not signed up for any slot - may be logged out}}
+
+                {{else if (isAuth ../req)}}
+                    {{#if (slotFuture this)}}
+                        <button class="signup-btn btn btn-secondary">Sign up</button>
+                    {{else if (slotOngoing this)}}
+                        <button class="btn btn-secondary" disabled>Sign ups closed</button>
+                    {{/if}}
+
+
+                {{else}}
+                    <a class="btn btn-secondary" href="/account/login?redirect=/events/tour/{{@root.event.tour_id}}">
+                        Log in to {{#if (slotFuture this)}}register{{else if (slotOngoing this)}}purchase{{/if}}
+                        {{!-- {{else if (slotPast this)}}
+                            <button class="btn btn-secondary" disabled>Login to purchase</button> --}}
+                    </a>
+                {{/if}}
+
             </div>
         {{/each}}
+    </div>
 {{/if}}
 
-<h3>Dates & Venues</h3>
+<h3 class="mt-2">Dates & Venues</h3>
 <p>Info goes here</p>
 <p class="comment">If tour is on sale there should be links direct to purchase tickets maybe? Or find tickets button shows city cards? Idk but something</p>
 <table class="m-auto">
     {{#each dates}}
         {{!-- <div class="row"> --}}
-            <tr>
-                <td class="text-end pe-2" style="vertical-align: top">{{formatDate this.date 'EEE do LLL'}}</td>
-                <td class="ps-1 pb-2">{{this.city}}<br>{{this.venue_name}}</td>
+            <tr {{#if ../onsale}}onclick="purchaseClick({{isAuth ../req}}, {{../event.tour_id}}, {{this.venue_id}})"{{/if}}>
+                
+                    <td class="text-end pe-2" style="vertical-align: top">{{formatDate this.date 'EEE do LLL'}}</td>
+                    <td class="ps-1 pb-2">{{this.city}}<br>{{this.venue_name}}</td>
             </tr>
             
         {{!-- </div> --}}
     {{/each}}
 </table>
-
-{{!-- <p class="comment">Actually fuck that maybe the city cards should be here</p> --}}
-
-{{!-- {{#unless onsale}} {{! continue the grid layout opened before}}
-
-    </main> {{! close the main opened in first if block}}
-
-    <aside class="col-6">
-        {{#each slots}}
-            <div class="m-auto col-6 text-center">
-                {{#if (isFuture this.start)}}
-                    <h3>
-                        {{#if (isThisYear this.start)}}
-                            {{formatDate this.start "EEEE do LLLL"}}
-                        {{else}}
-                            {{formatDate this.start "EEEE do LLLL yyyy"}}
-                        {{/if}}
-                        <p class="fs-4">
-                            <span class="text-uppercase text-muted small">Start</span> {{formatDate this.start "HH:mm"}}
-                            <span class="text-uppercase text-muted small">End</span> {{formatDate this.end "HH:mm"}}
-                        </p>
-                    </h3>
-                    <button class="btn btn-secondary btn-block">Sign Up</button>
-                {{else}}
-                    {{#if (isFuture this.end)}}
-                        <p>Slot happening now</p>
-                        <button>Purchase</button>
-                    {{else}}
-                        <p>Slot has ended</p>
-                        <button disabled="disabled">Purchase</button>
-                    {{/if}}
-                {{/if}}
-            </div>
-        {{/each}}
-    </aside>
-</div>
-{{/unless}} --}}
 
 {{!-- Should put scripts in a section but didn't work... figure out later --}}
 <script src="/js/tour-{{#unless onsale}}not-{{/unless}}onsale.js"></script>

@@ -1,5 +1,48 @@
 <h2>Hi {{req.user.first_name}}!</h2>
-<h3>ID verification</h3>
-<h3>Purchases</h3> 
 
-{{stringify req.user}}
+<h3>Your details</h3>
+<table>
+    <tr>
+        <th>Name</th>
+        <td>{{req.user.first_name}} {{req.user.last_name}}</td>
+    </tr>
+    <tr>
+        <th>Email</th>
+        <td>{{req.user.email}}</td>
+    </tr>
+</table>
+
+<h3>Purchases</h3>
+{{#if wlError}}
+    <p class="alert alert-danger">There was an issue adding your tickets to the waiting list. Please try again.</p>
+{{else if wlSuccess}}
+    <p class="alert alert-success">Your tickets have been added to the waiting list!</p>
+{{/if}}
+
+
+{{#each orders}}
+    <div class="card mx-auto my-3">
+        <p class="fs-5 my-1">
+            {{#if (isThisYear this.date)}}
+                {{formatDate this.date "EEEE do LLL"}}
+            {{else}}
+                {{formatDate this.date "EEEE do LLL yyyy"}}
+            {{/if}}
+        </p>
+        <p class="fs-4">{{this.artist_name}} {{this.tour_name}}</p>
+        <p>{{this.venue_name}}, {{this.city}}</p>
+        <p>Block {{this.seats.0.section}} Section {{this.seats.0.block}} Row {{this.seats.0.row_name}} Seat{{addPluralS this.seats.length}} {{groupSeats this.seats}}</p>
+        {{#if this.on_waiting_list}}
+            {{!-- <p>These tickets have been put on the waiting list and can no longer be used.</p> --}}
+            <p>These tickets have been put on the waiting list and can no longer be used.</p>
+        {{else}}
+            <form action="account/put-on-waiting-list" method="POST">
+                <input name="order_id" value={{this.order_id}} hidden>
+                <input name="date_id"  value={{this.date_id}}  hidden>
+                <input name="seat_ids" value={{this.seat_ids}} hidden>
+                <button>Put these tickets on the waiting list</button>
+            </form>
+        {{/if}}
+    </div>
+{{/each}}
+

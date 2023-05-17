@@ -1,4 +1,6 @@
-$(document).ready(function() {
+import { fetchData } from './fetchData.js'
+
+$(document).ready(async function() {
 
     $("body").css("background", "black") // easiest place to set a background - want to change to 
 
@@ -45,6 +47,10 @@ $(document).ready(function() {
         limitQtyInput()
     }
 
+    const tourID = window.location.pathname.match(/tour\/(\d)/)[1]
+    const { max_tickets } = await fetchData(`/api/tour/${tourID}/max`)
+
+    $("#ticket-qty").attr("max", max_tickets)
     $("#ticket-qty").on("focusout", limitQtyInput)
     $("#waiting-list-form").on("submit", (e) => formSubmit(e))
 })
@@ -61,13 +67,10 @@ function limitQtyInput() {
 
 function formSubmit(e) {
     limitQtyInput()
-
     if ($("input[name=venues]:checked").length < 1) {
-        // alert("Please select one or more venues")
         $("#venue-error").removeClass("d-none")
         e.preventDefault()
     }
-
 }
 
 function showHideDateSelect(eventTarget, transition = true, openDates = true) {

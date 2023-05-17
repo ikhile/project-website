@@ -1,7 +1,7 @@
 import express from 'express'
 import * as db from '../database.js'
 // import { createCheckoutSession, createStripeCustomer, constructWebhookEvent } from '../stripe.js'
-import api from '../index.js'
+import api, { parseArray } from '../index.js'
 import Stripe from "stripe"
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
@@ -37,5 +37,22 @@ router.post("/", express.raw({type: 'application/json'}), async (req, res) => {
 
     }
 
+    if (event.type == 'checkout.session.completed') {
+        const { id, metadata } = event.data.object
+        console.log((id, metadata.user_id, metadata.tour_id, metadata.venue_id, metadata.date_id, metadata.seat_ids, metadata))
 
+        try {
+            db.addOrder(id, metadata.user_id, metadata.tour_id, metadata.venue_id, metadata.date_id, metadata.seat_ids, JSON.stringify(metadata))
+
+        } catch(err) {
+            console.error(err)
+            return res.sendStatus(400)
+        }
+
+        // const seatIDs = parseArray(metadata.seat_ids)
+        await db.setSeatAvailability(false, parseArray(metadata.seat_ids))
+        await db.setSeatStatus("sold", parseArray(metadata.seat_ids))
+    }
+
+    res.sendStatus(200)
 })

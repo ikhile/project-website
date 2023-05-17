@@ -15,11 +15,13 @@ $(document).ready(() => {
     })
 })
 
-function purchaseClick(isAuth, tour) {
+function purchaseClick(isAuth, tour, venue = null) {
     if (isAuth) {
         $("#change-city-modal").removeClass("d-none")
         $("#change-city-modal").addClass("d-flex")
+
     } else {
-        window.location.href = `/account/login?alert=to-purchase&redirect=/events/purchase/tour/${tour}&tour=${tour}`
+        console.log(`/account/login?alert=to-purchase&redirect=/events/purchase/tour/${tour}/queue` + (!!venue ? `&venue=${venue}` : ""))
+        window.location.href = `/account/login?alert=to-purchase&redirect=/events/purchase/tour/${tour}/queue` + (!!venue ? `?venue=${venue}` : "")
     }
 }

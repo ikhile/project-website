@@ -5,45 +5,65 @@ import * as pconfig from '../passport-config.js'
 import * as flash from 'express-flash'
 import * as session from 'express-session'
 import * as db from '../database.js'
+import { checkAuthRedirect, parseArray } from '../index.js'
+import { stringifyLog } from './events.js'
+import * as wl from '../waiting-list.js'
 
 export const router = express.Router()
 
-pconfig.passportInit(
-    passport, 
-    // email => await db.getUserByEmail(email),
-    // id => await db.getUserById(id)
-)
+pconfig.passportInit(passport)
 
-const users = [
-    {
-        id: 0,
-        name: "Test",
-        email: "test@test",
-        password: await (bcrypt.hash("test", 10))
+router.get('/', checkAuthRedirect, async (req, res) => {
+    const context = {
+        req,
+        orders: await db.getUserOrders(req.user.user_id), // gonna want some joins - tour name, artist name, venue and city, date
+        // then for each seat, parse the array then get each seat from db as well
+        wlError: req.query.hasOwnProperty("wl-error"),
+        wlSuccess: req.query.hasOwnProperty("wl-success")
     }
-]
 
-router.get('/', (req, res) => {
-    if (!req.isAuthenticated()) return res.redirect('/account/login')
+    for (let order of context.orders) {
+        // console.log(order.seat_ids)
+        // order.seat_ids = order.seat_ids.replace(/\\|\"/, "")
+        // order.seat_ids = [...JSON.parse(JSON.parse(order.seat_ids))] // needs to be doubled parsed for whatever reason
+        // order.seat_ids = parseArray(order.seat_ids)
+        const seat_ids = parseArray(order.seat_ids)
+        order.seats = await db.getSeats(...seat_ids) // WHY did i use the spread operator here *melt emoji*
+    }
 
-    res.render('account/account')
+    // stringifyLog(context.orders)
 
+    res.render('account/account', context)
+
+})
+
+router.post('/put-on-waiting-list', async (req, res) => {
+    console.log(req.body)
+
+    try {
+        wl.releaseTickets(req.body.date_id, req.body.seat_ids, req.body.order_id)
+        res.redirect('/account?wl-success')
+    } catch (err) {
+        console.error(err)
+        res.redirect('/account?wl-error')
+    }
 })
 
 router.get('/login', (req, res) => {
-    res.render('account/login', { query: req.query })
+    res.render('account/login', { req, query: req.query })
 })
-
-let successRedirect = '/account'
 
 router.post(
     '/login', 
     passport.authenticate('local', { failureRedirect: 'login', failureFlash: true, }), 
-    (req, res) => res.redirect(req.body.redirect ?? '/account') // https://stackoverflow.com/a/70171106 
+    (req, res) => {// https://stackoverflow.com/a/70171106 
+        // res.redirect(req.body.redirect ?? '/account') // doesn't work anymore?
+        res.redirect(!!req.body.redirect ? req.body.redirect : '/account')
+    } 
 )
 
 router.get('/register', (req, res) => {
-    res.render('account/register', {query: req.query})
+    res.render('account/register', { req, query: req.query })
 })
 
 router.post('/register', async (req, res) => {

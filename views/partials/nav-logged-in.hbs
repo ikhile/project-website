@@ -15,24 +15,18 @@
                 </button>
 
                 <ul class="dropdown-menu position-absolute">
-                    {{#if user}}
-                        <li class="dropdown-item">Purchase History</li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <form method="POST" action="/account/logout?_method=DELETE">
-                                <button 
-                                    type="submit" 
-                                    {{!-- styling button as link (must be form for delete method) --}}
-                                    class="btn btn-light bg-transparent ms-1 col-11 border-0"
-                                    style="text-align: left !important"
-                                >Logout</button>
-                            </form>
-                        </li>
-                        
-                    {{else}}
-                        <li><a class="dropdown-item" href="/account/login">Login</a></li>
-                        <li><a class="dropdown-item" href="/account/register">Register</a></li>
-                    {{/if}}
+                    <li class="dropdown-item">Purchase History</li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form method="POST" action="/account/logout?_method=DELETE">
+                            <button 
+                                type="submit" 
+                                {{!-- styling button as link (must be form for delete method) --}}
+                                class="btn btn-light bg-transparent ms-1 col-11 border-0"
+                                style="text-align: left !important"
+                            >Logout</button>
+                        </form>
+                    </li>
                 </ul>
             </li>
         </ul>

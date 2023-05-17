@@ -13,7 +13,7 @@ import { router as apiRouter } from './routes/api.js'
 import { router as accountRouter } from './routes/account.js'
 import { router as payRouter } from './routes/pay.js'
 import { router as searchRouter } from './routes/search.js'
-import { router as webhooksRouter } from './routes/webhooks.js'
+import { router as webhookRouter } from './routes/webhook.js'
 
 const app = express()
 const port = 3000
@@ -58,11 +58,13 @@ app.use(passport.initialize())
 app.use(passport.session())
 app.use(methodOverride('_method'))
 
-app.use((req, res, next) => {
-    app.locals.req = req
-    app.locals.title = "Tickets"
-    next()
-})
+// doesn't seem to work - I've just added req to most contexts
+// app.use((req, res, next) => {
+//     app.locals.req = req
+//     app.locals.user = req.user
+//     app.locals.title = "Tickets"
+//     next()
+// })
 
 function mapHelpers() {
     let helpersObj = {}
@@ -76,9 +78,27 @@ export function checkAuthRedirect(req, res, next) {
         res.redirect(`/account/login?alert=login-required&redirect=${req.originalUrl}`)
 
     } else {
+        app.locals.user = req.user
         next()
     }
 }
+
+export function stringifyArray(array, brackets = true) {
+    let str = array.join(",")
+    if (str.length == 0) return ""
+    return brackets ? `[${str}]` : str
+}
+
+export function parseArray(str, intArray = true) {
+    if (!str || !str.length) return []
+    let arr = str.replace(/\[|\]/g, "").split(",")
+    return arr.map(a => isNaN(a) ? a : parseInt(a))
+}
+
+// console.log(parseArray("[1,2,3]"))
+// console.log(parseArray("1,2,3"))
+// console.log(stringifyArray(["a", 1, "c"]))
+// console.log(parseArray("1,b,3"))
 
 app.get('/', async (req, res) => {
     let events = await db.getAllEvents(10)
@@ -86,11 +106,11 @@ app.get('/', async (req, res) => {
     for (let event of events) {
         event.firstDate = await api.get(`tours/${event.tour_id}/dates/first`).then((res) => res.data)
         event.lastDate = await api.get(`tours/${event.tour_id}/dates/last`).then((res) => res.data)
-        event.purchaseSlots = await db.getPurchaseSlots(event.tour_id)
+        event.purchaseSlots = await db.getSlotsByTour(event.tour_id)
         event.salesStart = await db.tourSalesStart(event.tour_id)
     }
 
-    const context = { events: events } 
+    const context = { req, events: events } 
 
     res.render('index', context)
 })
@@ -100,6 +120,6 @@ app.use('/events', eventsRouter)
 app.use('/api', apiRouter)
 app.use('/pay', payRouter)
 app.use('/search', searchRouter)
-app.use('/webhooks', webhooksRouter)
+app.use('/webhook', webhookRouter)
 
 app.listen(port, 'localhost', () => console.log(`App listening to port ${port}`))

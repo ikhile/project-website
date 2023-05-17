@@ -28,20 +28,27 @@
     </div>
 </form>
 
-{{!-- <form id="purchase-form" action="/events/create-checkout-session" method="POST" class="text-center">
-    <input name="product-ids" hidden value="">
-    <button id="purchase" class="btn btn-primary m-auto">
-        Purchase
-    </button>
-</form> --}}
-
 <div id="available-tickets" class="m-auto w-75"></div>
 
-<div id="change-city-modal" class="modal flex-column">
+<div id="change-city-modal" class="modal flex-column {{#if venueSelected}}d-none{{else}}d-flex{{/if}}">
     {{> city-cards}}
 </div>
 
 <div id="select-seats-modal" class="modal"></div>
 
-<script src="/js/fetchData.js"></script>
+<footer class="fixed-bottom d-flex justify-content-center align-items-center py-2 bg-secondary">
+    <p class="my-0 me-1 text-white">Don't see anything you like?</p>
+    <form id="#waiting-list-form-footer" action="/events/tour/{{tour.tour_id}}/waiting-list" method="get">
+        <input name="venue" value="{{venue.venue_id}}" hidden>
+        <input name="dates" hidden>
+        <button class="btn btn-dark ms-1">Join the waiting List</button>
+    </form>
+</footer>
+
+{{log isSaleSlot}}
+
+<meta name="user-id" content="{{req.user.user_id}}">
+<meta name="tour-id" content="{{tour.tour_id}}">
+<meta name="max-tickets" content="{{maxTickets}}">
+
 <script type="module" src="/js/purchase-page.js"></script> <!--https://stackoverflow.com/a/55310399-->

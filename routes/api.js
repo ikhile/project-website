@@ -2,6 +2,7 @@ import express from 'express'
 import * as db from '../database.js'
 import * as datefns from 'date-fns'
 import { stringifyLog } from './events.js'
+import { parseArray, stringifyArray } from '../index.js'
 
 export const router = express.Router()
 
@@ -93,6 +94,14 @@ router.get("/tours/:tour_id/all-onsale", async (req, res) => {
     })
 })
 
+router.get('/tours/:tour_id/max', async (req, res) => {
+    const [[max]] = await db.pool.query(`
+        SELECT max_tickets FROM tours WHERE tour_id = ?
+    `, req.params.tour_id)
+
+    return res.json(max)
+})
+
 function areConsecutiveNumbers(arr) {
     arr = arr.sort((a, b) => a - b)
 
@@ -110,7 +119,8 @@ function areNeighbouringSeats(seatsArr) {
 
 router.get("/available-seats", async (req, res) => {
     let tour = req.query.tour
-    let dates = req.query.dates.replace(/\[|\]/g, "").split(",").map(a => parseInt(a))
+    // let dates = req.query.dates.replace(/\[|\]/g, "").split(",").map(a => parseInt(a))
+    let dates = parseArray(req.query.dates)
     let onsale = req.query.onsale == "false" ? false : true
 
 
@@ -183,7 +193,7 @@ router.get("/available-seats", async (req, res) => {
                     fullDate: fullDate, 
                     shortDate: shortDate,
                     seat_numbers: seatNums,
-                    seat_ids: `[${seatSlice.map(a => a.seat_id).join()}]`,
+                    seat_ids: stringifyArray(seatSlice.map(a => a.seat_id)),
                     seats: seatSlice
                 }
 
@@ -238,25 +248,40 @@ router.get("/email-available", async (req, res) => {
     })
 })
 
-router.post("/queue-test/", async (req, res) => {
+router.post("/queue-test", async (req, res) => {
+    console.log("queue test")
     console.log(req.body, req.body.val)
     await db.pool.query(`
         INSERT INTO queue_test (test) VALUES("${req.body.val}")
     `)
 })
 
+router.get("/get-queue", async (req, res) => {
+    console.log("get queue")
+    // return res.json("h")
+    return res.json(await db.getTourQueue(req.query.tour_id))
+})
+
 router.post("/user-join-queue", async (req, res) => {
-    console.log("sanity check")
+    // console.log("sanity check")
     // console.log(req.body.tour_id)
     // const queue = await db.getTourQueue(req.body.tour_id)
 
     // console.log(req.user.user_id)
+    // console.log(1, req.body.original_url) 
 
-    if (!req.user) {
-        return res.redirect(req.originalUrl)
-    }
-    await db.addUserToQueue(req.body.tour_id, req.user.user_id)
-    
+    // // I actually think this is only an issue for testing - user can't refresh the post request but nodemon can
+    // if (!req.user) {
+    //     return res.redirect("/account/login?redirect=")   // forces refresh of the page, which will then force log in
+    // } 
+ 
+
+
+    try {
+        await db.addUserToQueue(req.body.tour_id, req.body.user_id)
+    } catch (err) {
+        return res.redirect(req.headers.referer) 
+    } 
     
     // if (await db.getQu)
     // const [queue] = await.db.
@@ -266,6 +291,7 @@ router.post("/user-join-queue", async (req, res) => {
 })
 
 router.post("/user-leave-queue", async (req, res) => {
+    console.log("leave queue", new Date())
     if (!req.user) {
         return res.redirect(req.originalUrl)
     }
@@ -277,4 +303,20 @@ router.post("/user-leave-queue", async (req, res) => {
     }
 })
 
+router.post("/increment-headcount", async (req, res) => {
+    await db.incrementHeadcount(req.body.tour_id)
+})
 
+router.post("/decrement-headcount", async (req, res) => {
+    console.log("decrement")
+    await db.decrementHeadcount(req.body.tour_id)
+})
+
+router.post("/slot-signup", async (req, res) => {
+    await db.slotSignUp(req.body.user_id, req.body.slot_id)
+})
+
+router.post("/slot-signup/remove", async (req, res) => {
+    console.log("remove")
+    await db.removeSlotSignup(req.body.user_id, req.body.slot_id)
+})

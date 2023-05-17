@@ -1,4 +1,4 @@
-{{#if isAuth}}<h1>Hi {{user.name}}!</h1>{{/if}}
+{{#if (isAuth req)}}<h1>Hi {{req.user.first_name}}!</h1>{{/if}}
 
 <h2>Upcoming events</h2>
 <p class="note-to-self">maybe have some filters for date and city</p>

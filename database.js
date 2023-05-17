@@ -1,5 +1,6 @@
 import mysql from 'mysql2'
 import dotenv from 'dotenv'
+import { parseArray, stringifyArray } from './index.js'
 dotenv.config()
 
 export const pool = mysql.createPool({
@@ -49,19 +50,9 @@ export async function getAllEvents(limit = null) {
     return events
 }
 
-export async function getPurchaseSlots(tourID) {
-    const [slots] = await pool.query(`
-        SELECT * 
-        FROM purchase_slots
-        WHERE tour_id = ?
-        ORDER BY start ASC
-    `, tourID)
-
-    return slots
-}
 
 export async function tourSalesStart(tourID) {
-    const slots = await getPurchaseSlots(tourID)
+    const slots = await getSlotsByTour(tourID)
     if (slots.length == 0) return new Date("2000-01-01") // random past date to compare to
     else return (new Date(slots[0].start))
 }
@@ -143,6 +134,19 @@ export async function getDateFromID(dateID) {
     return rows[0]
 }
 
+export async function getDateInfo(dateID) {
+    const [info] = await pool.query(`
+        SELECT date, artist_name, tour_name, venue_name, city
+        FROM dates
+        INNER JOIN venues on dates.venue_id = venues.venue_id
+        INNER JOIN tours ON dates.tour_id = tours.tour_id
+        INNER JOIN artists ON tours.artist_id = artists.artist_id
+        WHERE date_id = ?
+    `, dateID)
+
+    return info
+}
+
 export async function getVenueById(venueID) {
     const [rows] = await pool.query(`
         SELECT *
@@ -217,7 +221,6 @@ export async function search(searchTerm) {
 }
 
 export async function getSeats(...seatIDs) {
-
     let query = `
         SELECT 
             seat_id, seats.date_id, date, 
@@ -246,12 +249,14 @@ export async function getSeats(...seatIDs) {
         return seats
 
     } else if (seats.length < seatIDs.length) {
-        console.log("Not all seats found - may be an issue with one or more seat IDs")
-        throw new Error("Not all seats found - may be an issue with one or more seat IDs")
+        console.error("Not all seats found - may be an issue with one or more seat IDs")
+        // throw new Error("Not all seats found - may be an issue with one or more seat IDs")
+        return seats
 
     } else if (seats.length > seatIDs.length) {
-        console.log("Somehow found more seats than expected...")
-        throw new Error("Somehow found more seats than expected...")
+        console.error("Somehow found more seats than expected...")
+        return seats
+        // throw new Error("Somehow found more seats than expected...")
     }
 }
 
@@ -273,7 +278,23 @@ export async function setSeatStatus(status, seatIDs) {
     return affectedRows
 }
 
-// console.log(await setSeatStatus("test", [2]))
+export async function setSeatAvailability(available, seatIDs) {
+    let query = `
+        UPDATE seats
+        SET available = ?
+    `
+
+    let values = [available]
+
+    for (let [i, seatID] of seatIDs.entries()) {
+        query += `\n${i == 0 ? "WHERE" : "OR"} seat_id = ?`
+        values.push(seatID)
+    }
+
+    const [{affectedRows}] = await pool.query(query, values)
+
+    return affectedRows
+}
 
 // USERS
 
@@ -341,55 +362,54 @@ export async function checkEmailAvailable(email) {
     return !exists // not exists == available
 }
 
-// console.log(await addUser(1, 2, 0, 4))
-// console.log(await getUserByEmail("PHILLIPAI@HOTMAIL.COM"))
-
-// const events = await getAllEvents()
-// console.log(await getVenueById(1))
-// process.exit()
 
 export async function getTourQueue(tourID) {
-    let [queue] = await pool.query(`
-        SELECT * from queues WHERE tour_id = ?
-    `, tourID)
+    let [[{queue_exists}]] = await pool.query(`SELECT EXISTS(SELECT * FROM queues WHERE tour_id = ?) as "queue_exists"`, tourID)
+    
+    // console.log(queue_exists)
 
-    if (!queue.length) {
-        [queue] = await pool.query(`
-            INSERT INTO queues (tour_id) VALUES(?)
-        `, tourID)
+    if (!queue_exists) {
+        await pool.query(`INSERT INTO queues (tour_id) VALUES(?)`, tourID)
     }
 
+    const [[queue]] = await pool.query(`SELECT * from queues WHERE tour_id = ?`, tourID)    
+
+    // if (!queue.length) {
+    //     await pool.query(` INSERT INTO queues (tour_id) VALUES(?)`, tourID)
+    //     [queue = await pool.query(`SELECT * from queues WHERE tour_id = ?`, tourID)    
+    // }
+
+    // console.log(queue)
     return queue
 }
 
+// console.log(2, await getTourQueue(1))
+
 export async function addUserToQueue(tourID, userID) {
-    const [queueObj] = await getTourQueue(tourID)
+    const queueObj = await getTourQueue(tourID)
+    console.log(queueObj, queueObj.queue_id)
 
-    // this doesn't work - if user is already in queue it keeps them at earlier position rather than moving to end
-    // let queueSet = new Set((queueObj.queue?.split(",") ?? []).map(a => parseInt(a)))
-    // queueSet.add(userID)
-    // let queueVal = Array.from(queueSet).join(",")
-
-    let queueArr = queueObj.queue?.replace(/\[|\]/g, "").split(",").map(a => parseInt(a)) ?? []
+    let queueArr = parseArray(queueObj.queue) // since i return the array could i just tack filter on here?
     console.log(queueArr)
-
     queueArr = queueArr.filter(a => a != userID)
-    console.log(queueArr)
 
     queueArr.push(userID)
+
+    console.log(queueArr, stringifyArray(queueArr))
 
     await pool.query(`
         UPDATE queues
         SET queue = ?
         WHERE queue_id = ?
-    `, [`[${queueArr.join(",")}]` ,queueObj.queue_id])
-    console.log(queueArr)
+    `, [stringifyArray(queueArr) ,queueObj.queue_id])
 }
 
-export async function removeUserFromQueue(tourID, userID) {
-    const [queueObj] = await getTourQueue(tourID)
 
-    let queueArr = queueObj.queue?.replace(/\[|\]/g, "").split(",").map(a => parseInt(a)) ?? []
+
+export async function removeUserFromQueue(tourID, userID) {
+    const queueObj = await getTourQueue(tourID)
+
+    let queueArr = parseArray(queueObj.queue)
 
     if (queueArr.length) {
         queueArr = queueArr.filter(a => a != userID)
@@ -399,23 +419,22 @@ export async function removeUserFromQueue(tourID, userID) {
         UPDATE queues
         SET queue = ?
         WHERE queue_id = ?
-    `, [`[${queueArr.join(",")}]` ,queueObj.queue_id])
-
-    console.log(queueArr)
+    `, [stringifyArray(queueArr) ,queueObj.queue_id])
 }
 
-// addUserToQueue(1, 6)
+export async function incrementHeadcount(tourID) {
+    await pool.query("UPDATE queues SET headcount = headcount + 1 WHERE tour_id = ?", tourID)
+}
+
+export async function decrementHeadcount(tourID) {
+    await pool.query("UPDATE queues SET headcount = headcount - 1 WHERE tour_id = ?", tourID)
+}
 
 export async function addUserToWaitingList(userID, dateIDs, qty) {
 
     let [[{waiting_lists: waitingLists}]] = await pool.query(`
         SELECT (waiting_lists) FROM users WHERE user_id = ?
     `, userID)
-
-    // console.log(!!waitingLists)
-
-    // if (!!waitingLists) waitingLists = JSON.parse(waitingLists)
-    // waitingLists = !!waitingLists
 
     waitingLists = !!waitingLists ? JSON.parse(waitingLists) : []
 
@@ -442,8 +461,94 @@ export async function addUserToWaitingList(userID, dateIDs, qty) {
 // addUserToWaitingList(1, [2, 3, 5], 3)
 
 export async function findUsersOnWaitingListByDateId(dateID) {
-    const [users] = await pool.query(`SELECT * FROM users WHERE waiting_lists REGEXP '\"date_id\":?'`, dateID)
+    const [users] = await pool.query(`SELECT * FROM users WHERE waiting_lists REGEXP '\"{0,1}date_id\"{0,1}:\"{0,1}?\"{0,1}'`, dateID) // can't use ? for optional char as already used for wildcard
     return users
 }
 
-// console.log(await findUsersOnWaitingListByDateId(5))
+// console.log(await findUsersOnWaitingListByDateId(1))
+
+// export async function 
+
+export async function addOrder(session, user, tour, venue, date, seats, meta) {
+    /*stripe_order_id VARCHAR(255),
+    user_id INT,
+    tour_id INT,
+    date_id INT,
+    seat_ids VARCHAR(255),
+ --   status VARCHAR(255), -- set pending from success page, use webhook to set complete
+    stripe_metadata TEXT,
+    on_waiting_list BOOLEAN, */
+
+    return await pool.query(`
+        INSERT INTO orders (stripe_session_id, user_id, tour_id, venue_id, date_id, seat_ids, stripe_metadata)
+        VALUES(?, ?, ?, ?, ?, ?, ?)
+    `, [session, user, tour, venue, date, stringifyArray(seats), meta])
+}
+
+export async function getUserOrders(userID) {
+    const [orders] = await pool.query(`
+    SELECT order_id, orders.date_id, date, orders.tour_id, tour_name, artist_name, orders.venue_id, venue_name, city, stripe_session_id, on_waiting_list, seat_ids
+    FROM orders 
+    INNER JOIN tours ON orders.tour_id = tours.tour_id
+    INNER JOIN artists ON tours.artist_id = artists.artist_id
+    INNER JOIN venues ON orders.venue_id = venues.venue_id
+    INNER JOIN dates ON orders.date_id = dates.date_id
+    WHERE user_id = 1;
+    `, userID)
+    return orders
+}
+
+export async function getSlotsByTour(tourID) {
+    const [slots] = await pool.query(`
+        SELECT * 
+        FROM purchase_slots
+        WHERE tour_id = ?
+        ORDER BY start ASC
+    `, tourID)
+
+    return slots
+}
+
+export async function getSlotById(slotID) {
+    const [[slot]] = await pool.query(`
+        SELECT * 
+        FROM purchase_slots
+        WHERE slot_id = ?
+    `, slotID)
+
+return slot
+}
+
+export async function slotSignUp(userID, slotID) {
+    await pool.query("INSERT INTO slot_registrations (user_id, slot_id) VALUES(?, ?)", [userID, slotID])
+}
+
+export async function removeSlotSignup(userID, slotID) {
+    await pool.query("DELETE FROM slot_registrations WHERE user_id = ? AND slot_id = ?", [userID, slotID])
+}
+
+export async function getUsersForSlot(slotID) {
+    const [signups] = await pool.query("SELECT * FROM slot_registrations WHERE slot_id = ?", slotID)
+    return signups.map(a => a.user_id)
+}
+
+export async function isUserSignedUpForSlot(userID, slotID) {
+    const [[{isSignedUp}]] = await pool.query("SELECT EXISTS(SELECT * FROM slot_registrations WHERE user_id = ? AND slot_id = ?) as isSignedUp", [userID, slotID])
+
+    return Boolean(parseInt(isSignedUp))
+}
+
+export async function getUserSlots(userID) {
+    const [slots] = await pool.query("SELECT * FROM slot_registrations WHERE user_id = ?", userID)
+    return slots.map(a => a.slot_id)
+}
+
+export async function getUserTourSlots(userID, tourID) {
+    const [slots] = await pool.query(`
+        SELECT * FROM slot_registrations
+        INNER JOIN purchase_slots ON slot_registrations.slot_id = purchase_slots.slot_id
+        WHERE user_id = ?
+        AND tour_id = ?
+    `, [userID, tourID])
+    return slots.map(a => a.slot_id)
+}

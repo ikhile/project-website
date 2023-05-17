@@ -1,14 +1,13 @@
 import express from 'express'
 import * as db from '../database.js'
 import { createCheckoutSession, createStripeCustomer } from '../stripe.js'
-import api from '../index.js'
+import api, { parseArray } from '../index.js'
 
 export const router = express.Router()
 
 // might move payments to a "purchase" route... could move purchase page as well yep yep
 router.post('/create-checkout-session', async (req, res) => {
-    // console.log("body: ", req.body)
-    // console.log("params: ", req.params)
+    if (!req.user) return res.redirect(req.body.currentUrl)
 
     // get customer id if exists, otherwise create new customer and pass in to 
     // console.log("!!!", req.user)
@@ -20,7 +19,8 @@ router.post('/create-checkout-session', async (req, res) => {
 
     // should also set each ticket's status in db to "reserved" at this point
 
-    let seatIDs = req.body.seats.replace(/\[|\]/g, "").split(",")
+    // let seatIDs = req.body.seats.replace(/\[|\]/g, "").split(",")
+    let seatIDs = parseArray(req.body.seats)
 
     let seats = await db.getSeats(...seatIDs)
 
@@ -31,7 +31,7 @@ router.post('/create-checkout-session', async (req, res) => {
 
     // wait since I'm retrieving products here I'll just create them instead
     try {
-        const session = await createCheckoutSession(seatIDs, stripeCustomerID, req.body.currentUrl)
+        const session = await createCheckoutSession(seatIDs, stripeCustomerID, req)
         await db.setSeatStatus("reserved", seatIDs) // set seats to reserved in database
         res.redirect(303, session.url)
 
@@ -51,7 +51,8 @@ router.get('/cancel', async (req, res) => {
     console.log(req.query.seatIDs)
     console.log(req.query.cancelRedirect)
 
-    const seatIDs = req.query.seatIDs.replace(/^\[|\]$/, "").split(",").map(a => parseInt(a))
+    // const seatIDs = req.query.seatIDs.replace(/^\[|\]$/, "").split(",").map(a => parseInt(a))
+    const seatIDs = parseArray(req.query.seatIDs)
 
     db.setSeatStatus(null, seatIDs)
 

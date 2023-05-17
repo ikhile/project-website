@@ -2,6 +2,6 @@
 <p>To be notified when more tickets are available, sign up to the waiting list</p>
 <form action="/events/tour/{{tour_id}}/waiting-list" method="get" class="d-block text-center">
     <input name="venue" value="{{venue_id}}" hidden>
-    <input name="dates" type="text" id="waiting-list-dates" value="{{date_value}}">
-        <button class="btn btn-secondary col-4 m-auto">Waiting List</button>
+    <input name="dates" type="text" id="waiting-list-dates" value="{{date_value}}" hidden>
+    <button class="btn btn-secondary col-4 m-auto">Waiting List</button>
 </form>

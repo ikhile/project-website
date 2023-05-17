@@ -13,7 +13,7 @@
 {{/if}}
 
 <form action="login" method="POST">
-    <input name="redirect" value={{query.redirect}} hidden>
+    <input name="redirect" value="{{query.redirect}}" hidden>
     {{!-- {{#each query}}
         <input name={{@key}} value={{this}} hidden> {{! to pass query through to login post page }}
     {{/each}} --}}
