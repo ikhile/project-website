@@ -31,17 +31,9 @@
 
     <p>General sale will begin after the final slot closes.</p>
 
-    {{!-- {{#if req.query}}
-        {{#if (compareValues req.query.alert '==' 'signed-up')}}
-            <p class="alert alert-success">You have signed up for a purchase slot.</p>
-        {{else if (compareValues req.query.alert '==' 'removed-reg')}}
-            <p class="alert alert-success">You are no longer registered for this purchase slot.</p>
-        {{/if}}
-    {{/if}} --}}
-
-    <div class="d-flex flex-wrap">
+    <div class="d-flex flex-wrap justify-content-center" style="gap: 25px">
         {{#each slots}}
-            <div class="mx-auto text-center d-flex flex-column justify-content-between" data-slot-id="{{this.slot_id}}">
+            <div class="text-center d-inline-flex flex-column justify-content-between" data-slot-id="{{this.slot_id}}">
                 {{! DATE }}
                 <h4 class="mb-0 {{#if (slotPast this)}}text-muted{{/if}}">
                     {{#if (isThisYear this.start)}}
@@ -108,6 +100,18 @@
 
             </div>
         {{/each}}
+
+        <div class="text-center d-flex flex-column justify-content-between">
+            <h4 class="my-0 text-uppercase fst-italic">General sale</h4>
+            <p class="fs-4 fw-500 my-0 ms-2">
+                {{#if (lastSlotEndIsThisYear slots)}}
+                    {{formatDate (lastSlotEnd slots) "EEEE do LLLL"}}
+                {{else}}
+                    {{formatDate (lastSlotEnd slots) "EEEE do LLLL yyyy"}}
+                {{/if}}
+            </p>
+            <p class="fs-4 fw-500 my-0"><span class="text-uppercase text-muted small">from</span> {{formatDate (lastSlotEnd slots) "HH:mm"}}</p>
+        </div>
     </div>
 {{/if}}
 
@@ -119,7 +123,7 @@
         {{!-- <div class="row"> --}}
             <tr {{#if ../onsale}}onclick="purchaseClick({{isAuth ../req}}, {{../event.tour_id}}, {{this.venue_id}})"{{/if}}>
                 
-                    <td class="text-end pe-2" style="vertical-align: top">{{formatDate this.date 'EEE do LLL'}}</td>
+                    <td class="text-end pe-2" style="vertical-align: top">{{formatDate this.date 'EEE do LLLL'}}</td>
                     <td class="ps-1 pb-2">{{this.city}}<br>{{this.venue_name}}</td>
             </tr>
             

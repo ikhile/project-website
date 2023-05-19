@@ -5,6 +5,7 @@ import * as pconfig from '../passport-config.js'
 import * as flash from 'express-flash'
 import * as session from 'express-session'
 import * as db from '../database.js'
+import * as datefns from 'date-fns'
 import { checkAuthRedirect, parseArray } from '../index.js'
 import { stringifyLog } from './events.js'
 import * as wl from '../waiting-list.js'
@@ -19,7 +20,8 @@ router.get('/', checkAuthRedirect, async (req, res) => {
         orders: await db.getUserOrders(req.user.user_id), // gonna want some joins - tour name, artist name, venue and city, date
         // then for each seat, parse the array then get each seat from db as well
         wlError: req.query.hasOwnProperty("wl-error"),
-        wlSuccess: req.query.hasOwnProperty("wl-success")
+        wlSuccess: req.query.hasOwnProperty("wl-success"),
+        // waitingListSignUps: await db.
     }
 
     for (let order of context.orders) {
@@ -29,6 +31,33 @@ router.get('/', checkAuthRedirect, async (req, res) => {
         // order.seat_ids = parseArray(order.seat_ids)
         const seat_ids = parseArray(order.seat_ids)
         order.seats = await db.getSeats(...seat_ids) // WHY did i use the spread operator here *melt emoji*
+
+        // eligibility for refund - can't do in a helper as uses async to get event date    
+        // const purchasedDate = new Date(order.purchased_at)
+        order.purchased_at = new Date(order.purchased_at)
+        order.event_date = new Date((await db.getDateFromID(order.date_id)).date)
+        if (
+            Math.abs(datefns.differenceInDays(new Date(order.purchased_at), new Date())) < 14 
+            && Math.abs(datefns.differenceInDays(order.event_date, new Date())) > 7 
+        ) {
+            order.eligibleForRefund = true
+
+        } else {
+            order.eligibleForRefund = false
+            order.refundReason = Math.abs(datefns.differenceInDays(order.event_date, new Date())) < 7 ? "event date" : "purchase date"
+        }
+
+        // if () {
+        //     order.eligibleForRefund = true
+        // } else {
+        //     order.eligibleForRefund = false
+        //     order.refundReason = "event date"
+        // }
+        // order.eligibleForRefund = (
+        //     Math.abs(datefns.differenceInDays(new Date(purchasedDate), new Date())) < 14
+        //     &&
+        //     Math.abs(datefns.differenceInDays(eventDate, purchasedDate)) > 7
+        // )
     }
 
     // stringifyLog(context.orders)

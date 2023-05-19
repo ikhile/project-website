@@ -23,7 +23,7 @@ router.get("/artists", async (req, res) => {
 // router.get("/artists/:artist_id")
 
 router.get("/tours/:tour_id/venues", async (req, res) => {
-    res.json(await db.getTourDatesGroupedByVenue(req.params.tour_id))
+    res.json(await db.getDatesByTourGroupVenues(req.params.tour_id))
 })
 
 router.get("/tours/:tour_id/venues/:venue_id", async (req, res) => {
@@ -184,8 +184,8 @@ router.get("/available-seats", async (req, res) => {
                 // console.log(suitableTickets[ind].dates)
 
                 let date = new Date((await db.getDateFromID(seat.date_id)).date)
-                let fullDate = datefns.format(date, 'E do LLL yyyy')
-                let shortDate = datefns.format(date, 'do LLL')
+                let fullDate = datefns.format(date, 'E do LLLL yyyy')
+                let shortDate = datefns.format(date, 'do LLLL')
                 let seatNums = seatSlice[0].seat_number + (requiredQty > 1 ? ` - ${seatSlice[seatSlice.length-1].seat_number}` : "" )
 
                 let seatGroup = {

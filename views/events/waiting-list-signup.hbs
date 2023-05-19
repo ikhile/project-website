@@ -1,4 +1,4 @@
-<main class="text-center bg-white w-75 mx-auto my-4">
+<main class="text-center bg-white mx-auto my-4" style="max-width: 800px">
 
     <p id="alert-error" class="alert alert-danger d-none">There was an error. Please try again.</p>
 
@@ -8,19 +8,20 @@
         <p class="h4">{{tour.artist_name}} - {{tour.tour_name}}</p>
 
         <p id="alert-success" class="alert alert-success d-none">Thank you for signing up!</p>
+        <p id="alert-email-error" class="alert alert-danger d-none">Error sending email confirmation.</p>
 
         <hr class="col-11 mx-auto">
 
-        <section>
+        <section class="d-flex flex-column align-items-center">
             {{!-- <h3>Number of Tickets</h3> --}}
-            <label for="ticket-qty" class="col-9 m-auto">Please enter the minimum number of tickets you would like. You will be notified each time a group of at least this many tickets is released.<br>Maximum: {{tour.ticket_limit}}</label>
+            <label for="ticket-qty" class="col-9 m-auto">Please enter the minimum number of tickets you would like. You will be notified each time a group of at least this many tickets is released.<br>Maximum: {{maxTickets}}</label>
             {{!-- <br> --}}
             {{!-- <label for="ticket-qty">Tickets wanted (max: 4)</label>{{! later use tour.ticketLimit}} --}}
             <input 
                 id="ticket-qty" 
                 name="qty" 
                 type="number"
-                max="4" {{! later use tour.ticketLimit}}
+                max="{{maxTickets}}" {{! later use tour.ticketLimit}}
                 {{!-- oninvalid="this.setCustomValidity('Please enter the minimum number of tickets you would like')" --}} {{!https://stackoverflow.com/a/41357883}}
                 required
                 class="my-3 text-center"
@@ -49,7 +50,7 @@
                                     {{!-- oninvalid="this.setCustomValidity('Please choose at least one venue.')"
                                     required --}}
                                 >
-                                <label for="venue-{{this.venue_id}}" class="control-label position-relative d-flex">{{this.city}} -&nbsp;<i>{{this.venue}}</i></label>
+                                <label for="venue-{{this.venue_id}}" class="control-label position-relative">{{this.city}} -&nbsp;<i>{{this.venue}}</i></label>
                             </div>
                         </td>        
 
@@ -68,7 +69,7 @@
                                 multiple
                             >
                                 {{#each this.dates}}
-                                        <option title="{{formatDate this.date 'do LLL'}}" value={{this.date_id}}>{{formatDate this.date "EEEE do LLLL yyyy"}}</option>
+                                        <option title="{{formatDate this.date 'do LLLL'}}" value={{this.date_id}}>{{formatDate this.date "EEEE do LLLL yyyy"}}</option>
                                 {{/each}}
                             </select>
                         </td>
@@ -89,4 +90,4 @@
 </main>
 
 
-<script src="/js/signup.js" type="module"></script>
+<script src="/js/wl-signup.js" type="module"></script>

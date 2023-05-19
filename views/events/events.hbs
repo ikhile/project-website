@@ -12,12 +12,12 @@
         </a>
         <span class="d-block">
             {{#if (compareValues (formatDate this.firstDate.date 'yyyy') '==' (formatDate this.lastDate.date 'yyyy'))}}
-                {{formatDate this.firstDate.date "do LLL"}}
+                {{formatDate this.firstDate.date "do LLLL"}}
             {{else}}
-                {{formatDate this.firstDate.date "do LLL yyy"}}
+                {{formatDate this.firstDate.date "do LLLL yyy"}}
             {{/if}}
 
-            to {{formatDate this.lastDate.date "do LLL yyyy"}}
+            to {{formatDate this.lastDate.date "do LLLL yyyy"}}
 
         </span>
     </li>

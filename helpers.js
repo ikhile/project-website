@@ -1,4 +1,5 @@
 import * as datefns from 'date-fns'
+import * as db from './database.js'
 
 export function section (name, options) {
     if(!this._sections) this._sections = {}
@@ -8,7 +9,12 @@ export function section (name, options) {
 
 export function formatDate(date, format) {
     let args = Array.from(arguments); args.pop()
-    if (args.length == 1) format = "do LLL"
+    if (args.length == 1) format = "do LLLL"
+
+    if (/invalid date/i.test(new Date(date))) {
+        console.error(`Invalid date '${date}'`)
+        return
+    }
 
     return datefns.format(
         new Date(date), 
@@ -78,10 +84,10 @@ function groupedDatesToArray(groupedDates) {
 export function groupFormatDates(dates, groupFormat, dateFormat) {
     let args = Array.from(arguments); args.pop()
     groupFormat = args.length < 2 ? "startEnd" : groupFormat
-    // dateFormat = args.length < 3 ? "do LLL"  : dateFormat
+    // dateFormat = args.length < 3 ? "do LLLL"  : dateFormat
 
     if (dates.length == 1) {
-        return datefns.format(new Date(dates[0]), "do LLL yyyy")
+        return datefns.format(new Date(dates[0]), "do LLLL yyyy")
     }
     
     if (groupFormat == "commaSeparated") {
@@ -90,7 +96,7 @@ export function groupFormatDates(dates, groupFormat, dateFormat) {
 
         // need to add an and in
         for (let group of groupedDates) {
-            arr.push(`${group.map(a => datefns.format(new Date(a), "do")).join(", ")} ${datefns.format(new Date(group[0]), "LLL")}`)
+            arr.push(`${group.map(a => datefns.format(new Date(a), "do")).join(", ")} ${datefns.format(new Date(group[0]), "LLLL")}`)
         }
 
         return arr.join(", ")
@@ -102,13 +108,13 @@ export function groupFormatDates(dates, groupFormat, dateFormat) {
 
     if (start.getFullYear == end.getFullYear) {
         if (start.getMonth() == end.getMonth()) {
-            return `${datefns.format(start, "do")} - ${datefns.format(end, "do LLL yyyy")}`
+            return `${datefns.format(start, "do")} - ${datefns.format(end, "do LLLL yyyy")}`
         } else {
-            return `${datefns.format(start, "do LLL")} - ${datefns.format(end, "do LLL yyyy")}`
+            return `${datefns.format(start, "do LLLL")} - ${datefns.format(end, "do LLLL yyyy")}`
         }
     }
 
-    return `${datefns.format(start, "do LLL yyyy")} - ${datefns.format(end, "do LLL yyyy")}`
+    return `${datefns.format(start, "do LLLL yyyy")} - ${datefns.format(end, "do LLLL yyyy")}`
     
 }
 
@@ -189,3 +195,49 @@ export function slotFuture(slot) {
     return false
 }
 
+export function last(arr) {
+    return arr[arr.length - 1]
+}
+
+export function lastSlotEnd(slotsArr) {
+    return slotsArr[slotsArr.length - 1].end
+}
+
+export function lastSlotEndIsThisYear(slotsArr) {
+    console.log(lastSlotEnd(slotsArr))
+    return isThisYear(lastSlotEnd(slotsArr))
+}
+
+
+// can't use async in a helper .. gonna do in router
+export async function eligibleForRefund(order) {
+    console.log(order.purchased_at)
+    const purchasedDate = new Date(order.purchased_at)
+    const eventDate = new Date((await db.getDateFromID(order.date_id)).date)
+    console.log(purchasedDate, eventDate)
+    
+    // console.log(Math.abs(datefns.differenceInDays(purchasedDate, new Date())))
+    // console.log(Math.abs(datefns.differenceInDays(purchasedDate, new Date())) <= 14)
+    console.log(eventDate, purchasedDate, datefns.differenceInDays(eventDate, purchasedDate))
+    return Math.abs(datefns.differenceInDays(new Date(order.purchased_at), new Date())) < 14 && datefns.differenceInDays(eventDate, purchasedDate) < 7
+}
+
+export function formatDistance(date, baseDate) {
+    let args = Array.from(arguments); args.pop()
+    let invalidDates = false
+    baseDate = args.length == 1 ? new Date() : baseDate
+
+    if (/invalid date/i.test(new Date(date))) {
+        console.error(`Invalid date '${date}'`)
+        invalidDates = true
+    }
+
+    if (/invalid date/i.test(new Date(baseDate))) {
+        console.error(`Invalid date '${baseDate}'`)
+        invalidDates = true
+    }
+
+    if (invalidDates) return
+
+    return datefns.formatDistance(new Date(date), new Date(baseDate))
+}

@@ -221,3 +221,14 @@ CREATE TABLE IF NOT EXISTS slot_registrations (
     FOREIGN KEY (slot_id) REFERENCES purchase_slots(slot_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
+
+CREATE TABLE IF NOT EXISTS waiting_list (
+	wl_id INT NOT NULL AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    date_id INT NOT NULL,
+    qty INT NOT NULL,
+    
+    PRIMARY KEY (wl_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (date_id) REFERENCES dates(date_id)
+);

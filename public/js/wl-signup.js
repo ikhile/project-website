@@ -7,7 +7,18 @@ $(document).ready(async function() {
     let params = new URLSearchParams(window.location.search)
     let paramVenues = params.getAll('venue')
 
-    if (params.has("alert")) {
+    // if (params.has("alert")) {
+    //     switch (params.get("alert")) {
+    //         case "success":
+    //             $("p#info").addClass("d-none")
+    //             $("p#alert-success").removeClass("d-none")
+    //             break
+    //         case "error":
+    //             $("p#alert-error").removeClass("d-none")
+    //     }
+    // }
+
+    for (let alert of params.getAll("alert")) {
         switch (params.get("alert")) {
             case "success":
                 $("p#info").addClass("d-none")
@@ -15,12 +26,16 @@ $(document).ready(async function() {
                 break
             case "error":
                 $("p#alert-error").removeClass("d-none")
+                break
+            case "email-error":
+                $("p#alert-email-error").removeClass("d-none")
         }
     }
 
     // check any pre-selected venues from query string
     for (let venue of paramVenues) {
         if (!!venue) {
+            console.log(venue)
             $(`input[name=venues][value=${venue}]`).prop("checked", true)
         }
 
@@ -48,7 +63,7 @@ $(document).ready(async function() {
     }
 
     const tourID = window.location.pathname.match(/tour\/(\d)/)[1]
-    const { max_tickets } = await fetchData(`/api/tour/${tourID}/max`)
+    const { max_tickets } = await fetchData(`/api/tours/${tourID}/max`)
 
     $("#ticket-qty").attr("max", max_tickets)
     $("#ticket-qty").on("focusout", limitQtyInput)

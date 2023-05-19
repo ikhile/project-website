@@ -281,7 +281,7 @@ SET on_waiting_list = true
 WHERE order_id = 5;
 
 
-SELECT * FROM users WHERE waiting_lists REGEXP '\"{0,1}date_id\"{0,1}:\"{0,1}1\"{0,1}';
+SELECT * FROM users WHERE waiting_list REGEXP '\"{0,1}date_id\"{0,1}:\"{0,1}1\"{0,1}';
 
 SELECT date, artist_name, tour_name, venue_name, city
 FROM dates
@@ -289,6 +289,8 @@ INNER JOIN venues on dates.venue_id = venues.venue_id
 INNER JOIN tours ON dates.tour_id = tours.tour_id
 INNER JOIN artists ON tours.artist_id = artists.artist_id
 WHERE date_id = 1;
+
+INSERT INTO seats (date_id, price, slot_id, section, block, row_name, seat, onsale, available) VALUES (2, 0, 2, 'test', 'test', 'test', 5, false, true), (2, 0, 2, 'test', 'test', 'test', 6, false, true), (2, 0, 2, 'test', 'test', 'test', 7, false, true), (2, 0, 2, 'test', 'test', 'test', 8, false, true), (2, 0, 2, 'test', 'test', 'test', 9, false, true), (2, 0, 2, 'test', 'test', 'test', 10, false, true)
 
 INSERT INTO queues (tour_id) VALUES(2);
 
@@ -306,6 +308,6 @@ INSERT INTO slot_registrations (user_id, slot_id) VALUES(1, 2);
 DELETE FROM slot_registrations WHERE slot_id = 2 AND user_id = 1;
 
 SELECT * FROM slot_registrations
-INNER JOIN purchase_slots ON slot_registrations.slot_id. = purchase_slots.slot_id;
-WHERE user_id = ?
-AND tour_id = ?
+INNER JOIN purchase_slots ON slot_registrations.slot_id = purchase_slots.slot_id
+WHERE user_id = 1
+AND tour_id = 2;

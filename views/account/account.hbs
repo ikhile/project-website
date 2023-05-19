@@ -1,48 +1,76 @@
 <h2>Hi {{req.user.first_name}}!</h2>
 
-<h3>Your details</h3>
-<table>
-    <tr>
-        <th>Name</th>
-        <td>{{req.user.first_name}} {{req.user.last_name}}</td>
-    </tr>
-    <tr>
-        <th>Email</th>
-        <td>{{req.user.email}}</td>
-    </tr>
-</table>
+<section class="px-3 py-2">
+    <h3>Your details</h3>
+    <table>
+        <tr>
+            <th>Name</th>
+            <td>{{req.user.first_name}} {{req.user.last_name}}</td>
+        </tr>
+        <tr>
+            <th>Email</th>
+            <td>{{req.user.email}}</td>
+        </tr>
+    </table>
+</section>
 
-<h3>Purchases</h3>
-{{#if wlError}}
-    <p class="alert alert-danger">There was an issue adding your tickets to the waiting list. Please try again.</p>
-{{else if wlSuccess}}
-    <p class="alert alert-success">Your tickets have been added to the waiting list!</p>
-{{/if}}
+<section id="order-history" class="p-3">
+    <h3 class="text-center">Purchases</h3>
+    <p class="text-center">You have up to 14 days from date of purchase to request a refund, as long as the event is more than 7 days away.</p>
+    {{#if wlError}}
+        <p class="alert alert-danger">There was an issue adding your tickets to the waiting list. Please try again.</p>
+    {{else if wlSuccess}}
+        <p class="alert alert-success">Your tickets have been added to the waiting list!</p>
+    {{/if}}
 
 
-{{#each orders}}
-    <div class="card mx-auto my-3">
-        <p class="fs-5 my-1">
-            {{#if (isThisYear this.date)}}
-                {{formatDate this.date "EEEE do LLL"}}
-            {{else}}
-                {{formatDate this.date "EEEE do LLL yyyy"}}
-            {{/if}}
-        </p>
-        <p class="fs-4">{{this.artist_name}} {{this.tour_name}}</p>
-        <p>{{this.venue_name}}, {{this.city}}</p>
-        <p>Block {{this.seats.0.section}} Section {{this.seats.0.block}} Row {{this.seats.0.row_name}} Seat{{addPluralS this.seats.length}} {{groupSeats this.seats}}</p>
-        {{#if this.on_waiting_list}}
-            {{!-- <p>These tickets have been put on the waiting list and can no longer be used.</p> --}}
-            <p>These tickets have been put on the waiting list and can no longer be used.</p>
-        {{else}}
-            <form action="account/put-on-waiting-list" method="POST">
-                <input name="order_id" value={{this.order_id}} hidden>
-                <input name="date_id"  value={{this.date_id}}  hidden>
-                <input name="seat_ids" value={{this.seat_ids}} hidden>
-                <button>Put these tickets on the waiting list</button>
-            </form>
-        {{/if}}
-    </div>
-{{/each}}
-
+    {{#each orders}}
+        <hr>
+        <div class="mx-auto my-3 px-3 d-flex flex-row-reverse flex-wrap justify-content-between">
+            <div>
+                {{#if (isFuture this.event_date)}}
+                    {{#if this.eligibleForRefund}}
+                        <button 
+                            class="refund-btn btn btn-secondary float-end mb-2" 
+                            data-order="{{stringify this}}"
+                            data-order-id="{{this.order_id}}"
+                        >
+                            Request refund
+                        </button>
+                        <br>
+                    {{else}}
+                        <p class="small text-muted fst-italic mb-1">Not eligible for refund: 
+                            {{#if (compareValues this.refundReason "==" "event date")}}
+                                Event in less than 7 days
+                            {{else}}
+                                Purchased more than 14 days ago
+                            {{/if}}
+                        </p>
+                    {{/if}}
+                {{/if}}
+                <p class="mt-0 mb-1 text-end" style="clear: both">
+                    Purchased {{formatDistance this.purchased_at}} ago
+                </p>
+            </div>
+            <div>
+                <p class="fs-4">{{this.artist_name}} {{this.tour_name}}</p>
+                <p>
+                    {{this.venue_name}}, {{this.city}}
+                    {{#if (isThisYear this.date)}}
+                        {{formatDate this.date "EEEE do LLLL"}}
+                    {{else}}
+                        {{formatDate this.date "EEEE do LLLL yyyy"}}
+                    {{/if}}
+                </p>
+                <p>
+                    Block {{this.seats.0.section}}, 
+                    Section {{this.seats.0.block}}, 
+                    Row {{this.seats.0.row_name}}, 
+                    Seat{{addPluralS this.seats.length}} {{groupSeats this.seats}}
+                </p>
+            </div>
+            
+        </div>
+    {{/each}}
+        
+</section>

@@ -2,6 +2,9 @@ import express from 'express'
 import api, { checkAuthRedirect } from '../index.js'
 import * as db from '../database.js'
 import * as helpers from '../helpers.js'
+import nodemailer from 'nodemailer'
+import dotenv from 'dotenv';import { sendEmail } from '../emails.js'
+ dotenv.config()
 
 export const router = express.Router()
 export const stringifyLog = (input) => console.log(JSON.stringify(input, null, 2))
@@ -29,7 +32,7 @@ router.get('/', async (req, res) => {
     res.render('events/events', context)
 })
 
-router.get('/tour/:tour_id', async (req, res) => {
+router.get('/tour/:tour_id', validateTourID, async (req, res) => {
 
     const event = await api.get(`tours/${req.params.tour_id}`).then((res) => res.data)
     const venues = await api.get(`tours/${req.params.tour_id}/venues`).then((res) => res.data)
@@ -61,7 +64,7 @@ router.get('/tour/:tour_id', async (req, res) => {
     res.render('events/tour', context)
 })
 
-router.get('/tour/:tour_id/waiting-list', checkAuthRedirect, async (req, res) => {
+router.get('/tour/:tour_id/waiting-list', validateTourID, checkAuthRedirect, async (req, res) => {
     const tourID = req.params.tour_id
     const venueID = req.query.venue
 
@@ -74,17 +77,19 @@ router.get('/tour/:tour_id/waiting-list', checkAuthRedirect, async (req, res) =>
         user: req.user,
         // userSignedUp: // check db for user id
         tour: await api.get(`tours/${req.params.tour_id}`).then((res) => res.data),
-        venues: await api.get(`tours/${req.params.tour_id}/venues`).then((res) => res.data)
+        venues: await api.get(`tours/${req.params.tour_id}/venues`).then((res) => res.data),
+        maxTickets: await api.get(`tours/${req.params.tour_id}/max`).then(res => res.data.max_tickets)
     }
 
     res.render('events/waiting-list-signup', context)
 })
 
-router.post('/tour/:tour_id/waiting-list', checkAuthRedirect, async(req, res) => {
+router.post('/tour/:tour_id/waiting-list', validateTourID, checkAuthRedirect, async(req, res) => {
     // const redirectUrl = new URL(req.originalUrl) // can't set search params and only using relative path
     let redirectUrl = req.originalUrl
+    let tour = await db.getEventById(req.params.tour_id)
 
-    console.log(req.search) // could use that to check if there's params already
+    // console.log(req.search) // could use that to check if there's params already
 
     try {
         await db.addUserToWaitingList(req.user.user_id, req.body.dates, req.body.qty)
@@ -95,48 +100,29 @@ router.post('/tour/:tour_id/waiting-list', checkAuthRedirect, async(req, res) =>
         redirectUrl += (/\?/.test(req.originalUrl) ? "&" : "?") + "alert=error"
     }
 
-    // https://community.nodemailer.com/2-0-0-beta/templating/
-    var transporter = nodemailer.createTransport({
-        service: 'hotmail',
-        auth: {
-            user: process.env.EMAIL_USERNAME,
-            pass: process.env.EMAIL_PASSWORD,
-        },
-    })
+    try {
+        sendEmail(
+            req.user.email,
+            "You have signed up to the waiting list",
+            `Dear ${req.user.first_name}
+            You have signed up to the waiting list for ${tour.artist_name} ${tour.tour_name} and will be notified when ${req.body.qty} or more tickets are released.`
+        )
 
-    let template = `
-    <h1>Hello{{user}}<p>
-    `
-
-    console.log(dateInfo)
-
-    let text = `You have signed up to be notified when ${req.body.qty} tickets have been released for ...`
-    
-    var mailOptions = {
-        from: process.env.EMAIL_USERNAME,
-        to: req.user.email,
-        subject: 'Signed up for waiting list',
-        text: text
+    } catch (err) {
+        console.error(err)
+        redirectUrl += (/\?/.test(req.originalUrl) ? "&" : "?") + "alert=email-error"
     }
-    
-    transporter.sendMail(mailOptions, function(error, info){
-        if (error) {
-            console.log(error)
-        } else {
-            console.log('Email sent: ' + info.response)
-        }
-    })
 
     res.redirect(redirectUrl)
 })
 
-router.get('/purchase/tour/:tour_id/queue/', checkAuthRedirect, async (req, res) => {
+router.get('/purchase/tour/:tour_id/queue/', validateTourID, checkAuthRedirect, async (req, res) => {
     console.log(req.user)
     let context = {
         req,
         layout: req.isAuthenticated() ?'main-logged-in' : 'main',
         event: await db.getEventById(req.params.tour_id),
-        qry: req.query
+        queryVenue: req.query.venue
     }
 
     res.render('queue', context)
@@ -144,11 +130,43 @@ router.get('/purchase/tour/:tour_id/queue/', checkAuthRedirect, async (req, res)
     // could add user to queue here
 })
 
-// router.get('/purchase/slot/:slot_id/', async (req, res) => {
-//     // check signed up for slot
-//     // if so, redirect to purchase page - purchase page must have redirect
-//     // if not, redirect to tour page
-// })
+router.get(
+    [
+        '/purchase/tour/:tour_id/', 
+        '/purchase/tour/:tour_id/venue',
+        '/purchase/tour/:tour_id/venue/:venue_id',
+    ], 
+    validateTourID, validateVenueID, checkAuthRedirect, checkSlotAuth, async (req, res) => {
+
+    // validate venue ID same way as tour
+    // if (req.params.venue_id) {
+
+    // }
+
+    let context = {
+        req,
+        layout: req.isAuthenticated() ? 'main-logged-in' : 'main',
+        cardContext: {
+            event: await api.get(`tours/${req.params.tour_id}`).then((res) => res.data),
+            venues: await api.get(`tours/${req.params.tour_id}/venues`).then((res) => res.data),
+        },
+        tour: await db.getEventById(req.params.tour_id),
+        venueSelected: !!req.params.venue_id,
+        isSlotSale: !!res.locals.isSlotSale, // use when getting available tickets to get slot
+        slotID: res.locals.slot_id ?? null
+    }
+
+    if (!!req.params.venue_id) {
+        context.venue = await db.getVenueById(req.params.venue_id)
+        context.venueDates = await db.getDatesByTourAndVenue(req.params.tour_id, req.params.venue_id)
+        context.maxTickets = await api.get(`tours/${req.params.tour_id}/max`).then((res) => res.data.max_tickets)
+    }
+    
+    res.render('events/purchase-page', context)
+})
+
+
+// MIDDLEWARE
 
 async function checkSlotAuth(req, res, next) {
     // MAYBE check first if tour has open or future slots
@@ -156,10 +174,8 @@ async function checkSlotAuth(req, res, next) {
     // if not then send a lil "you are not signed up to this purchase slot" page with a back button to tour page
     // if so then pass slot id/slot sale = true through to context and render page
 
-    // put this in a middleware - checkSlotAuth or similar
-
     let slots = await db.getSlotsByTour(req.params.tour_id)
-    let hasOpenSlot = false, openSlot = true, hasFutureSlots = false//, authorisedForSlot = false
+    let hasOpenSlot = false, openSlot = true, hasFutureSlots = false
 
     for (let slot of slots) {
         if (helpers.slotOngoing(slot)) {
@@ -171,131 +187,58 @@ async function checkSlotAuth(req, res, next) {
         }
     }
 
-    console.log(req.protocol + '://' + req.get('host') + req.originalUrl) // https://dev.to/smpnjn/how-to-get-the-full-url-in-express-on-nodejs-2h23
-
+    // https://dev.to/smpnjn/how-to-get-the-full-url-in-express-on-nodejs-2h23
     let redirectUrl = new URL((req.protocol + '://' + req.get('host') + req.originalUrl).replace("/purchase", ""))
 
     if (hasOpenSlot) {
-        // check user authenticated for slots
-        console.log("open slot")
+        // check if user is authenticated for open slot
         let [[{authorisedForSlot}]] = await db.pool.query(`
             SELECT EXISTS(SELECT * FROM slot_registrations WHERE user_id = ? AND slot_id = ?) as authorisedForSlot
         `, [req.user.user_id, openSlot.slot_id])
-        console.log(2, Boolean(authorisedForSlot))
-
         authorisedForSlot = Boolean(authorisedForSlot)
+
+        // if authorised, pass ID of slot to router/renderer
         if (authorisedForSlot) {
-            res.locals.isSaleSlot = true
-            req.slotID = openSlot.slot_id
+            res.locals.isSlotSale = true
+            res.locals.slotID = openSlot.slot_id
             return next() // https://stackoverflow.com/a/53557817
+
+        // else redirect to main tour page query string to show info
         } else {
             redirectUrl.searchParams.set("alert", "not-authorised")
             res.redirect(redirectUrl)
         }
     }
     
+    // if no open slot but there are upcoming slots for this tour, redirect to main tour page query string to show info
     if (hasFutureSlots) {
-        // say can't purchase yet
-        console.log("not auth")
-        // res.send("to purchase tickets for this tour, please sign up to one of the purchase slots [link to tour page]")
-
         redirectUrl.searchParams.set("alert", "future-slots")
         res.redirect(redirectUrl)
-        // nah actually i should redirect to tour page with an alert
     }
 
+    // continue to main router if no slots involved
     return next()
 }
 
-router.get(
-    [
-        '/purchase/tour/:tour_id/', 
-        '/purchase/tour/:tour_id/venue',
-        '/purchase/tour/:tour_id/venue/:venue_id',
-        // '/purchase/slot/:slot_id/tour/:tour_id/',
-        // '/purchase/slot/:slot_id/tour/:tour_id/venue'
-    ], checkAuthRedirect, checkSlotAuth, async (req, res) => {
+async function validateTourID(req, res, next) {
+    const [[{exists}]] = await db.pool.query(`
+        SELECT EXISTS (SELECT tour_id FROM tours WHERE tour_id = ?) as "exists"
+    `, req.params.tour_id)
+    if (!Boolean(exists)) return res.status(404).render('events/404', { error: "event" })
+    next()
+}
 
-    console.log(!!req.params.venue_id)
+async function validateVenueID(req, res, next) {
+    console.log("validate venue")
+    if (req.params.venue_id) {
+        console.log("has")
+        const [[{exists}]] = await db.pool.query(`
+            SELECT EXISTS (SELECT tour_id FROM tours WHERE tour_id = ?) as "exists"
+        `, req.params.venue_id)
 
-    console.log(2, !!res.locals.isSaleSlot)
-    let tour_id = req.params.tour_id
-    // if (!!req.params.slot_id) {
-    //     // check authorised - if not, redirect to purchase page
-    //     const slot = await db.getSlotById(req.params.slot_id)
-    //     console.log(slot)
-    //     tour_id = await slot.tour_id
-    // }
-
+        if (!Boolean(exists)) return res.status(404).render('events/404', { error: "venue" })
+    }
     
+    next()
+}
 
-    // console.log(await slots)
-
-    // console.log(tour_id)
-
-    let context = {
-        req,
-        layout: req.isAuthenticated() ? 'main-logged-in' : 'main',
-        cardContext: {
-            event: await api.get(`tours/${tour_id}`).then((res) => res.data),
-            venues: await api.get(`tours/${tour_id}/venues`).then((res) => res.data),
-        },
-        tour: await db.getEventById(tour_id),
-        venueSelected: false,
-        isPurchaseSlotSale: !!req.isSaleSlot, // use when getting available tickets to get slot
-        slotID: req.slot_id
-    }
-
-    res.render('events/purchase-page', context)
-})
-
-router.get(['/purchase/tour/:tour_id/venue/:venue_id', '/purchase/slot/:slot_id/venue/:venue_id'], checkAuthRedirect, checkSlotAuth, async (req, res) => {
-
-    console.log(2, !!res.locals.isSaleSlot)
-
-
-    let context = {
-        req,
-        layout: req.isAuthenticated() ?'main-logged-in' : 'main',
-        cardContext: {
-            event: await api.get(`tours/${req.params.tour_id}`).then((res) => res.data),
-            venues: await api.get(`tours/${req.params.tour_id}/venues`).then((res) => res.data),
-        },
-        tour: await db.getEventById(req.params.tour_id),
-        venue: await db.getVenueById(req.params.venue_id),
-        venueDates: await db.getDatesByTourAndVenue(req.params.tour_id, req.params.venue_id),
-        maxTickets: await api.get(`tours/${req.params.tour_id}/max`).then((res) => res.data.max_tickets),
-        venueSelected: true
-    }
-
-    // don't think I need any of this? not sure why I started it tbh
-    // const params = new URLSearchParams(req.query)
-    // const qryDates = params.getAll("date")
-    // if (qryDates.length == 0 || qryDates.length == context.venueDates.length) {
-    //     // console.log("get all dates")
-    //     // use req.query to get ticket info for all selected dates and send in context
-    // }
-    // use req.query to return available seats for number of tickets
-    // 
-    // console.log(context.cardContext)
-
-    res.render('events/purchase-page', context)
-})
-
-router.get('/artist/:artist_id', (req, res) => {
-    // res.send("artist id: " + req.params.artist_id)
-    // let artist = loadArtist(req.params.artist)
-
-    // if (!artist) {
-    //     res.status(404).render('events/404')
-    //     return
-    // }
-
-    // let context = {
-    //     artist: artist[0].artist.label,
-    //     tours: loadArtist(req.params.artist),
-    // }
-
-    // res.render('events/artist', context)
-    res.send(`artist page (artist = ${req.params.artist_id})`)
-})

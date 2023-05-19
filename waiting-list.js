@@ -41,7 +41,7 @@ export async function unreleaseTickets() {}
 export async function notifyTicketsReleased(dateID, qty) {
     console.log("notify")
     let [dateInfo] = await db.getDateInfo(dateID)
-    let users = await db.findUsersOnWaitingListByDateId(dateID)
+    let users = await db.findWLUsersByDateAndQty(dateID)
     let userList = []
     let emailList = []
 

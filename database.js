@@ -1,6 +1,8 @@
 import mysql from 'mysql2'
 import dotenv from 'dotenv'
 import { parseArray, stringifyArray } from './index.js'
+import { sendEmail } from './emails.js'
+import * as datefns from 'date-fns'
 dotenv.config()
 
 export const pool = mysql.createPool({
@@ -8,8 +10,11 @@ export const pool = mysql.createPool({
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASSWORD,
     database: process.env.MYSQL_DATABASE,
-    dateStrings: true // https://stackoverflow.com/a/52398828
+    dateStrings: true // means dates are returned as strings without an arbitrarty time added - https://stackoverflow.com/a/52398828
 }).promise()
+
+
+// EVENTS
 
 export async function getAllEvents(limit = null) {
     // let query = `
@@ -50,7 +55,6 @@ export async function getAllEvents(limit = null) {
     return events
 }
 
-
 export async function tourSalesStart(tourID) {
     const slots = await getSlotsByTour(tourID)
     if (slots.length == 0) return new Date("2000-01-01") // random past date to compare to
@@ -69,6 +73,9 @@ export async function getEventById(tourID) {
     return rows[0]
 }
 
+
+// DATES
+
 export async function getTourDates(tourID) {
     const [rows] = await pool.query(`
         SELECT * 
@@ -81,10 +88,8 @@ export async function getTourDates(tourID) {
     return rows
 }
 
-// export async function
-
 // this is a really similar name to below lol
-export async function getTourDatesGroupedByVenue(tourID) {
+export async function getDatesByTourGroupVenues(tourID) {
     const [rows] = await pool.query(`
         SELECT * 
         FROM dates 
@@ -135,7 +140,7 @@ export async function getDateFromID(dateID) {
 }
 
 export async function getDateInfo(dateID) {
-    const [info] = await pool.query(`
+    const [[info]] = await pool.query(`
         SELECT date, artist_name, tour_name, venue_name, city
         FROM dates
         INNER JOIN venues on dates.venue_id = venues.venue_id
@@ -146,6 +151,9 @@ export async function getDateInfo(dateID) {
 
     return info
 }
+
+
+// VENUES
 
 export async function getVenueById(venueID) {
     const [rows] = await pool.query(`
@@ -158,6 +166,9 @@ export async function getVenueById(venueID) {
     return rows[0]
 }
 
+
+// ARTISTS
+
 export async function getAllArtists() {
     const [rows] = await pool.query(`
         SELECT *
@@ -167,13 +178,12 @@ export async function getAllArtists() {
     return rows
 }
 
+
+// SEARCH
+
 export async function search(searchTerm) {
     // https://stackoverflow.com/questions/28717868/sql-server-select-where-any-column-contains-x#comment-105517868
     // https://www.w3schools.com/sql/sql_like.asp
-
-    // let value = `%${searchTerm}%`
-    // let values = ("%" + searchTerm + "%").repeat(4)
-    // let values = new Array(4).fill(`%${searchTerm}%`, 0, 4)
 
     const [results] = await pool.query(` 
         SELECT *
@@ -219,6 +229,9 @@ export async function search(searchTerm) {
 
     return grouped
 }
+
+
+// SEATS
 
 export async function getSeats(...seatIDs) {
     let query = `
@@ -296,6 +309,20 @@ export async function setSeatAvailability(available, seatIDs) {
     return affectedRows
 }
 
+
+// STRIPE
+
+export async function updateStripeID(userID, stripeID) {
+    await pool.query(`
+        UPDATE users
+        SET stripe_id = ?
+        WHERE user_id = ?
+    `, [stripeID, userID])
+
+    return await getUserById(stripeID)
+}
+
+
 // USERS
 
 export async function addUser(firstName, lastName, email, hashedPassword) {
@@ -316,18 +343,6 @@ export async function addUser(firstName, lastName, email, hashedPassword) {
         console.error(error)
     }
 
-}
-
-// STRIPE
-
-export async function updateStripeID(userID, stripeID) {
-    await pool.query(`
-        UPDATE users
-        SET stripe_id = ?
-        WHERE user_id = ?
-    `, [stripeID, userID])
-
-    return await getUserById(stripeID)
 }
 
 export async function getUsers() {
@@ -363,6 +378,8 @@ export async function checkEmailAvailable(email) {
 }
 
 
+// QUEUE (cancel this)
+
 export async function getTourQueue(tourID) {
     let [[{queue_exists}]] = await pool.query(`SELECT EXISTS(SELECT * FROM queues WHERE tour_id = ?) as "queue_exists"`, tourID)
     
@@ -383,8 +400,6 @@ export async function getTourQueue(tourID) {
     return queue
 }
 
-// console.log(2, await getTourQueue(1))
-
 export async function addUserToQueue(tourID, userID) {
     const queueObj = await getTourQueue(tourID)
     console.log(queueObj, queueObj.queue_id)
@@ -403,8 +418,6 @@ export async function addUserToQueue(tourID, userID) {
         WHERE queue_id = ?
     `, [stringifyArray(queueArr) ,queueObj.queue_id])
 }
-
-
 
 export async function removeUserFromQueue(tourID, userID) {
     const queueObj = await getTourQueue(tourID)
@@ -430,55 +443,40 @@ export async function decrementHeadcount(tourID) {
     await pool.query("UPDATE queues SET headcount = headcount - 1 WHERE tour_id = ?", tourID)
 }
 
+
+// WAITING LIST
+
 export async function addUserToWaitingList(userID, dateIDs, qty) {
 
-    let [[{waiting_lists: waitingLists}]] = await pool.query(`
-        SELECT (waiting_lists) FROM users WHERE user_id = ?
-    `, userID)
-
-    waitingLists = !!waitingLists ? JSON.parse(waitingLists) : []
+    // for both values = [qty, user_id, date_id]
+    let insertQry = "INSERT INTO waiting_list (qty, user_id, date_id) VALUES (?, ?, ?)"
+    let updateQry = "UPDATE waiting_list SET qty = ? WHERE user_id = ? AND date_id = ?"
 
     for (let dateID of dateIDs) {
-        let insertObj = { date_id: dateID, qty: qty }
-        let ind = waitingLists.findIndex(a => a.date_id == dateID)
-        if (ind >= 0) waitingLists[ind] = insertObj
-        else waitingLists.push(insertObj)
+        let [[{alreadyOnList}]] = await pool.query(`SELECT EXISTS(SELECT * FROM waiting_list WHERE user_id = ? AND date_id = ?) AS alreadyOnList`, [userID, dateID]); alreadyOnList = Boolean(alreadyOnList)
+        console.log(alreadyOnList)
+        const values = [qty, userID, dateID]
+
+        if (alreadyOnList) await pool.query(updateQry, values)
+        else await pool.query(insertQry, values)
     }
+}
 
-    waitingLists = JSON.stringify(waitingLists)
+export async function findWLUsersByDateAndQty(dateID, qty) {
+    const [users] = await pool.query(`
+        SELECT * FROM users
+        INNER JOIN waiting_list ON waiting_list.user_id = users.user_id
+        WHERE date_id = ?
+        AND qty >= ?
+    `, [dateID, qty])
 
-    await pool.query(`
-        UPDATE users
-        SET waiting_lists = ?
-        WHERE user_id = ?
-    `, [waitingLists, userID])
-
-    // EMAIL USER
-    const { email } = await getUserById(userID)
-    console.log(await email)
-} 
-
-// addUserToWaitingList(1, [2, 3, 5], 3)
-
-export async function findUsersOnWaitingListByDateId(dateID) {
-    const [users] = await pool.query(`SELECT * FROM users WHERE waiting_lists REGEXP '\"{0,1}date_id\"{0,1}:\"{0,1}?\"{0,1}'`, dateID) // can't use ? for optional char as already used for wildcard
     return users
 }
 
-// console.log(await findUsersOnWaitingListByDateId(1))
 
-// export async function 
+// ORDERS
 
 export async function addOrder(session, user, tour, venue, date, seats, meta) {
-    /*stripe_order_id VARCHAR(255),
-    user_id INT,
-    tour_id INT,
-    date_id INT,
-    seat_ids VARCHAR(255),
- --   status VARCHAR(255), -- set pending from success page, use webhook to set complete
-    stripe_metadata TEXT,
-    on_waiting_list BOOLEAN, */
-
     return await pool.query(`
         INSERT INTO orders (stripe_session_id, user_id, tour_id, venue_id, date_id, seat_ids, stripe_metadata)
         VALUES(?, ?, ?, ?, ?, ?, ?)
@@ -487,7 +485,7 @@ export async function addOrder(session, user, tour, venue, date, seats, meta) {
 
 export async function getUserOrders(userID) {
     const [orders] = await pool.query(`
-    SELECT order_id, orders.date_id, date, orders.tour_id, tour_name, artist_name, orders.venue_id, venue_name, city, stripe_session_id, on_waiting_list, seat_ids
+    SELECT order_id, orders.date_id, date, orders.tour_id, tour_name, artist_name, orders.venue_id, venue_name, city, stripe_session_id, on_waiting_list, seat_ids, purchased_at
     FROM orders 
     INNER JOIN tours ON orders.tour_id = tours.tour_id
     INNER JOIN artists ON tours.artist_id = artists.artist_id
@@ -497,6 +495,8 @@ export async function getUserOrders(userID) {
     `, userID)
     return orders
 }
+
+// SLOTS
 
 export async function getSlotsByTour(tourID) {
     const [slots] = await pool.query(`
@@ -552,3 +552,64 @@ export async function getUserTourSlots(userID, tourID) {
     `, [userID, tourID])
     return slots.map(a => a.slot_id)
 }
+
+// SEATS
+
+export async function addSeats(schema) {
+    function arrayFromRange (start, end) {
+        if (end < start) [start, end] = [end, start]
+        return Array.from(Array(end - start + 1).keys()).map(a => a + start)
+    }
+
+    // put together a query using all of the provided seats
+    let query = "INSERT INTO seats (date_id, price, purchase_slot_id, section, block, row_name, seat_number, onsale, available) VALUES ", values = [], dateQtyAdded = {}
+
+    for (let row of schema) {
+        const seatRange = arrayFromRange(...row.seats)
+        if (seatRange.length > dateQtyAdded[row.dateID] || !dateQtyAdded.hasOwnProperty(row.dateID)) dateQtyAdded[row.dateID] = seatRange.length
+
+        for (let [i, seat] of seatRange.entries()) {
+            // add a new line of placeholders to query
+            query += `(?, ?, ?, ?, ?, ?, ?, ?, ?)` + (i < seatRange.length - 1 ? ",\n" : "")
+            // add corresponding values to values array
+            values.push(row.dateID, row.price, row.slotID ?? null, row.section, row.block, row.row, seat, false, true)
+        }
+    }
+
+    // execute query
+    await pool.query(query, values)
+
+    // email users on waiting list
+
+
+    for (let [date, qty] of Object.entries(dateQtyAdded)) { 
+        
+        // probs need to check the on-sale date of the tour but eh
+        // something like select general sale start from dates inner join tours...
+        // if start is future
+        // then need to use slot ids but this differs for each seat... maybe add to dateQty added?
+
+        // get users on waiting list
+        let [users] = await pool.query(`
+            SELECT *
+            FROM waiting_list 
+            INNER JOIN users ON waiting_list.user_id = users.user_id
+            WHERE date_id = ? AND qty <= ?`, [date, qty])
+
+        // use users list to send emails
+        let dateInfo = await getDateInfo(date)
+        console.log(dateInfo)
+
+        sendEmail(
+            users.map(user => user.email), 
+            `Tickets released for ${dateInfo.tour_name}`,
+            `Tickets have been released for ${dateInfo.artist_name} ${dateInfo.tour_name} on ${datefns.format(new Date(dateInfo.date), "EEE do LLLL yyyy")} at ${dateInfo.venue_name}, ${dateInfo.city}`
+        )
+    }
+
+    return [query, values]
+}
+
+const template = {dateID: 2, price: 0, slotID: 2, section: "test", block: "test", row: "test", seats: [10, 5]}
+
+// console.log(await addSeats([template]))

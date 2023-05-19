@@ -8,7 +8,7 @@
             {{#each events}}
                 <li class="m-1 p-2 card">
                     <a href="events/tour/{{this.tour_id}}">{{this.artist_name}}: {{this.tour_name}}</a>
-                    <span class="d-block">{{formatDate this.firstDate.date "do LLL ''yy"}} to {{formatDate this.lastDate.date "do LLL ''yy"}}</span>
+                    <span class="d-block">{{formatDate this.firstDate.date "do LLLL ''yy"}} to {{formatDate this.lastDate.date "do LLLL ''yy"}}</span>
                 </li>
             {{/each}}
         </ul>
@@ -24,10 +24,10 @@
                     <img class="card-img-top" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJiT-UHSm6w0Jperb8SitpfoAKeMUE3uynPg5YO-2Drw&s" alt="">
                     <p class="h5 card-title px-3 mb-1 mt-2">{{this.artist_name}}</p>
                     <a href="events/tour/{{this.tour_id}}" class="stretched-link px-3">{{this.tour_name}}</a>
-                    <p class="d-block mb-0 mt-1 px-3 pb-2">{{formatDate this.firstDate.date "do LLL ''yy"}} to {{formatDate this.lastDate.date "do LLL ''yy"}}</p>
+                    <p class="d-block mb-0 mt-1 px-3 pb-2">{{formatDate this.firstDate.date "do LLLL ''yy"}} to {{formatDate this.lastDate.date "do LLLL ''yy"}}</p>
                     <p class="fw-bold px-3">
                         {{#if (isFuture this.salesStart)}}
-                            Sales start {{formatDate this.salesStart "HH:mm EEE do LLL"}}
+                            Sales start {{formatDate this.salesStart "HH:mm EEE do LLLL"}}
                         {{else}}
                             On sale now
                         {{/if}}

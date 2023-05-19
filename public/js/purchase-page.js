@@ -3,7 +3,7 @@ import { fetchData } from "./fetchData.js"
 
 // import { fetchData } from "./fetchData"
 let tourID = window.location.href.match(/tour\/(\d+)/)[1]
-const venueRegex = /venue\/(\d+)/, venueID = venueRegex.test(window.location.href)  ? window.location.href.match(venueRegex) : null
+const venueRegex = /venue\/(\d+)/, venueID = venueRegex.test(window.location.href)  ? window.location.href.match(venueRegex)[1] : null
 let selectedDateIDs = [], numDates = $("input[name=date]").length
 let ticketQty, qtyInput = $('input[name="qty"]')
 let ticketResponse, ticketResIndex
@@ -12,14 +12,9 @@ let maxTickets = parseInt($('meta[name="tour-id"]').attr("content"))
 
 
 $(document).ready(async function () {
-    console.log($("header").height(), $("footer").height())
-
     $(".modal").css("margin-top", $("header").height())
     $(".modal").css("height", $(document).height() - $("header").outerHeight() - $("footer").outerHeight())
-    // tourID = window.location.href.match(/tour\/(\d*)/)[1]
-    // venueID = /venue\/(\d*)/.test(window.location.href)  ? window.location.href.match(/venue\/(\d*)/) : -1
-
-    console.log(tourID, !!venueID, /venue\/(\d+)/.test(window.location.href))
+    $("body").css("margin-bottom", $("footer").outerHeight() + 10)
 
     $(window).on("beforeunload", function() {
         console.log("pagehide")
@@ -133,9 +128,7 @@ async function updateDates() {
         selectedDateIDs.push($(elem).val())
     })
 
-    $("#waiting-list-form-footer input[name=dates]").val(stringifyArray(selectedDateIDs))
-    console.log($("#waiting-list-form-footer input[name=dates]").val())
-
+    $("input[name=dates]").val(stringifyArray(selectedDateIDs))
     // the below allows for refreshing the page to keep the same dates and qty selected (noticed because I constantly refresh this page, thought it'd be nice)
     // https://stackoverflow.com/questions/824349/how-do-i-modify-the-url-without-reloading-the-page
     // https://developer.mozilla.org/en-US/docs/Web/API/History/pushState#change_a_query_parameter
@@ -267,7 +260,7 @@ function toggleCityPopup() {
 
 
 // can store a max quantity in the database for each tour
-// let maxTickets = 4 // fetchData(`/api/tour/${tourID}/max`) ?? 4
+// let maxTickets = 4 // fetchData(`/api/tours/${tourID}/max`) ?? 4
 // then also want to check number purchased by user already for thcont
 // let maxTickets = parseInt($('meta[name="tour-id"]').attr("content"))
 
