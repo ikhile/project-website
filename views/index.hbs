@@ -1,9 +1,9 @@
-<main id="index-main" class="d-flex flex-column flex-grow-1 justify-content-center">
-    <h1 class="text-center py-1 my-0 text-uppercase fw-700">
+<main id="index-main" class="d-flex flex-column flex-grow-1 justify-content-center align-items-center">
+    <h1 class="text-center py-1 my-0 text-uppercase fw-700 px-3 pink-glo">
         {{#if (isAuth req)}}<span class="small d-block">Hi {{req.user.first_name}}</span>{{/if}}
-        Welcome to tickety boo!</h1>
-    <section id="upcoming-events" class="text-center pt-3 pb-4">
-        <h2 class="text-uppercase fw-800 mb-3 fs-1">Upcoming Events</h2>
+        Welcome to tixfix!</h1>
+    <section id="upcoming-events" class="text-center pt-2">
+        <h2 class="text-uppercase fw-800 mb-4 fs-1">Upcoming Events</h2>
         <div class="d-flex flex-wrap justify-content-center" style="gap: 12px">
             {{#each events}}
                 <div class="card hover-scale event-card">

@@ -330,4 +330,18 @@ INNER JOIN purchase_slots.slot_id = slot_reg
 INNER JOIN tours ON tours.tour_id = purchase_slots.tour_id
 FROM purchase_slots;
 
+SELECT DISTINCT price
+FROM seats
+INNER JOIN dates ON dates.date_id = seats.date_id
+WHERE tour_id = 1;
 
+SELECT COUNT(*) AS count
+FROM seats
+INNER JOIN dates ON seats.date_id = dates.date_id
+WHERE tour_id = 1
+AND available = true;
+
+SELECT COUNT(*) AS count
+FROM seats
+INNER JOIN dates ON seats.date_id = dates.date_id
+WHERE tour_id = ? AND available = true

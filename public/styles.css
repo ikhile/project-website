@@ -94,12 +94,17 @@ main {
 
 #index-main h1 {
     color:rgba(0, 255, 234, 0.65);
-    filter: drop-shadow(0 0 2px white)
+    /* color:var(--white-0-5); */
+    text-shadow: 0 0 10px rgb(0, 255, 234);
+    filter: drop-shadow(0 0 10px rgb(0, 137, 155)) drop-shadow(0 0 5px rgba(255, 255, 255, 0.435));
+    /* background-color: rgba(60, 83, 255, 0.35); */
+    /* display: inline; */
+    /* border-radius: 50%; */
 }
 
 #index-main h2 {
     color:rgba(0, 0, 0, 0.7);
-    filter: drop-shadow(0 0 3px );
+    /* filter: drop-shadow(0 0 3px white); */
 }
 
 .event-card {
@@ -163,6 +168,10 @@ main {
 .navbar .dropdown-menu a {
     text-decoration: none;
     color: inherit !important;
+}
+
+.line-height-1em { /*use to make numbers space better vertically*/
+    line-height: 1em !important;
 }
 
 .note-to-self, .comment {

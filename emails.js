@@ -12,7 +12,7 @@ var transporter = nodemailer.createTransport({
 })
 
 export function sendEmail(to, subject, text) {
-    const options = { from: `Ticket site <${process.env.EMAIL_USERNAME}>`, to, subject, text }
+    const options = { from: `TixFix <${process.env.EMAIL_USERNAME}>`, to, subject, text }
 
     transporter.sendMail(options, (error, info) => {
         if (error) console.error(error)

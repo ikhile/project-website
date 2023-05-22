@@ -129,13 +129,76 @@ router.post('/tour/:tour_id/waiting-list', validateTourID, checkAuthRedirect, as
 })
 
 router.get('/purchase/tour/:tour_id/queue/', validateTourID, checkAuthRedirect, async (req, res) => {
-    console.log(req.user)
     let context = {
         req,
         layout: req.isAuthenticated() ?'main-logged-in' : 'main',
         event: await db.getEventById(req.params.tour_id),
         venue_id: req.query.venue
     }
+
+    let availableSeats, totalSeats, prices
+    const {tour_id} = req.params
+
+    const baseSeatQuery = `
+        SELECT COUNT(*) AS count
+        FROM seats
+        INNER JOIN dates ON seats.date_id = dates.date_id
+        WHERE tour_id = ? `
+
+    const basePriceQuery = `
+        SELECT price FROM seats
+        INNER JOIN dates ON seats.date_id = dates.date_id
+        WHERE tour_id = ? `
+
+    if (req.query.venue) {
+        const totalQuery = baseSeatQuery + " AND venue_id = ?"
+        const availableQuery = totalQuery + " AND available = true"
+
+        ;(
+            [[{count: totalSeats}]] = await db.pool.query(totalQuery, [tour_id, req.query.venue])
+        )
+
+        ;(
+            [[{count: availableSeats}]] = await db.pool.query(availableQuery, [tour_id, req.query.venue])
+        )
+
+    } else {
+        const availableQuery = baseSeatQuery + "AND available = true"
+
+        ;(
+            [[{count: totalSeats}]] = await db.pool.query(baseSeatQuery, tour_id)
+        )
+
+        ;(
+            [[{count: availableSeats}]] = await db.pool.query(availableQuery, tour_id)
+        )
+
+        console.log(tour_id, basePriceQuery)
+
+        ;(
+            [prices] = await db.pool.query(basePriceQuery, tour_id)
+        )
+        prices = prices.map(obj => parseFloat(obj.price))
+    }
+
+    context.availability = {
+        decimal: availableSeats / totalSeats,
+        percent: availableSeats / totalSeats * 100,
+        percentage: parseFloat((availableSeats / totalSeats * 100).toFixed(2)) + "%",
+
+
+    }
+    console.log(prices)
+    context.prices = {
+        min: !!prices ? Math.min(...prices) : 0,
+        max: !!prices ? Math.max(...prices) : 0,
+        avg: !!prices ? prices.reduce((a, b) => a + b) / prices.length : 0
+    }
+    console.log(totalSeats, availableSeats, context.availability, context.prices)
+
+
+    // get availability
+    console.log(context)
 
     res.render('events/queue', context)
 

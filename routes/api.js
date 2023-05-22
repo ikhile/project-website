@@ -3,6 +3,7 @@ import * as db from '../database.js'
 import * as datefns from 'date-fns'
 import { stringifyLog } from './events.js'
 import { parseArray, stringifyArray } from '../index.js'
+import { sendEmail } from '../emails.js'
 
 export const router = express.Router()
 
@@ -318,6 +319,9 @@ router.post("/slot-signup", async (req, res) => {
 })
 
 router.post("/slot-signup/remove", async (req, res) => {
-    console.log("remove")
     await db.removeSlotSignup(req.body.user_id, req.body.slot_id)
+})
+
+router.post("/send-email", async (req, res) => {
+    sendEmail(req.body.to, req.body.subject, req.body.text)
 })

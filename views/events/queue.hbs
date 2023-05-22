@@ -1,14 +1,26 @@
-<main class="d-flex flex-column text-center align-items-center justify-content-center text-white" style="background-color: var(--black-0-5)">
+<main class="d-flex flex-column text-center align-items-center justify-content-center text-white" style="background-color: var(--black-0-7)">
     <p class="my-2 fw-300 text-uppercase mb-1">You are in the queue for...</p>
     <h2 class="fw-700 text-uppercase pink-glow">{{event.artist_name}}<br>{{event.tour_name}}</h2>
     <section id="availability">
-        <h3 class="fw-300 text-uppercase">Availability</h3>
+        <h3 class="fw-300 text-uppercase mb-2">Availability</h3>
+        <p class="fs-1 fw-300 line-height-1em mb-1">
+            {{availability.percentage}}
+        </p>
+        <span class="fs-6 fw-300 text-uppercase fst-italic">of tickets remaining</span>
     </section>
+
     <hr class="col-8 mx-auto">
+
     <section id="price-range" class=" text-uppercase fw-300">
-        <h3 class="fw-300">Price range</h3>
-        <p class="mb-1"> to </p>
-        <p class="text-uppercase"><span class="fst-italic small">Average price</span> </p>
+        <h3 class="fw-300 mb-0">Prices</h3>
+        <p class="fw-300 fst-italic mt-0 mb-2">(of remaining tickets)</p>
+        <p class="mb-2 fs-3 line-height-1em">
+            {{formatPrice prices.min true}}
+            <span class="fs-6">to</span>
+            {{formatPrice prices.min true}}
+        </p>
+        <p class="text-uppercase fst-italic small mb-0">Average price</p>
+        <p class="mb-0 fs-4 fw-300 line-height-1em">{{formatPrice prices.avg true}}</p>
     </section>
 </main>
 
@@ -16,13 +28,17 @@
     <div id="est-wait" class="d-flex align-items-center justify-content-center">
         <p class="m-0">Estimated wait time: <span id="wait-time">less than a minute</span></p>
     </div>
-    <div id="your-turn" class="d-flex align-items-center justify-content-center">
-        <p class="m-0">It's your turn!</p>
+    <div id="your-turn" class="d-flex align-items-center justify-content-center d-none">
+        <p class="m-0">Ready when you are!</p>
         <a href="venue/{{venue_id}}" class="btn btn-white text-uppercase fw-300 ms-2">Purchase</a>
     </div>
 </footer>
 
 <meta name="bg-name" content="{{event.image_name}}">
+<meta name="user" content="{{stringify req.user}}">
+<meta name="event" content="{{stringify event}}">
+
+<script src="/jquery-title-alert/index.js"></script>
 <script src="/js/set-tour-bg.js"></script><script type="module">
     import { parseArray } from '/js/array-functions.mjs'
     //import * as datefns from '../date-fns'
@@ -52,10 +68,21 @@
             console.log(delaySeconds)
         }, 1000) */
 
-        let delay = randomBetween(5 * 1000, 30 * 1000)
+        const delay = randomBetween(5 * 1000, 15 * 1000)
+        const user = JSON.parse($("meta[name=user]").attr("content"))
+        const event = JSON.parse($("meta[name=event]").attr("content"))
+        console.log(delay, user)
 
         setTimeout(function() {
+            $.titleAlert("Your turn to buy tickets!", { interval: 700, stopOnFocus: false })
+            $.post("/api/send-email", {
+                to: user.email,
+                subject: "You've reached the front of the queue!",
+                text: `${user.first_name}, it's your turn to buy tickets to the ${event.tour_name}!`
+            })
 
+            $("#est-wait").addClass("d-none")
+            $("#your-turn").removeClass("d-none")
         }, delay)
 
         //let turnStart = 
