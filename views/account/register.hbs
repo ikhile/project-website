@@ -1,24 +1,35 @@
-<h1>Register</h1>
+<main class="d-flex flex-column align-items-center justify-content-center">
+    <h1 class="fw-300 mb-2">Register</h1>
 
-<section id="validation-errors" class="d-none alert alert-danger">
-    <p id="name-validation-empty" class="d-none my-1">Please enter your name.</p>
-    <p id="email-validation-empty" class="d-none my-1">Please enter an email address.</p>
-    <p id="email-validation-format" class="d-none my-1">Please enter an email address in the standard format, e.g. name@example.com</p>
-    <p id="email-validation-used" class="d-none my-1">Email already in use. Please use another email address or <a href="/login">log in to your account</a>.</p>
-    <p id="password-validation-length">Password must contain at least 6 characters</p>
-    <p id="password-validation-chars">Password must contain a lowercase letter, a uppercase letter, and a number.</p>
-</section>
+    <section id="validation-errors" class="d-none alert alert-danger my-1">
+        <p id="name-validation-empty" class="d-none my-1">Please enter your name.</p>
+        <p id="email-validation-empty" class="d-none my-1">Please enter an email address.</p>
+        <p id="email-validation-format" class="d-none my-1">Please enter an email address in the standard format, e.g. name@example.com</p>
+        <p id="email-validation-used" class="d-none my-1">Email already in use. Please use another email address or <a href="login?redirect={{query.redirect}}">log in to your account</a>.</p>
+        <p id="password-validation-length">Password must contain at least 6 characters</p>
+        <p id="password-validation-chars">Password must contain a lowercase letter, a uppercase letter, and a number.</p>
+    </section>
 
-<form id="register-form" action="register" method="POST">
-    <input name="redirect" value={{query.redirect}} hidden>
-    <label for="firstName">Forename</label><input type="text" name="firstName" id="firstName" required><br>
-    <label for="lastName">Surname</label><input type="text" name="lastName" id="lastName" required><br>
-    <label for="email">Email</label><input type="email" name="email" id="email" required><br>
-    <label for="password">Password</label><input type="password" name="password" id="password" required><br>
-    <button id="reg-submit" type="submit">Register</button> {{! submit can't be ID or $.submit() won't work https://stackoverflow.com/a/22982900 }}
-</form>
+    <form id="register-form" action="register" method="POST" class="d-flex align-items-center flex-column text-center mt-1">
+        <input name="redirect" value="{{query.redirect}}" hidden>
 
-<p>Alread registered? Click here to <a href="login">log in</a></p>
+        <label for="firstName" class="fw-300 text-lowercase fs-5">Forename</label>
+        <input type="text" name="firstName" id="firstName" class="form-control text-center" required>
+
+        <label for="lastName" class="fw-300 text-lowercase fs-5 mt-2">Surname</label>
+        <input type="text" name="lastName" id="lastName" class="form-control text-center" required>
+
+        <label for="email" class="fw-300 text-lowercase fs-5 mt-2">Email</label>
+        <input type="email" name="email" id="email" class="form-control text-center" required>
+
+        <label for="password" class="fw-300 text-lowercase fs-5 mt-2">Password</label>
+        <input type="password" name="password" id="password" class="form-control text-center" required>
+
+        <button id="reg-submit" type="submit" class="btn btn-black text-lowercase fw-300 col-12 mx-auto py-2 mt-2">Register</button> {{! submit can't be ID or $.submit() won't work https://stackoverflow.com/a/22982900 }}
+    </form>
+
+    <p class="mt-3 mb-0 fw-300 fs-5">Already registered? Click here to <a href="login?redirect={{query.redirect}}">log in</a></p>
+</main>
 
 <script type="module">
 

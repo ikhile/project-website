@@ -1,10 +1,11 @@
 import express from 'express'
-import api, { checkAuthRedirect } from '../index.js'
+import api, { checkAuthRedirect, parseArray } from '../index.js'
 import * as db from '../database.js'
 import * as helpers from '../helpers.js'
-import nodemailer from 'nodemailer'
-import dotenv from 'dotenv';import { sendEmail } from '../emails.js'
- dotenv.config()
+import dotenv from 'dotenv';
+import { sendEmail } from '../emails.js'
+import { retrieveStripeSession } from '../stripe.js'
+dotenv.config()
 
 export const router = express.Router()
 export const stringifyLog = (input) => console.log(JSON.stringify(input, null, 2))
@@ -22,8 +23,7 @@ router.get('/', async (req, res) => {
 
     const context = {
         req,
-        // query: req.query,
-        layout: req.isAuthenticated() ? 'main-logged-in' : 'main', // nav bar doesn't changed based on isAuth - this works https://stackoverflow.com/a/58386111
+        layout: req.isAuthenticated() ? 'main-logged-in' : 'main', // nav bar doesn't automatically changed based on isAuth - this works https://stackoverflow.com/a/58386111
         isAuth: req.isAuthenticated(),
         user: req.user,
         events: events
@@ -37,6 +37,17 @@ router.get('/tour/:tour_id', validateTourID, async (req, res) => {
     const event = await api.get(`tours/${req.params.tour_id}`).then((res) => res.data)
     const venues = await api.get(`tours/${req.params.tour_id}/venues`).then((res) => res.data)
     const dates = await db.getTourDates(req.params.tour_id)
+    let [prices] = await db.pool.query(`
+        SELECT DISTINCT price
+        FROM seats
+        INNER JOIN dates ON dates.date_id = seats.date_id
+        WHERE tour_id = ?
+    `, req.params.tour_id)
+
+    prices = prices.map(price => parseFloat(price.price)).sort((a, b) => a - b)
+    // prices.push(50)
+    // prices = prices.sort((a, b) => a - b)
+    // console.log(prices)
 
     // if is on sale, all seats for that tour will have onsale = true
     let isOnsale = await api.get(`tours/${req.params.tour_id}/all-onsale`).then(res => res.data.allOnsale)
@@ -48,6 +59,7 @@ router.get('/tour/:tour_id', validateTourID, async (req, res) => {
         venues: venues,
         onsale: isOnsale,
         dates: dates,
+        prices
     }
 
     if (isOnsale) {
@@ -122,10 +134,10 @@ router.get('/purchase/tour/:tour_id/queue/', validateTourID, checkAuthRedirect, 
         req,
         layout: req.isAuthenticated() ?'main-logged-in' : 'main',
         event: await db.getEventById(req.params.tour_id),
-        queryVenue: req.query.venue
+        venue_id: req.query.venue
     }
 
-    res.render('queue', context)
+    res.render('events/queue', context)
 
     // could add user to queue here
 })
@@ -163,6 +175,29 @@ router.get(
     }
     
     res.render('events/purchase-page', context)
+})
+
+router.get('/purchase/success', async (req, res) => {
+    const session = await retrieveStripeSession(req.query.session)
+    const dateID = parseInt(session.metadata.date_id)
+    const seatIDs = parseArray(session.metadata.seat_ids)
+    let context = {
+        layout: req.isAuthenticated() ? 'main-logged-in' : 'main',
+        session,
+        dateID,
+        seatIDs,
+        seats: await db.getSeats(...seatIDs),
+        qty: seatIDs.length,
+        total: session.amount_total / 100,
+    }
+
+    for (let [key, value] of Object.entries(await db.getDateInfo(dateID))) {
+        context[key] = value
+    }
+
+    stringifyLog(await context)
+
+    res.render('events/success', context)
 })
 
 

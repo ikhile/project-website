@@ -1,27 +1,41 @@
-<h1>Log In</h1>
+<main class="d-flex flex-column align-items-center justify-content-center">
+    <h1 class="fw-300">Log In</h1>
 
-{{#if messages.error}}
-    <p class="alert alert-danger">
-        {{messages.error}}
-    </p>
-{{/if}}
+    {{#if messages.error}}
+        <p class="alert alert-danger">
+            {{messages.error}}
+        </p>
+    {{/if}}
 
-{{#if (compareValues query.alert '==' 'to-purchase')}}
-    <p class="alert alert-primary">Please log in to purchase tickets.</p>
-{{else if (compareValues query.alert '==' 'login-required')}}
-    <p class="alert alert-primary">You must be logged in to access this page.</p>
-{{/if}}
+    {{#if (compareValues query.alert '==' 'to-purchase')}}
+        <p class="alert alert-primary">Please log in to purchase tickets.</p>
+    {{else if (compareValues query.alert '==' 'login-required')}}
+        <p class="alert alert-primary">You must be logged in to access this page.</p>
+    {{/if}}
 
-<form action="login" method="POST">
-    <input name="redirect" value="{{query.redirect}}" hidden>
-    {{!-- {{#each query}}
-        <input name={{@key}} value={{this}} hidden> {{! to pass query through to login post page }}
-    {{/each}} --}}
-    <label for="email">Email</label><input type="email" name="email" id="email" required>
-    <br>
-    <label for="password">Password</label><input type="password" name="password" id="password" required>
-    <br>
-    <button type="submit">Login</button>
-</form>
+    <form action="login" method="POST" class="d-flex align-items-center flex-column text-center">
+        <input name="redirect" value="{{query.redirect}}" hidden>
 
-<p></p>Don't have an ccount? Click here to <a href="register?redirect={{query.redirect}}">register</a></p>
+        <label for="email" class="fw-300 text-lowercase fs-5 mt-1">Email</label>
+        <input 
+            type="email" 
+            name="email" 
+            id="email"  
+            class="form-control text-center"
+            required
+        >
+
+        <label for="password" class="fw-300 text-lowercase fs-5 mt-2">Password</label>
+        <input 
+            type="password" 
+            name="password" 
+            id="password" 
+            class="form-control text-center" 
+            required
+        >
+
+        <button type="submit" class="btn btn-black text-lowercase fw-300 col-12 mx-auto py-2 mt-2">Login</button>
+    </form>
+
+    <p class="mt-3 mb-0 fw-300 fs-5">Don't have an account? Click here to <a href="register?redirect={{query.redirect}}">register</a></p>
+</main>

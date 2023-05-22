@@ -2,16 +2,16 @@ import Stripe from "stripe"
 import * as db from './database.js'
 import * as datefns from 'date-fns'
 import { stringifyArray } from "./index.js"
+import dotenv from 'dotenv'
+dotenv.config()
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
-const expireAtMins = 30 // has to be at least 30 mins annoyingly
+const expireAfterMins = 30 // has to be at least 30 mins annoyingly
 
 export async function createCheckoutSession(seatIDs, customerID, req) {
-    // const prevUrl = req.body.currentUrl
-
     let lineItems = []
-
     let seats = await db.getSeats(...seatIDs)
+    const fee = {price: "price_1N9qREJuWbWNbD9CCnh2faVJ", quantity: 1}
 
     // create a product
     // define default price data for that product
@@ -50,29 +50,26 @@ export async function createCheckoutSession(seatIDs, customerID, req) {
             })
         } catch (err) {
             console.error(err)
+            throw new Error(err) // might get rid - for now this will alert me if anything goes wrong here
         }
     }
-    let prevUrl = new URL(req.body.currentUrl)
-    const baseUrl = prevUrl.origin
 
-    let cancelRedirect = prevUrl
-    cancelRedirect.searchParams.set("cancelled", "true")
-    cancelRedirect = cancelRedirect.toString()
+    lineItems.push(fee) // add booking fee as last item in list
 
-    const cancelUrl = new URL(baseUrl + "/pay/cancel")
-    cancelUrl.searchParams.set("cancelRedirect", cancelRedirect)
-    cancelUrl.searchParams.set("seatIDs", stringifyArray(seatIDs))
+    const cancelUrl = new URL(req.headers.referer)
+    cancelUrl.searchParams.set("cancelled", "true")
 
+    let successUrl = new URL(req.headers.origin + "/events/purchase/success")
+    successUrl += (!!successUrl.search ? "&" : "?") + "session={CHECKOUT_SESSION_ID}"
 
     try {
         return stripe.checkout.sessions.create({
-            line_items: lineItems,
             mode: "payment",
-            success_url: baseUrl + "/pay/success?session={CHECKOUT_SESSION_ID}&tour=",
+            line_items: lineItems,
+            success_url: successUrl,
             cancel_url: cancelUrl.toString(),
             customer: customerID,
-            expires_at: datefns.addSeconds(Date.now(), expireAtMins * 60), // expiry time of checkout sesh in epoch seconds
-            // should work but doesn't seem to
+            expires_at: datefns.addSeconds(Date.now(), expireAfterMins * 60), // expiry time of checkout sesh in epoch seconds
             metadata: {
                 user_id: req.user.user_id,
                 tour_id: req.body.tourID,
@@ -88,6 +85,15 @@ export async function createCheckoutSession(seatIDs, customerID, req) {
 
 }
 
+export async function retrieveStripeSession(sessionID) {
+    try {
+        return await  stripe.checkout.sessions.retrieve(sessionID)
+        
+    } catch (err) {
+        console.error(err)
+    }
+}
+
 export async function createStripeCustomer(user) {
 
     try {
@@ -101,9 +107,6 @@ export async function createStripeCustomer(user) {
     } catch (err) {
         console.error(err)
     }
-    
-
-    
 }
 
 export async function constructWebhookEvent(body, signature) {
@@ -117,6 +120,22 @@ export async function constructWebhookEvent(body, signature) {
     }
 }
 
-// export async function getPurchaseHistory(stripeID) {
+export async function refundOrder(order) {
+    console.log(order.stripe_session_id)
+    const { payment_intent: intentID } = await stripe.checkout.sessions.retrieve(order.stripe_session_id)
+    const { latest_charge: chargeID } = await stripe.paymentIntents.retrieve(intentID)
+    const { id: refundID } = await stripe.refunds.create({charge: chargeID})
 
-// }
+    try {
+        await db.pool.query(`
+        UPDATE orders 
+        SET 
+            refunded = true,
+            stripe_refund_id = ?            
+        WHERE order_id = ?`
+        , [refundID, order.order_id]
+    )
+    } catch (err) {
+        console.error(err)
+    }
+}

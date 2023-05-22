@@ -1,34 +1,55 @@
-<h1>{{tour.artist_name}} - {{tour.tour_name}}</h1>
-<h2>{{venue.city}}, {{venue.venue_name}} <button id="change-city-btn" class="btn btn-primary">Change</button></h2>
+<main id="purchase-main">
+    <div class="pt-1 pb-3 d-flex flex-column align-items-center col-12">
+        <h1 
+            class="text-center text-white m-1 text-uppercase fw-700 mb-0 pink-glow" 
+            {{!-- style="filter: drop-shadow(0 0 7px rgb(187, 8, 154))" --}}
+        >
+            {{tour.artist_name}} - {{tour.tour_name}}
+        </h1>
+        <h2 class="text-center text-white m-1 d-flex align-items-center justify-content-center fw-300">
+            <span class="text-uppercase">{{venue.city}}</span>&nbsp;{{venue.venue_name}} 
+        </h2>
+        <button id="change-city-btn" class="btn {{!ms-2}} mt-2 btn-outline-light py-0 text-uppercase fw-300">Change city/venue</button>        
+    </div>
 
-<form method="get" id="filters" class="d-flex flex-column align-items-center">
-    <div>
-        {{#each venueDates}}
-            <div class="form-check form-check-inline">
-                <input type="checkbox" class="form-check-input" id="date-check-{{this.date_id}}" name="date" value="{{this.date_id}}">
-                <label for="date-check-{{this.date_id}}">
-                    {{formatDate this.date 'E do LLLL'}}
-                </label>
+    <form method="get" id="filters" class="d-flex flex-md-row flex-column mt-2 mx-3">
+        <section class="d-flex flex-wrap justify-content-center col-md-4 flex-grow-1">
+            <h3 class="mb-1 text-uppercase fw-300 text-center" style="flex-basis: 100%">Dates</h3>
+            {{!-- could replace checks with a selectpicker - however, will affect the date logic in .js... would definitely look nicer though --}}
+            {{#each venueDates}}
+                <div class="form-check form-check-inline">
+                    <input type="checkbox" class="form-check-input" id="date-check-{{this.date_id}}" name="date" value="{{this.date_id}}">
+                    <label for="date-check-{{this.date_id}}">
+                        {{formatDate this.date 'E do LLLL'}}
+                    </label>
+                </div>
+            {{/each}}
+        </section>
+        <section class="d-flex flex-column align-items-center col-md-4">
+            <h3 class="mb-1 text-uppercase fw-300">Tickets</h3>
+            <div class="d-flex align-items-center mb-2" style="column-gap: 5px;">
+                <button type="button" id="decrease-tickets" class="btn btn-black fw-700 py-1 mt-2" style="border-radius: 50%;">-</button>
+                <input type="number" name="qty" value="2" hidden>
+                <span id="qty-span" class="text-center text-white d-flex justify-content-center px-2 rounded fw-600 pink-glow" style="font-size: 3.75em; line-height: 80%"></span>
+                <div>
+                    <button type="button" id="increase-tickets" class="btn btn-black fw-700 py-1 mt-2 position-relative" style="border-radius: 50%">+</button>
+                    <p id="max-qty-warning" class="opacity-0 text-uppercase fst-italic fw-500 text-center">You have reached the maximum purchase quantity for this tour</p>
+                </div>
             </div>
-        {{/each}}
-    </div>
+        </section>
+        <section class="col-md-4 container-fluid">
+            <div class="row">
+                <h3 class="mb-1 text-uppercase fw-300 text-center col-12">Sort by...</h3>
+            </div>
+            <div class="row mt-2 flex-nowrap justify-content-center" style="column-gap: 5px">
+                <button id="sort-high-low" class="sort-tix btn btn-black-transparent col-5" data-sort-order="DESC">Best Available</button>
+                <button id="sort-low-high" class="sort-tix btn btn-black-transparent col-5" data-sort-order="ASC">Cheapest</button>
+            </div>
+        </section>
+    </form>
+    <div id="available-tickets" class="m-auto w-75"></div>
+</main>
 
-    
-
-    <h3 style="display: inline-block">Tickets</h3>
-    <div class="d-flex">
-        <button type="button" id="decrease-tickets" class="btn btn-outline-primary">-</button>
-        <input type="number" name="qty" value="2" hidden>
-        <span id="qty-span" class="card text-center justify-content-center" style="width: 50px"></span>
-        <div>
-            <button type="button" id="increase-tickets" class="btn btn-outline-primary">+</button>
-            <p class="opacity-0">Maximum ticket quantity reached</p>
-        </div>
-        {{!-- <p class="comment">Want to add a lil tooltip when this button is disabled that says max tickets reached or smth</p> --}}
-    </div>
-</form>
-
-<div id="available-tickets" class="m-auto w-75"></div>
 
 <div id="change-city-modal" class="modal flex-column {{#if venueSelected}}d-none{{else}}d-flex{{/if}}">
     {{> city-cards}}
@@ -36,19 +57,19 @@
 
 <div id="select-seats-modal" class="modal"></div>
 
-<footer class="fixed-bottom d-flex justify-content-center align-items-center py-2 bg-secondary">
+<footer class="fixed-bottom d-flex justify-content-center align-items-center py-2 bg-black text-white" style="z-index: 2000">
     <p class="my-0 me-1 text-white">Don't see anything you like?</p>
     <form id="waiting-list-form-footer" action="/events/tour/{{tour.tour_id}}/waiting-list" method="get">
         <input name="venue" value="{{venue.venue_id}}" hidden>
         <input name="dates" hidden>
-        <button class="btn btn-dark ms-1">Join the waiting List</button>
+        <button class="btn btn-white ms-1">Join the waiting list</button>
     </form>
 </footer>
-
-{{log isSlotSale}}
 
 <meta name="user-id" content="{{req.user.user_id}}">
 <meta name="tour-id" content="{{tour.tour_id}}">
 <meta name="max-tickets" content="{{maxTickets}}">
+<meta name="bg-name" content="{{tour.image_name}}">
 
+<script src="/js/set-tour-bg.js"></script>
 <script type="module" src="/js/purchase-page.js"></script> <!--https://stackoverflow.com/a/55310399-->

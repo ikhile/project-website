@@ -3,133 +3,164 @@
     <meta name="user-id" content="{{req.user.user_id}}">
 {{/section}}
 
-<h2>{{event.artist_name}} - {{event.tour_name}}</h2>
-<p class="comment">event info goes here - probably need to store in database</p>
+<main id="tour-main" class="text-center text-white d-flex">
+    <div class="rounded m-3 p-3 flex-grow-1">
+    <h2 class="my-3 fw-300 text-uppercase mb-1">
+        <span class="d-block fst-italic">{{event.artist_name}}</span>
+        {{!-- <br> --}}
+        <span class="d-block fw-900 fs-1">{{event.tour_name}}</span>
+    </h2>
 
-{{#if onsale}}
-    <p>
-        Tickets for this event are on sale now!
-        <button id="purchase" class="btn btn-primary" onclick="purchaseClick({{isAuth req}}, {{event.tour_id}})">Find tickets</button>
-    </p>
+    {{#if onsale}}
+        <p class="mb-2 fw-300 fs-5">
+            Tickets for this event are on sale now!
+        </p>
+        <button id="purchase" class="btn btn-white text-uppercase fw-300" onclick="purchaseClick({{isAuth req}}, {{event.tour_id}})">Find tickets</button>
 
-    <div id="change-city-modal" class="modal d-none flex-column">
-        {{> city-cards}}
-    </div>
+        <div id="change-city-modal" class="modal d-none flex-column">
+            {{> city-cards}}
+        </div>
 
-{{else}}
-    <p>Tickets will be released at the below times - sign up to be notified and buy tickets at a time that suits you!</p>
+    {{else}}
+        <p class="mt-3">Tickets will be released at the below times - sign up to be notified and buy tickets at a time that suits you!</p>
 
-    {{#if (isAuth req)}}
-    <p id="alert-success" class="alert alert-success d-none">
-        <span id="signed-up" class="d-none">You have signed up for a purchase slot.</span>
-        <span id="signup-removed" class="d-none">You are no longer registered for this purchase slot.</span>
-        <span id="future-slots" class="d-none">Tickets are not currently on sale for this tour. Please sign up for one of the upcoming purchase slots below.</span>
-        <span id="not-authorised" class="d-none">You are not authorised to purchase tickets in this slot. Please sign up for another or wait until general sale.</span>
-    </p>
+        {{#if (isAuth req)}}
+        <p id="alert-success" class="alert alert-success d-none">
+            <span id="signed-up" class="d-none">You have signed up for a purchase slot.</span>
+            <span id="signup-removed" class="d-none">You are no longer registered for this purchase slot.</span>
+            <span id="future-slots" class="d-none">Tickets are not currently on sale for this tour. Please sign up for one of the upcoming purchase slots below.</span>
+            <span id="not-authorised" class="d-none">You are not authorised to purchase tickets in this slot. Please sign up for another or wait until general sale.</span>
+        </p>
 
+        {{/if}}
+
+        {{!-- <p>General sale will begin after the final slot closes.</p> --}}
+
+        <section class="d-flex flex-wrap justify-content-center my-2 mx-auto" style="column-gap: 25px; row-gap: 10px">
+            {{#each slots}}
+                <div class="text-center d-inline-flex flex-column justify-content-between" data-slot-id="{{this.slot_id}}">
+                    {{! DATE }}
+                    <h4 class="mb-0 fw-300 {{#if (slotPast this)}}text-muted{{/if}}">
+                        {{#if (isThisYear this.start)}}
+                            {{formatDate this.start "EEEE do LLLL"}}
+                        {{else}}
+                            {{formatDate this.start "EEEE do LLLL yyyy"}}
+                        {{/if}}
+                    </h4>
+
+                    {{! TIME}}
+                    {{!-- {{#if (slotPast this)}}
+                        <p class="my-1">This slot has ended</p>
+                    {{else if (slotOngoing this)}} --}}
+                    {{#if (slotOngoing this)}}
+                        <p class="fs-4 fw-400 mb-0 ms-2 text-uppercase ">
+                            Now
+                            <span class="text-transparent-white small">until</span>
+                            {{formatDate this.end "HH:mm"}}
+                        </p>
+                    {{else }}
+                        <p class="fs-4 fw-400 mb-0 {{#if (slotPast this)}}text-muted{{/if}}">
+                            <span class="text-uppercase text-transparent-white small">Start</span> {{formatDate this.start "HH:mm"}}
+                            <span class="text-uppercase text-transparent-white small">End</span> {{formatDate this.end "HH:mm"}}
+                        </p>
+                    {{/if}}
+
+                    {{! BUTTONS }}
+
+                    {{! past}} {{!position of this depends on whether users should be able to sign up for another slot if theirs has ended}}
+                    {{#if (slotPast this) }}
+                        <button class="btn btn-outline-white border-black" disabled>Sales have ended</button>
+
+                    {{! user signed up for this slot}}
+                    {{else if (arrayIncludes @root.userSignedUpSlots this.slot_id)}}
+                        {{#if (slotOngoing this)}}
+                            <button class="btn btn-black-transparent">Purchase</button>
+                        {{else if (slotFuture this)}}
+                            <button class="unsignup-btn btn btn-black-transparent">Cancel registration</button>
+                        {{else if (slotPast this)}}
+                            <button class="btn btn-black-transparent" disabled>Purchase</button>
+                        {{/if}}
+
+                    {{! user signed up for a different slot}}
+                    {{else if (compareValues @root.userSignedUpSlots.length '>' 0)}}
+                        <button class="mb-0 btn btn-outline-white" disabled>You have already signed up for another slot.</button>
+
+                    {{!user not signed up for any slot - may be logged out}}
+
+                    {{else if (isAuth ../req)}}
+                        {{#if (slotFuture this)}}
+                            <button class="signup-btn btn btn-black-transparent">Sign up</button>
+                        {{else if (slotOngoing this)}}
+                            <button class="btn btn-black-transparent" disabled>Sign ups closed</button>
+                        {{/if}}
+
+
+                    {{else}}
+                        <a class="btn btn-black-transparent" href="/account/login?redirect=/events/tour/{{@root.event.tour_id}}">
+                            Log in to {{#if (slotFuture this)}}register{{else if (slotOngoing this)}}purchase{{/if}}
+                            {{!-- {{else if (slotPast this)}}
+                                <button class="btn btn-secondary" disabled>Login to purchase</button> --}}
+                        </a>
+                    {{/if}}
+
+                </div>
+            {{/each}}
+
+            <div class="flex-break"></div>
+
+            <div class="text-center d-flex flex-column justify-content-between">
+                <h4 class="my-0 text-uppercase fw-400">General sale</h4>
+                <p class="fs-4 fw-300 my-0 ms-2">
+                    {{#if (lastSlotEndIsThisYear slots)}}
+                        {{formatDate (lastSlotEnd slots) "EEEE do LLLL"}}
+                    {{else}}
+                        {{formatDate (lastSlotEnd slots) "EEEE do LLLL yyyy"}}
+                    {{/if}}
+                </p>
+                <p class="fs-4 fw-300 my-0"><span class="text-uppercase text-transparent-white small">from</span> {{formatDate (lastSlotEnd slots) "HH:mm"}}</p>
+            </div>
+        </section>
     {{/if}}
 
-    <p>General sale will begin after the final slot closes.</p>
+    <hr class="mx-auto col-md-10 my-4">
 
-    <div class="d-flex flex-wrap justify-content-center" style="gap: 25px">
-        {{#each slots}}
-            <div class="text-center d-inline-flex flex-column justify-content-between" data-slot-id="{{this.slot_id}}">
-                {{! DATE }}
-                <h4 class="mb-0 {{#if (slotPast this)}}text-muted{{/if}}">
-                    {{#if (isThisYear this.start)}}
-                        {{formatDate this.start "EEEE do LLLL"}}
-                    {{else}}
-                        {{formatDate this.start "EEEE do LLLL yyyy"}}
-                    {{/if}}
-                </h4>
-
-                {{! TIME}}
-                {{!-- {{#if (slotPast this)}}
-                    <p class="my-1">This slot has ended</p>
-                {{else if (slotOngoing this)}} --}}
-                {{#if (slotOngoing this)}}
-                    <p class="fs-4 fw-500 mb-0 ms-2 text-uppercase ">
-                        Now
-                        <span class="text-muted small">until</span>
-                        {{formatDate this.end "HH:mm"}}
-                    </p>
-                {{else }}
-                    <p class="fs-4 fw-500 mb-0 {{#if (slotPast this)}}text-muted{{/if}}">
-                        <span class="text-uppercase text-muted small">Start</span> {{formatDate this.start "HH:mm"}}
-                        <span class="text-uppercase text-muted small">End</span> {{formatDate this.end "HH:mm"}}
-                    </p>
-                {{/if}}
-
-                {{! BUTTONS }}
-
-                {{! past}} {{!position of this depends on whether users should be able to sign up for another slot if theirs has ended}}
-                {{#if (slotPast this) }}
-                    <button class="btn btn-outline-secondary" disabled>Sales have ended</button>
-
-                {{! user signed up for this slot}}
-                {{else if (arrayIncludes @root.userSignedUpSlots this.slot_id)}}
-                    {{#if (slotOngoing this)}}
-                        <button class="btn btn-secondary">Purchase</button>
-                    {{else if (slotFuture this)}}
-                        <button class="unsignup-btn btn btn-secondary">Cancel registration</button>
-                    {{else if (slotPast this)}}
-                        <button class="btn btn-secondary" disabled>Purchase</button>
-                    {{/if}}
-
-                {{! user signed up for a different slot}}
-                {{else if (compareValues @root.userSignedUpSlots.length '>' 0)}}
-                    <button class="mb-0 btn btn-outline-secondary" disabled>You have already signed up for another slot.</button>
-
-                {{!user not signed up for any slot - may be logged out}}
-
-                {{else if (isAuth ../req)}}
-                    {{#if (slotFuture this)}}
-                        <button class="signup-btn btn btn-secondary">Sign up</button>
-                    {{else if (slotOngoing this)}}
-                        <button class="btn btn-secondary" disabled>Sign ups closed</button>
-                    {{/if}}
-
-
-                {{else}}
-                    <a class="btn btn-secondary" href="/account/login?redirect=/events/tour/{{@root.event.tour_id}}">
-                        Log in to {{#if (slotFuture this)}}register{{else if (slotOngoing this)}}purchase{{/if}}
-                        {{!-- {{else if (slotPast this)}}
-                            <button class="btn btn-secondary" disabled>Login to purchase</button> --}}
-                    </a>
-                {{/if}}
-
-            </div>
-        {{/each}}
-
-        <div class="text-center d-flex flex-column justify-content-between">
-            <h4 class="my-0 text-uppercase fst-italic">General sale</h4>
-            <p class="fs-4 fw-500 my-0 ms-2">
-                {{#if (lastSlotEndIsThisYear slots)}}
-                    {{formatDate (lastSlotEnd slots) "EEEE do LLLL"}}
-                {{else}}
-                    {{formatDate (lastSlotEnd slots) "EEEE do LLLL yyyy"}}
-                {{/if}}
-            </p>
-            <p class="fs-4 fw-500 my-0"><span class="text-uppercase text-muted small">from</span> {{formatDate (lastSlotEnd slots) "HH:mm"}}</p>
+    <section class="mt-3 d-flex flex-md-row flex-column" style="row-gap: 15px">
+        <div class="col-md-6">
+            <h3 class="fw-300 text-uppercase">Dates & Venues</h3>
+            <table class="mx-auto">
+                {{#each dates}}
+                    <tr {{#if ../onsale}}onclick="purchaseClick({{isAuth ../req}}, {{../event.tour_id}}, {{this.venue_id}})"{{/if}}>
+                            <td class="text-end pe-2 fw-300" style="vertical-align: top">
+                                {{formatDate this.date 'EEE do LLLL'}}
+                            </td>
+                            <td class="ps-1 pb-2 text-start fw-400">
+                                <span class="text-uppercase fw-500 d-block">{{this.city}}</span>
+                                {{this.venue_name}}
+                            </td>
+                    </tr>
+                {{/each}}
+            </table>
         </div>
-    </div>
-{{/if}}
+        <hr>
+        <div class="col-md-6">
+            <h3 class="fw-300 text-uppercase">Prices</h3>
+            <p class="fw-300 fst-italic fs-6 mb-0">
+                All tickets for the {{event.tour_name}} cost one of the following prices:
+            </p>
+            <ul class="px-0 my-1" style="list-style-type: none; min-width: 0">
+                {{#each prices}}
+                    <li class="fw-300 fs-5">{{formatPrice this true}}</li>
+                {{/each}}
+            </ul>
+            <p class="fw-300 fst-italic">+ £3.99 booking fee per order</p>
+        </div>
+    </section>
 
-<h3 class="mt-2">Dates & Venues</h3>
-<p>Info goes here</p>
-<p class="comment">If tour is on sale there should be links direct to purchase tickets maybe? Or find tickets button shows city cards? Idk but something</p>
-<table class="m-auto">
-    {{#each dates}}
-        {{!-- <div class="row"> --}}
-            <tr {{#if ../onsale}}onclick="purchaseClick({{isAuth ../req}}, {{../event.tour_id}}, {{this.venue_id}})"{{/if}}>
-                
-                    <td class="text-end pe-2" style="vertical-align: top">{{formatDate this.date 'EEE do LLLL'}}</td>
-                    <td class="ps-1 pb-2">{{this.city}}<br>{{this.venue_name}}</td>
-            </tr>
-            
-        {{!-- </div> --}}
-    {{/each}}
-</table>
+    </div>
+</main>
+
+<meta name="bg-name" content="{{event.image_name}}">
+<script src="/js/set-tour-bg.js"></script>
 
 {{!-- Should put scripts in a section but didn't work... figure out later --}}
 <script src="/js/tour-{{#unless onsale}}not-{{/unless}}onsale.js"></script>

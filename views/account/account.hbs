@@ -1,76 +1,163 @@
-<h2>Hi {{req.user.first_name}}!</h2>
+<main class="d-flex flex-column align-items-center justify-content-center">
+    <h2 class="mt-4 fst-italic fw-300 mb-2">{{timeGreeting}}, {{req.user.first_name}}!</h2>
 
-<section class="px-3 py-2">
-    <h3>Your details</h3>
-    <table>
-        <tr>
-            <th>Name</th>
-            <td>{{req.user.first_name}} {{req.user.last_name}}</td>
-        </tr>
-        <tr>
-            <th>Email</th>
-            <td>{{req.user.email}}</td>
-        </tr>
-    </table>
-</section>
+    <section id="user-details" class="px-3 py-2 d-flex align-items-center flex-column text-center mt-1">
+        <h3 class="fw-100 text-lowercase fst-italic mb-1">Your details...</h3>
 
-<section id="order-history" class="p-3">
-    <h3 class="text-center">Purchases</h3>
-    <p class="text-center">You have up to 14 days from date of purchase to request a refund, as long as the event is more than 7 days away.</p>
-    {{#if wlError}}
-        <p class="alert alert-danger">There was an issue adding your tickets to the waiting list. Please try again.</p>
-    {{else if wlSuccess}}
-        <p class="alert alert-success">Your tickets have been added to the waiting list!</p>
-    {{/if}}
+        <p class="fw-300 text-lowercase fs-5 mb-0">Name</p>
+        <p class="fw-300 fs-4 mb-2">{{req.user.first_name}} {{req.user.last_name}}</p>
+            
+        <p class="fw-300 text-lowercase fs-5 mb-0">Email</p>
+        <p class="fw-300 fs-4 mb-0">{{req.user.email}}</p>
+    </section>
 
+    <section id="order-history" class="p-3">
+        <p id="refund-success" class="alert alert-success d-none">Your order has been refunded</p>
+        <p id="refund-error" class="alert alert-danger d-none">There was an error refunding your order. Please try again.</p>
+
+        <h2 class="fw-100 text-lowercase fst-italic mb-2 text-center fs-2">Your Purchases...</h2>
+        {{#if (compareValues query.alert "==" "refund-error")}}
+            <p class="alert alert-danger mt-3 col-md-8 mx-auto">There was an issue refunding your order. Please try again.</p>
+        {{else if (compareValues query.alert "==" "refund-success")}}
+            <p class="alert alert-success mt-3 col-md-8 mx-auto">Your refund has been processed.</p>
+        {{/if}}
+
+
+        {{#if orders}}
+            <p class="text-center fw-300 fs-5 col-md-7 mx-auto">You have up to 14 days from day of purchase to request a refund, as long as the event is more than 7 days away.</p>
+        {{else}}
+            <p class="text-center fw-300 fs-5 mt-1">You haven't purchased any tickets yet. Why not <a href="/events">browse our events</a> to see what's available?</p>
+        {{/if}}
+
+        {{#each orders}}
+            <hr class="col-md-10 mx-auto">
+            <section class="mx-auto my-3 px-3 d-flex flex-row-reverse flex-wrap justify-content-between {{#if this.refunded}}text-muted{{/if}} col-md-9">
+                {{#if this.refunded}}
+                    <p class="fs-6 fw-300 text-uppercase fst-italic mb-1">already refunded</p>
+                {{else}}
+                    <div>
+                        {{#if (isFuture this.event_date)}}
+                            {{#if this.eligibleForRefund}}
+                                <button 
+                                    class="refund-btn btn btn-secondary float-end mb-2 text-uppercase fw-300" 
+                                    data-order="{{stringify this}}"
+                                    data-order-id="{{this.order_id}}"
+                                >
+                                    Request refund
+                                </button>
+                                <br>
+                            {{else}}
+                                <p class="small text-muted fst-italic mb-1 fw-300">Not eligible for refund: 
+                                    {{#if (compareValues this.refundReason "==" "event date")}}
+                                        Event in less than 7 days
+                                    {{else}}
+                                        Purchased more than 14 days ago
+                                    {{/if}}
+                                </p>
+                            {{/if}}
+                        {{/if}}
+                        <p class="mt-0 mb-1 text-end fw-400 fst-italic" style="clear: both">
+                            Purchased {{formatDistance this.purchased_at}} ago
+                        </p>
+                    </div>
+                {{/if}}
+                <div>
+                    <p class="fs-4 mb-1">{{this.artist_name}} {{this.tour_name}}</p>
+                    <p class="mb-1">
+                        {{this.venue_name}}, {{this.city}}
+                        {{#if (isThisYear this.date)}}
+                            {{formatDate this.date "EEEE do LLLL"}}
+                        {{else}}
+                            {{formatDate this.date "EEEE do LLLL yyyy"}}
+                        {{/if}}
+                    </p>
+                    <p class="mb-1">
+                        Block {{this.seats.0.section}}, 
+                        Section {{this.seats.0.block}}, 
+                        Row {{this.seats.0.row_name}}, 
+                        Seat{{addPluralS this.seats.length}} {{groupSeats this.seats}}
+                    </p>
+                </div>
+            </section>
+        {{/each}}
+    </section>
+
+    <section id="waiting-list" class="mt-2">
+        <h2 class="fw-100 text-lowercase fst-italic mb-1 text-center fs-2">Your waiting lists...</h2>
+        {{#if (compareValues query.alert "==" "wl-removed")}}
+            <p class="alert alert-success mb-0 mt-2 col-md-8 mx-auto">You have been removed from the waiting list.</p>
+        {{/if}}
+        <p class="text-center fw-300 fs-5 mt-1 col-md-7 mx-auto">You will be notified by email when tickets matching your preferences become available for the following shows:</p> 
+
+        {{#each waitingLists}} 
+            <hr class="col-md-10 mx-auto">
+            <section class="mx-auto my-3 px-3 d-flex flex-column flex-wrap justify-content-center text-center col-md-9">
+                {{!-- { "wl_id": 1, "date": "2023-05-29", "qty": 1, "venue_name": "Tottenham Hotspur Stadium", "artist_name": "Beyonce", "tour_name": "Renaissance World Tour", "city": "London" } --}}
+                {{!-- <p class="fw-400 mb-1">{{this.artist_name}} {{this.tour_name}}</p>
+                <p class="fw-400 mb-1">{{formatDate this.date "EEEE do LLLL yyyy"}}</p>
+                <p class="fw-400 mb-1">{{this.venue_name}}, {{this.city}}</p> --}}
+                <p class="fw-400 mb-0 fst-italic small">
+                    You're looking for:
+                </p>
+                <p class="fw-400 mb-1">
+                    {{this.qty}} ticket{{addPluralS this.qty}} for
+                    {{this.artist_name}} {{this.tour_name}}
+                    <br>
+                    {{formatDate this.date "EEEE do LLLL yyyy"}} at
+                    {{this.venue_name}}, {{this.city}}
+                </p>
+                <form action="account/waiting-list/remove" method="POST">
+                    <input name="wl-id" value="{{this.wl_id}}" hidden>
+                    <button class="btn btn-black fw-300 text-uppercase mb-2">Remove me from the waiting list</button>
+                </form>
+            </section>
+        {{/each}}
+    </section>
 
     {{#each orders}}
-        <hr>
-        <div class="mx-auto my-3 px-3 d-flex flex-row-reverse flex-wrap justify-content-between">
-            <div>
-                {{#if (isFuture this.event_date)}}
-                    {{#if this.eligibleForRefund}}
-                        <button 
-                            class="refund-btn btn btn-secondary float-end mb-2" 
-                            data-order="{{stringify this}}"
-                            data-order-id="{{this.order_id}}"
-                        >
-                            Request refund
-                        </button>
-                        <br>
-                    {{else}}
-                        <p class="small text-muted fst-italic mb-1">Not eligible for refund: 
-                            {{#if (compareValues this.refundReason "==" "event date")}}
-                                Event in less than 7 days
-                            {{else}}
-                                Purchased more than 14 days ago
-                            {{/if}}
-                        </p>
-                    {{/if}}
-                {{/if}}
-                <p class="mt-0 mb-1 text-end" style="clear: both">
-                    Purchased {{formatDistance this.purchased_at}} ago
-                </p>
-            </div>
-            <div>
-                <p class="fs-4">{{this.artist_name}} {{this.tour_name}}</p>
-                <p>
-                    {{this.venue_name}}, {{this.city}}
-                    {{#if (isThisYear this.date)}}
-                        {{formatDate this.date "EEEE do LLLL"}}
-                    {{else}}
-                        {{formatDate this.date "EEEE do LLLL yyyy"}}
-                    {{/if}}
-                </p>
-                <p>
-                    Block {{this.seats.0.section}}, 
-                    Section {{this.seats.0.block}}, 
-                    Row {{this.seats.0.row_name}}, 
-                    Seat{{addPluralS this.seats.length}} {{groupSeats this.seats}}
-                </p>
-            </div>
-            
+
+        <div id="refund-modal-order-{{this.order_id}}" class="refund-modal modal d-flex text-center d-none">
+            <main class="bg-white rounded px-4 py-3 position-fixed">
+                <button id="close-refund" class="close-refund btn-close position-absolute" style="top: 15px; right: 15px;"></button>
+
+                <h3 class="text-center mb-3 mt-2 fw-300 fst-italic fs-2">Request Refund</h3>
+
+                <p class="mb-1 fw-300 fs-5">Are you sure you would like to request a refund for this order?</p>
+                <p class="fw-300 fs-5">You will no longer be able to use these tickets.</p>
+                <section class="text-center">
+                    <h4 class="mb-2 fw-300">Order details</h4>
+                    <p class="my-1 me-2 fw-300">{{this.artist_name}} {{this.tour_name}}</p>
+                    <p class="my-1 me-2 fw-300">{{formatDate this.date "EEEE do LLLL yyyy"}}</p>
+                    <p class="my-1 me-2 fw-300">
+                        Section {{this.seats.0.section}}
+                        Block {{this.seats.0.block}}
+                        Row {{this.seats.0.row_name}}
+                    </p>
+                    <p class="my-1 me-2 fw-300">Seat{{addPluralS this.seats.length}} {{groupSeats this.seats "range"}}</p>
+                    <p class="my-1 me-2 fw-300">£00.00</p>
+                    {{!-- <p id="order-details-event" class="my-1 me-2">
+                        <span class="fw-500 text-uppercase small fst-italic">Event</span>
+                        <span>xyz</span>
+                    </p>
+                    <p id="order-details-date" class="my-1">
+                        <span class="fw-bold">Date</span> <span></span>
+                    </p>
+                    <p id="order-details-seats" class="my-1">
+                        <span class="fw-bold">Seats</span> <span></span>
+                    </p>
+                    <p id="order-details-price-paid" class="my-1">
+                        <span class="fw-bold">Price paid</span> <span></span>
+                    </p> --}}
+                </section>
+                <form action="account/request-refund" method="POST">
+                    <input name="order-id" value="{{this.order_id}}" hidden>
+                    <button id="confirm-refund" class="btn btn-primary my-3">Yes, I would like to request a refund.</button>
+                </form>
+            </main>
         </div>
+
     {{/each}}
-        
-</section>
+</main>
+
+
+<script src="/js/account.js"></script>

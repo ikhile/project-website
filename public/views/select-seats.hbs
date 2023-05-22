@@ -7,8 +7,7 @@
     <hr>
 
     <div class="container row m-auto p-0">
-    {{!-- <div class="d-flex m-auto p-0"> --}}
-
+        
         <div class="col-6">
             <p class="comment">seat map/view goes here</p>
         </div>
@@ -22,7 +21,7 @@
                 {{/each}}
             </select>
 
-            <label for="seats" class="h4 text-center d-block">Seat{{#unless singleTicket}}s{{/unless}}</label>
+            <label for="seats" class="h4 text-center d-block mt-2">Seat{{#unless singleTicket}}s{{/unless}}</label>
             <select class="form-select" name="seats" required>
                 <option value="" hidden selected>Select your seat{{#unless singleTicket}}s{{/unless}}</option> {{! empty value for validation, hidden so doesn't appear in list, selected so shows like a placeholder}}
                 {{#each ticketGroups}}
@@ -32,16 +31,24 @@
                 {{/each}}
             </select>
 
-        <p class="comment">Need to change /create-checkout-session to use seats value as prod ids, validate that seats != "select your seats"</p>
-
         {{!-- hidden inputs for session cancel redirect values --}}
         <input name="tourID" value={{tourID}} hidden>
         <input name="venueID" value={{venueID}} hidden>
         <input name="currentUrl" value={{currentURL}} hidden>
 
-        <button id="purchase" class="btn btn-primary col-12">
-            Purchase
-        </button>
+        <div class="d-flex mt-3 align-items-center" style="gap: 8px">
+            <p class="my-0">
+                <span class="text-uppercase fw-bold fst-italic small">Total</span> 
+                {{log this}}
+                {{price.formatted.total}} 
+                <span class="text-muted small">+ £3.99 fees</span></p>
+            <button id="purchase" class="btn btn-primary flex-grow-1">
+                Purchase
+            </button>
+        </div>
+        
+
+        
     </form>
     </div>
 
@@ -51,9 +58,5 @@
         <input name="venue" value="{{venueID}}" hidden>
         <input name="dates" hidden>
         <button class="btn btn-secondary col-4 m-auto">Waiting List</button>
-    </form>
-
-    {{!-- </div> --}}
-
-    
+    </form>   
 </div>

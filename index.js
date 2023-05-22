@@ -14,6 +14,7 @@ import { router as accountRouter } from './routes/account.js'
 import { router as payRouter } from './routes/pay.js'
 import { router as searchRouter } from './routes/search.js'
 import { router as webhookRouter } from './routes/webhook.js'
+import * as s from './slot-notifications.js'
 
 const app = express()
 const port = 3000
@@ -73,9 +74,13 @@ function mapHelpers() {
 }
 
 export function checkAuthRedirect(req, res, next) {
-    console.log("redirect")
+    console.log(req.originalUrl)
+    console.log("not logged in: redirect")
     if (!req.user) {
-        res.redirect(`/account/login?alert=login-required&redirect=${req.originalUrl}`)
+        res.redirect(
+            "/account/login" 
+            + (/\/account/i.test(req.originalUrl) ? "" : `?alert=login-required&redirect=${req.originalUrl}`)
+        )
 
     } else {
         app.locals.user = req.user
@@ -95,11 +100,6 @@ export function parseArray(str, intArray = true) {
     return arr.map(a => isNaN(a) ? a : parseInt(a))
 }
 
-// console.log(parseArray("[1,2,3]"))
-// console.log(parseArray("1,2,3"))
-// console.log(stringifyArray(["a", 1, "c"]))
-// console.log(parseArray("1,b,3"))
-
 app.get('/', async (req, res) => {
     let events = await db.getAllEvents(10)
 
@@ -113,6 +113,10 @@ app.get('/', async (req, res) => {
     const context = { req, events: events } 
 
     res.render('index', context)
+})
+
+app.get('/about', async (req, res) => {
+    res.render("about")
 })
 
 app.use('/account', accountRouter)

@@ -290,7 +290,13 @@ INNER JOIN tours ON dates.tour_id = tours.tour_id
 INNER JOIN artists ON tours.artist_id = artists.artist_id
 WHERE date_id = 1;
 
-INSERT INTO seats (date_id, price, slot_id, section, block, row_name, seat, onsale, available) VALUES (2, 0, 2, 'test', 'test', 'test', 5, false, true), (2, 0, 2, 'test', 'test', 'test', 6, false, true), (2, 0, 2, 'test', 'test', 'test', 7, false, true), (2, 0, 2, 'test', 'test', 'test', 8, false, true), (2, 0, 2, 'test', 'test', 'test', 9, false, true), (2, 0, 2, 'test', 'test', 'test', 10, false, true)
+INSERT INTO seats (date_id, price, slot_id, section, block, row_name, seat, onsale, available) VALUES (2, 0, 2, 'test', 'test', 'test', 5, false, true), (2, 0, 2, 'test', 'test', 'test', 6, false, true), (2, 0, 2, 'test', 'test', 'test', 7, false, true), (2, 0, 2, 'test', 'test', 'test', 8, false, true), (2, 0, 2, 'test', 'test', 'test', 9, false, true), (2, 0, 2, 'test', 'test', 'test', 10, false, true);
+
+UPDATE orders 
+SET 
+	refunded = true,
+	stripe_refund_id = "test"        
+WHERE order_id = 3;
 
 INSERT INTO queues (tour_id) VALUES(2);
 
@@ -311,3 +317,17 @@ SELECT * FROM slot_registrations
 INNER JOIN purchase_slots ON slot_registrations.slot_id = purchase_slots.slot_id
 WHERE user_id = 1
 AND tour_id = 2;
+
+
+SELECT * 
+FROM slot_registrations 
+INNER JOIN users
+	ON users.user_id = slot_registrations.user_id
+WHERE slot_id = 3
+
+SELECT *
+INNER JOIN purchase_slots.slot_id = slot_reg
+INNER JOIN tours ON tours.tour_id = purchase_slots.tour_id
+FROM purchase_slots;
+
+

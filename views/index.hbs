@@ -1,33 +1,26 @@
-{{!-- <div class="container-fluid row mx-0 w-100 text-center">
-    <div class="col-4">
-        <h2>How it works</h2>
-    </div>
-    <div class="col-8">
-        <h2>Upcoming Events</h2>
-        <ul class="list-group flex-row">
+<main id="index-main" class="d-flex flex-column flex-grow-1 justify-content-center">
+    <h1 class="text-center py-1 my-0 text-uppercase fw-700">
+        {{#if (isAuth req)}}<span class="small d-block">Hi {{req.user.first_name}}</span>{{/if}}
+        Welcome to tickety boo!</h1>
+    <section id="upcoming-events" class="text-center pt-3 pb-4">
+        <h2 class="text-uppercase fw-800 mb-3 fs-1">Upcoming Events</h2>
+        <div class="d-flex flex-wrap justify-content-center" style="gap: 12px">
             {{#each events}}
-                <li class="m-1 p-2 card">
-                    <a href="events/tour/{{this.tour_id}}">{{this.artist_name}}: {{this.tour_name}}</a>
-                    <span class="d-block">{{formatDate this.firstDate.date "do LLLL ''yy"}} to {{formatDate this.lastDate.date "do LLLL ''yy"}}</span>
-                </li>
-            {{/each}}
-        </ul>
-    </div>
-</div> --}}
+                <div class="card hover-scale event-card">
+                    <img class="card-img-top" src="/images/tour-backgrounds/{{this.image_name}}" alt="">
+                    <p class="fs-6 card-title px-3 mt-2 mb-1 text-uppercase fst-italic fw-500">{{this.artist_name}}</p>
+                    <a href="events/tour/{{this.tour_id}}" class="stretched-link px-3 fw-400 text-uppercase">{{this.tour_name}}</a>
+                    <p class="d-block mb-0 mt-1 px-3 pb-2 fw-300">
+                        {{#if (isSameYear this.firstDate.date this.lastDate.date)}}
+                            {{formatDate this.firstDate.date "do LLLL"}}
+                        {{else}}
+                            {{formatDate this.firstDate.date "do LLLL yyyy"}}
+                        {{/if}}
 
-<section class="text-center">
-        <h2>Upcoming Events</h2>
-        <p class="comment">Need to make these equal width - grid?</p>
-        <div class="d-flex flex-wrap justify-content-center">
-            {{#each events}}
-                <div class="m-1 card hover-scale">
-                    <img class="card-img-top" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJiT-UHSm6w0Jperb8SitpfoAKeMUE3uynPg5YO-2Drw&s" alt="">
-                    <p class="h5 card-title px-3 mb-1 mt-2">{{this.artist_name}}</p>
-                    <a href="events/tour/{{this.tour_id}}" class="stretched-link px-3">{{this.tour_name}}</a>
-                    <p class="d-block mb-0 mt-1 px-3 pb-2">{{formatDate this.firstDate.date "do LLLL ''yy"}} to {{formatDate this.lastDate.date "do LLLL ''yy"}}</p>
-                    <p class="fw-bold px-3">
+                        to {{formatDate this.lastDate.date "do LLL yyyy"}}</p>
+                    <p class="fw-300 px-3 mb-3 text-uppercase small">
                         {{#if (isFuture this.salesStart)}}
-                            Sales start {{formatDate this.salesStart "HH:mm EEE do LLLL"}}
+                            Sales start {{formatDate this.salesStart "HH:mm EEE do LLL"}}
                         {{else}}
                             On sale now
                         {{/if}}
@@ -36,8 +29,10 @@
                 </div>
             {{/each}}
         </div>
-</section>
+    </section>
 
-<section class="text-center my-3">
-    <h2>How it works</h2>
-</section>
+    {{!-- <section class="text-center my-3">
+        <h2>How it works</h2>
+    </section> --}}
+</main>
+

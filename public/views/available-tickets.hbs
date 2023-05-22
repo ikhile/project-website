@@ -1,22 +1,23 @@
-<div class="d-flex">
+{{!-- <div class="d-flex">
     <button id="sort-high-low" class="sort-tix" data-sort-order="DESC">Best Available</button>
     <button id="sort-low-high" class="sort-tix" data-sort-order="ASC">Cheapest</button>
-</div>
+</div> --}}
 {{#each availableTickets}}
-    <div class="card available-ticket-card container p-3" data-index="{{@index}}">
-        <div class="row mb-1">
-            <button class="col-1 btn btn-outline-secondary p-0 ms-3 mw-80">Details</button>
-            <h3 class="col-8 mb-0">Block {{this.block}}, Section {{this.section}}, Row {{this.row}}</h3>
-            <p class="col-3 text-end mb-0 align-self-center">{{this.price.total}}</p>
+    <div class="card available-ticket-card container p-3 text-white mx-0" data-index="{{@index}}">
+        <div class="row mb-1 flex-wrap">
+            <button class="col-auto btn btn-outline-light px-3 py-0 ms-3 mw-80">Details</button>
+            <h3 class="col-auto mb-0 flex-grow-1 fw-300">Block {{this.block}} Section {{this.section}} Row {{this.row}}</h3>
+            <p class="col-auto text-end mb-0 mt-1 fs-1 fst-italic fw-300" style="line-height:
+            80%">{{this.price.formatted.totalWithFees}}</p>
         </div>
-        <div class="row mt-1">
-            <p class="col-7 mb-0">
+        <div class="row mt-1 fs-5">
+            <p class="col-auto mb-0">
                 Available: 
                 {{#each this.dates}}
                     {{this.shortDate}}{{#unless @last}}, {{/unless}} {{! date formatting done at API}}
                 {{/each}}
             </p>
-            <p class="col-5 mb-0 text-end">{{this.qty}} tickets at {{this.price.each}} each</p>
+            <p class="col-auto mb-0 text-end flex-fill">{{this.price.formatted.each}} per ticket + £3.99 fees</p>
         </div>
     </div>
 {{/each}}

@@ -30,6 +30,10 @@ export function isFuture(date) {
     return datefns.isFuture(new Date(date))
 }
 
+export function isSameYear(date1, date2) {
+    return datefns.isSameYear(new Date(date1), new Date(date2))
+}
+
 export function isThisYear(date) {
     return datefns.isSameYear(new Date(date), new Date())
 }
@@ -133,6 +137,10 @@ export function groupSeats(seats, mode = "range") {
     }
 }
 
+export function formatPrice(float, forceDecimals = false) {
+    return `£${float.toFixed(float % 1 != 0 || forceDecimals ? 2 : 0)}`
+}
+
 export function venueDatesToDatesArray (venueDates) {
     return venueDates.map(a => a.date)
 }
@@ -204,21 +212,15 @@ export function lastSlotEnd(slotsArr) {
 }
 
 export function lastSlotEndIsThisYear(slotsArr) {
-    console.log(lastSlotEnd(slotsArr))
     return isThisYear(lastSlotEnd(slotsArr))
 }
 
 
 // can't use async in a helper .. gonna do in router
 export async function eligibleForRefund(order) {
-    console.log(order.purchased_at)
     const purchasedDate = new Date(order.purchased_at)
     const eventDate = new Date((await db.getDateFromID(order.date_id)).date)
-    console.log(purchasedDate, eventDate)
     
-    // console.log(Math.abs(datefns.differenceInDays(purchasedDate, new Date())))
-    // console.log(Math.abs(datefns.differenceInDays(purchasedDate, new Date())) <= 14)
-    console.log(eventDate, purchasedDate, datefns.differenceInDays(eventDate, purchasedDate))
     return Math.abs(datefns.differenceInDays(new Date(order.purchased_at), new Date())) < 14 && datefns.differenceInDays(eventDate, purchasedDate) < 7
 }
 
@@ -240,4 +242,13 @@ export function formatDistance(date, baseDate) {
     if (invalidDates) return
 
     return datefns.formatDistance(new Date(date), new Date(baseDate))
+}
+
+export function lowercaseTour(text) {
+    return text.replace(/tour/gi, "tour")
+}
+
+export function timeGreeting() {
+    let hour = (new Date()).getHours()
+    return hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening"
 }

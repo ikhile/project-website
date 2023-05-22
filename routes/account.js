@@ -4,8 +4,10 @@ import * as bcrypt from 'bcrypt'
 import * as pconfig from '../passport-config.js'
 import * as flash from 'express-flash'
 import * as session from 'express-session'
+import * as stripe from '../stripe.js'
 import * as db from '../database.js'
 import * as datefns from 'date-fns'
+import { sendEmail } from '../emails.js'
 import { checkAuthRedirect, parseArray } from '../index.js'
 import { stringifyLog } from './events.js'
 import * as wl from '../waiting-list.js'
@@ -17,66 +19,97 @@ pconfig.passportInit(passport)
 router.get('/', checkAuthRedirect, async (req, res) => {
     const context = {
         req,
+        layout: 'main-logged-in',
         orders: await db.getUserOrders(req.user.user_id), // gonna want some joins - tour name, artist name, venue and city, date
         // then for each seat, parse the array then get each seat from db as well
-        wlError: req.query.hasOwnProperty("wl-error"),
-        wlSuccess: req.query.hasOwnProperty("wl-success"),
+        // wlError: req.query.hasOwnProperty("wl-error"),
+        // wlSuccess: req.query.hasOwnProperty("wl-success"),
         // waitingListSignUps: await db.
+        query: req.query,
+        waitingLists: await db.getUserWaitingLists(req.user.user_id)
     }
 
     for (let order of context.orders) {
-        // console.log(order.seat_ids)
-        // order.seat_ids = order.seat_ids.replace(/\\|\"/, "")
-        // order.seat_ids = [...JSON.parse(JSON.parse(order.seat_ids))] // needs to be doubled parsed for whatever reason
-        // order.seat_ids = parseArray(order.seat_ids)
         const seat_ids = parseArray(order.seat_ids)
         order.seats = await db.getSeats(...seat_ids) // WHY did i use the spread operator here *melt emoji*
 
         // eligibility for refund - can't do in a helper as uses async to get event date    
-        // const purchasedDate = new Date(order.purchased_at)
         order.purchased_at = new Date(order.purchased_at)
         order.event_date = new Date((await db.getDateFromID(order.date_id)).date)
         if (
             Math.abs(datefns.differenceInDays(new Date(order.purchased_at), new Date())) < 14 
             && Math.abs(datefns.differenceInDays(order.event_date, new Date())) > 7 
-        ) {
-            order.eligibleForRefund = true
+        ) { order.eligibleForRefund = true
 
         } else {
             order.eligibleForRefund = false
             order.refundReason = Math.abs(datefns.differenceInDays(order.event_date, new Date())) < 7 ? "event date" : "purchase date"
         }
-
-        // if () {
-        //     order.eligibleForRefund = true
-        // } else {
-        //     order.eligibleForRefund = false
-        //     order.refundReason = "event date"
-        // }
-        // order.eligibleForRefund = (
-        //     Math.abs(datefns.differenceInDays(new Date(purchasedDate), new Date())) < 14
-        //     &&
-        //     Math.abs(datefns.differenceInDays(eventDate, purchasedDate)) > 7
-        // )
     }
-
-    // stringifyLog(context.orders)
 
     res.render('account/account', context)
-
 })
 
-router.post('/put-on-waiting-list', async (req, res) => {
-    console.log(req.body)
+router.post('/request-refund', async (req, res) => {
+    console.log("hello")
+    const { "order-id": orderID } = req.body
+    const order = await db.getOrderById(orderID)
+    const dateInfo = await db.getDateInfo(order.date_id)
+    const qty = parseArray(order.seat_ids).length
+    const redirect = new URL(req.headers.referer)
 
     try {
-        wl.releaseTickets(req.body.date_id, req.body.seat_ids, req.body.order_id)
-        res.redirect('/account?wl-success')
+        await refundOrder(orderID)
+        redirect.searchParams.set("alert", "refund-success")
+
     } catch (err) {
         console.error(err)
-        res.redirect('/account?wl-error')
+        redirect.searchParams.set("alert", "refund-error")
+        return res.redirect(redirect) // put this in try catch to do a lil alert
     }
+
+    // email users on waiting list
+    const usersToNotify = await db.findWLUsersByDateAndQty(order.date_id, qty)
+
+    sendEmail(
+        usersToNotify.map(user => user.email),
+        "Tickets released",
+        `${qty} ${qty == 1 ? "ticket has" : "tickets have"} been released for ${dateInfo.artist_name} ${dateInfo.tour_name} at ${dateInfo.venue_name}, ${dateInfo.city} on ${datefns.format(new Date(dateInfo.date), "EEEE do LLLL yyyy")}`
+    )
+
+    // redirect to account page
+    res.redirect(redirect)
 })
+
+router.post('/waiting-list/remove', async (req, res) => {
+    await db.pool.query(`DELETE FROM waiting_list WHERE wl_id = ?`, req.body["wl-id"])
+
+    res.redirect(req.headers.referer + "?alert=wl-removed")
+})
+
+async function refundOrder(orderID) {
+    const order = await db.getOrderById(orderID)
+    const seatIDs = parseArray(order.seat_ids)
+
+    try {
+        // use orderID to...
+        // refund in stripe if I cba
+        await stripe.refundOrder(order)
+
+        // update in db - now doing in stripe.refundOrder
+        // await db.pool.query(`UPDATE orders SET refunded = true WHERE order_id = ?`, orderID) // I should also do in Stripe but there's no real reason to.... other than a receipt
+
+    } catch (err) {
+        console.error(err)
+    }
+
+
+    // update status of all seats - double check the wl method
+    // console.log(order.seat_ids)
+    await db.pool.query(`UPDATE orders SET refunded = true WHERE order_id = ?`, orderID)
+    await db.setSeatStatus("available", seatIDs)
+    // from a demo standpoint, though not a live one, best if the db updates regardless of whether stripe works
+}
 
 router.get('/login', (req, res) => {
     res.render('account/login', { req, query: req.query })

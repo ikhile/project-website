@@ -1,9 +1,168 @@
-.fw-500 { font-weight: 500; }
+:root {
+    --black-0-3: rgba(0, 0, 0, 0.3);
+    --black-0-5: rgba(0, 0, 0, 0.5);
+    --black-0-7: rgba(0, 0, 0, 0.7);
+    --black-0-8: rgba(0, 0, 0, 0.8);
+
+    --white-0-3: rgba(255, 255, 255, 0.3);
+    --white-0-5: rgba(255, 255, 255, 0.5);
+    --white-0-7: rgba(255, 255, 255, 0.7);
+    --white-0-8: rgba(255, 255, 255, 0.8);
+}
+
+.fw-100 { font-weight: 100 !important; }
+.fw-200 { font-weight: 200 !important; }
+.fw-300 { font-weight: 300 !important; }
+.fw-400 { font-weight: 400 !important; }
+.fw-450 { font-weight: 450 !important; }
+.fw-500 { font-weight: 500 !important; }
+.fw-600 { font-weight: 600 !important; }
+.fw-700 { font-weight: 700 !important; }
+.fw-800 { font-weight: 800 !important; }
+.fw-900 { font-weight: 900 !important; }
+
+.btn-black, .btn-black-transparent {
+    border: none !important;
+    color: white !important;
+}
+
+.btn-black {
+    background-color: black !important;
+}
+
+.btn-white {
+    background-color: white !important;
+    border: none !important;
+    color: black !important;
+}
+
+.btn-black-transparent {
+    background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.btn-black:disabled, .btn-black-transparent:disabled {
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid black !important;
+    color: white !important;
+}
+
+.text-transparent-white {
+    color: rgba(255, 255, 255, 0.35)
+}
+
+.flex-break {
+    flex-basis: 100%; 
+    height: 0;
+    margin: 0;
+}
+
+/* .btn-outline-black */
+
+body {
+    min-height: 100vh;
+    background-color: black;
+    background-size: cover;
+    background-position: center center;
+    max-width: 100vw;
+}
+
+body:has(#index-main), body:has(#events-main), body:has(#tour-main) {
+    background-color: black !important;
+}
+
+body:has(#index-main) {
+    background-image: url("images/concert.jpg");
+    background-size: cover;
+}
+
+body:has(#events-main) {
+    background-image: url("images/concert\ 2.jpg");
+    background-size: cover;
+}
+
+main {
+    flex-grow: 1;
+    max-width: 100vw;
+}
+
+.alert {
+    text-align: center;
+}
+
+/* body:has(#tour-1-main) { background-image: url(images/beychella.jpg) } */
+/* body:has(#tour-1-main) { background-size: cover } */
+
+#index-main h1 {
+    color:rgba(0, 255, 234, 0.65);
+    filter: drop-shadow(0 0 2px white)
+}
+
+#index-main h2 {
+    color:rgba(0, 0, 0, 0.7);
+    filter: drop-shadow(0 0 3px );
+}
+
+.event-card {
+    background-color: rgba(0, 0, 0, 0.3) !important;
+}
+
+.event-card * {
+    color: white;
+}
+
+.event-card img {
+    height: 55% !important;
+    max-height: 150px;
+    object-fit: cover;
+}
+
+.event-card a {
+    text-decoration: none;
+}
+
+.event-card a:hover {
+    color: white;
+    text-decoration: underline;
+}
+
+#events-main h2 {
+    color:rgba(0, 0, 0, 0.75);
+    filter: drop-shadow(0 0 3px rgba(137, 0, 155, 0.7))
+}
+
+#events-main div {
+    background-color: rgba(0, 0, 0, 0.45);
+    color: white !important;
+    transition: all 0.5s ease-in-out;
+}
+
+#events-main div a {
+    display: block;
+    color: white;
+    text-decoration: none;
+}
+
+#events-main div:has(a:hover), .available-ticket-card:hover {
+    background-color: rgba(0, 0, 0, 0.75);
+    transform: scale(1.03);
+}
+
+#tour-main > div:first-of-type {
+    /* margin: 20px; */
+    /* background-color: rgba(255, 255, 255, 0.3); */
+    background-color: rgba(0, 0, 0, 0.5);
+    box-sizing: border-box;
+}
 
 .navbar-nav {
     flex-direction: row !important;
     flex: 1;
     gap: 10px
+}
+
+.navbar .dropdown-menu a {
+    text-decoration: none;
+    color: inherit !important;
 }
 
 .note-to-self, .comment {
@@ -90,19 +249,27 @@
 }
 
 #increase-tickets + p {
-    position: fixed;
-    transform: translate(50px, -35px);
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, 8px);
+    max-width: 33%;
     transition: opacity 0.5s ease-in-out;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--black-0-7);
     color: white;
-    border-radius: 8px;
-    padding: 4px 10px;
+    /* border-radius: 8px; */
+    padding: 2px 5px;
     font-style: italic;
+    z-index: 2000;
+    pointer-events: none;
 }
 
 div:hover > #increase-tickets:disabled + p {
     /* display: block !important; */
     opacity: 1 !important;
+}
+
+.sort-tix {
+    box-sizing: border-box
 }
 
 /* .available-ticket-card {
@@ -120,4 +287,54 @@ div:hover > #increase-tickets:disabled + p {
 
 #waiting-list-form * {
     transition: opacity 0.5s ease-in-out;
+}
+
+#success-table th {
+    font-weight: 300;
+    text-transform: uppercase;
+    font-style: italic;
+    text-align: right;
+    padding-right: 10px;
+}
+
+#success-table td {
+    font-size: 1.3em;
+    font-weight: 300;
+    text-align: left;
+}
+
+.available-ticket-card {
+    background-color: var(--black-0-7) !important;
+    cursor: pointer;
+}
+
+#purchase-main > div:first-of-type {
+    background-color: var(--black-0-5);
+}
+
+#change-city-btn {
+    background-color: var(--black-0-3)
+}
+
+#change-city-btn:hover {
+    color: black !important;
+    background-color: var(--white-0-7) !important;
+}
+
+#tour-main #purchase:hover, #your-turn a:hover {
+    color: white !important;
+    background-color: black !important;
+}
+
+#your-turn .btn:hover {
+    border: 1px solid white !important;
+}
+
+#increase-tickets, #decrease-tickets {
+    width: 35px;
+    height: 35px;
+}
+
+.pink-glow {
+    filter: drop-shadow(0 0 7px rgb(187, 8, 154)) !important;
 }

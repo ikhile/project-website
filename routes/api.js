@@ -204,13 +204,14 @@ router.get("/available-seats", async (req, res) => {
                 }
 
                 suitableTickets[ind].totalPrice = 0
-                let totalPrice = 0
-                for (let seat of seatSlice) totalPrice += parseFloat(seat.price)
-                let priceEach = totalPrice / requiredQty
+                let total = 0
+                for (let seat of seatSlice) total += parseFloat(seat.price)
+                let each = total / requiredQty
 
                 suitableTickets[ind].price = {
-                    total: `£${totalPrice.toFixed(2)}`,
-                    each: `£${priceEach.toFixed(2)}`
+                    total,
+                    totalWithFees: total + 3.99,
+                    each,
                 }
 
             }

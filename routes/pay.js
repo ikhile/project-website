@@ -29,10 +29,9 @@ router.post('/create-checkout-session', async (req, res) => {
     // returns a product object
     // add default price of that product object to line items
 
-    // wait since I'm retrieving products here I'll just create them instead
     try {
         const session = await createCheckoutSession(seatIDs, stripeCustomerID, req)
-        await db.setSeatStatus("reserved", seatIDs) // set seats to reserved in database
+        // await db.setSeatStatus("reserved", seatIDs) // set seats to reserved in database
         res.redirect(303, session.url)
 
     } catch (err) {
@@ -44,20 +43,14 @@ router.post('/create-checkout-session', async (req, res) => {
 })
 
 router.get('/success', async (req, res) => {
+    console.log(req.query)
     res.send("payment success")
 })
 
 router.get('/cancel', async (req, res) => {
-    console.log(req.query.seatIDs)
-    console.log(req.query.cancelRedirect)
-
-    // const seatIDs = req.query.seatIDs.replace(/^\[|\]$/, "").split(",").map(a => parseInt(a))
     const seatIDs = parseArray(req.query.seatIDs)
-
     db.setSeatStatus(null, seatIDs)
-
     // use query params to set seats back to available in db, then redirect to previous page
-
     res.redirect(req.query.cancelRedirect)
     // res.send("payment cancelled")
 })

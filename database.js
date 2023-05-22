@@ -36,6 +36,7 @@ export async function getAllEvents(limit = null) {
             tour_name, 
             artists.artist_id, 
             artist_name, 
+            image_name,
             SUBSTRING_INDEX(
                 GROUP_CONCAT(date ORDER BY date ASC SEPARATOR ','), ",", 1
             ) AS first_date
@@ -64,7 +65,7 @@ export async function tourSalesStart(tourID) {
 export async function getEventById(tourID) {
     // need: artist, tour, cities, dates, venues
     const [rows] = await pool.query(`
-        SELECT tour_id, artist_name, tour_name
+        SELECT tour_id, artist_name, tour_name, image_name
         FROM tours
         INNER JOIN artists ON tours.artist_id = artists.artist_id
         WHERE tour_id = ?
@@ -141,7 +142,7 @@ export async function getDateFromID(dateID) {
 
 export async function getDateInfo(dateID) {
     const [[info]] = await pool.query(`
-        SELECT date, artist_name, tour_name, venue_name, city
+        SELECT date, artist_name, tour_name, venue_name, city, image_name
         FROM dates
         INNER JOIN venues on dates.venue_id = venues.venue_id
         INNER JOIN tours ON dates.tour_id = tours.tour_id
@@ -274,6 +275,7 @@ export async function getSeats(...seatIDs) {
 }
 
 export async function setSeatStatus(status, seatIDs) {
+    console.log("sss")
     let query = `
         UPDATE seats
         SET status = ?
@@ -381,36 +383,17 @@ export async function checkEmailAvailable(email) {
 // QUEUE (cancel this)
 
 export async function getTourQueue(tourID) {
-    let [[{queue_exists}]] = await pool.query(`SELECT EXISTS(SELECT * FROM queues WHERE tour_id = ?) as "queue_exists"`, tourID)
-    
-    // console.log(queue_exists)
-
-    if (!queue_exists) {
-        await pool.query(`INSERT INTO queues (tour_id) VALUES(?)`, tourID)
-    }
-
+    const [[{queue_exists}]] = await pool.query(`SELECT EXISTS(SELECT * FROM queues WHERE tour_id = ?) as "queue_exists"`, tourID)
+    if (!queue_exists) await pool.query(`INSERT INTO queues (tour_id) VALUES(?)`, tourID)
     const [[queue]] = await pool.query(`SELECT * from queues WHERE tour_id = ?`, tourID)    
-
-    // if (!queue.length) {
-    //     await pool.query(` INSERT INTO queues (tour_id) VALUES(?)`, tourID)
-    //     [queue = await pool.query(`SELECT * from queues WHERE tour_id = ?`, tourID)    
-    // }
-
-    // console.log(queue)
     return queue
 }
 
 export async function addUserToQueue(tourID, userID) {
     const queueObj = await getTourQueue(tourID)
-    console.log(queueObj, queueObj.queue_id)
-
     let queueArr = parseArray(queueObj.queue) // since i return the array could i just tack filter on here?
-    console.log(queueArr)
     queueArr = queueArr.filter(a => a != userID)
-
     queueArr.push(userID)
-
-    console.log(queueArr, stringifyArray(queueArr))
 
     await pool.query(`
         UPDATE queues
@@ -453,9 +436,8 @@ export async function addUserToWaitingList(userID, dateIDs, qty) {
     let updateQry = "UPDATE waiting_list SET qty = ? WHERE user_id = ? AND date_id = ?"
 
     for (let dateID of dateIDs) {
-        let [[{alreadyOnList}]] = await pool.query(`SELECT EXISTS(SELECT * FROM waiting_list WHERE user_id = ? AND date_id = ?) AS alreadyOnList`, [userID, dateID]); alreadyOnList = Boolean(alreadyOnList)
-        console.log(alreadyOnList)
         const values = [qty, userID, dateID]
+        let [[{alreadyOnList}]] = await pool.query(`SELECT EXISTS(SELECT * FROM waiting_list WHERE user_id = ? AND date_id = ?) AS alreadyOnList`, [userID, dateID]); alreadyOnList = Boolean(alreadyOnList)
 
         if (alreadyOnList) await pool.query(updateQry, values)
         else await pool.query(insertQry, values)
@@ -473,6 +455,21 @@ export async function findWLUsersByDateAndQty(dateID, qty) {
     return users
 }
 
+export async function getUserWaitingLists(userID) {
+    const [wl] = await pool.query(`
+        SELECT wl_id, date, qty, venue_name, artist_name, tour_name, city 
+        FROM waiting_list
+        INNER JOIN dates ON waiting_list.date_id = dates.date_id
+        INNER JOIN tours ON tours.tour_id = dates.tour_id
+        INNER JOIN artists ON artists.artist_id = tours.artist_id
+        INNER JOIN venues ON dates.venue_id = venues.venue_id
+        WHERE user_id = ?
+    `, userID)
+
+    console.log(wl)
+    return wl
+}
+
 
 // ORDERS
 
@@ -485,15 +482,29 @@ export async function addOrder(session, user, tour, venue, date, seats, meta) {
 
 export async function getUserOrders(userID) {
     const [orders] = await pool.query(`
+    SELECT order_id, orders.date_id, date, orders.tour_id, tour_name, artist_name, orders.venue_id, venue_name, city, stripe_session_id, on_waiting_list, seat_ids, purchased_at, refunded
+    FROM orders 
+    INNER JOIN tours ON orders.tour_id = tours.tour_id
+    INNER JOIN artists ON tours.artist_id = artists.artist_id
+    INNER JOIN venues ON orders.venue_id = venues.venue_id
+    INNER JOIN dates ON orders.date_id = dates.date_id
+    WHERE user_id = ?
+    `, userID) // user id was set to 1 in query that's BAD
+    // check every = in here later
+    return orders
+}
+
+export async function getOrderById(orderID) {
+    const [[order]] = await pool.query(`
     SELECT order_id, orders.date_id, date, orders.tour_id, tour_name, artist_name, orders.venue_id, venue_name, city, stripe_session_id, on_waiting_list, seat_ids, purchased_at
     FROM orders 
     INNER JOIN tours ON orders.tour_id = tours.tour_id
     INNER JOIN artists ON tours.artist_id = artists.artist_id
     INNER JOIN venues ON orders.venue_id = venues.venue_id
     INNER JOIN dates ON orders.date_id = dates.date_id
-    WHERE user_id = 1;
-    `, userID)
-    return orders
+    WHERE order_id = ?
+    `, orderID)
+    return order
 }
 
 // SLOTS
@@ -509,14 +520,17 @@ export async function getSlotsByTour(tourID) {
     return slots
 }
 
-export async function getSlotById(slotID) {
-    const [[slot]] = await pool.query(`
+export async function getSlots(slotID) {
+    const [slots] = await pool.query(`
         SELECT * 
         FROM purchase_slots
-        WHERE slot_id = ?
+        INNER JOIN tours ON tours.tour_id = purchase_slots.tour_id
+        INNER JOIN artists ON tours.artist_id = artists.artist_id
+        ${ !!slotID ? "WHERE slot_id = ?" : "" }
     `, slotID)
 
-return slot
+    if (slots.length == 1) return slots[0]
+    return slots
 }
 
 export async function slotSignUp(userID, slotID) {
@@ -528,7 +542,15 @@ export async function removeSlotSignup(userID, slotID) {
 }
 
 export async function getUsersForSlot(slotID) {
-    const [signups] = await pool.query("SELECT * FROM slot_registrations WHERE slot_id = ?", slotID)
+    const [signups] = await pool.query(`
+        SELECT * 
+        FROM slot_registrations 
+        WHERE slot_id = ?`
+    , slotID)
+
+    // 
+        // INNER JOIN users
+        //     ON users.user_id = slot_registrations.user_id
     return signups.map(a => a.user_id)
 }
 
@@ -598,7 +620,6 @@ export async function addSeats(schema) {
 
         // use users list to send emails
         let dateInfo = await getDateInfo(date)
-        console.log(dateInfo)
 
         sendEmail(
             users.map(user => user.email), 

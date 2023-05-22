@@ -1,0 +1,34 @@
+<main class="text-white text-center d-flex flex-column align-items-center justify-content-center flex-grow-1">
+    <div class="rounded p-4" style="background-color: var(--black-0-5)">
+        <h1 class="fw-300 fst-italic">Thank you for your purchase!</h1>
+        {{!-- <p>Your purchase is now complete.</p> --}}
+
+        {{log @root}}
+
+        <table id="success-table" class="mx-auto">
+            <tr>
+                <th>Event</th>
+                <td>{{artist_name}} {{tour_name}}</td>
+            </tr>
+            <tr>
+                <th>Date</th>
+                <td>{{formatDate date "EEEE do LLLL yyyy"}}</td>
+            </tr>
+            <tr>
+                <th>Location</th>
+                <td>{{venue_name}}, {{city}}</td>
+            </tr>
+            <tr>
+                <th>Seat{{addPluralS qty}} purchased</th>
+                <td>Section {{seats.0.section}} Block {{seats.0.block}} Row {{seats.0.row_name}} Seat{{addPluralS qty}} {{groupSeats seats "range"}}</td>
+            </tr>
+            <tr>
+                <th>Total price paid</th>
+                <td>{{formatPrice total}}</td>
+            </tr>
+
+        </table>
+    </div>
+</main>
+<meta name="bg-name" content="{{image_name}}">
+<script src="/js/set-tour-bg.js"></script>

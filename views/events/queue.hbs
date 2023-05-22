@@ -1,0 +1,69 @@
+<main class="d-flex flex-column text-center align-items-center justify-content-center text-white" style="background-color: var(--black-0-5)">
+    <p class="my-2 fw-300 text-uppercase mb-1">You are in the queue for...</p>
+    <h2 class="fw-700 text-uppercase pink-glow">{{event.artist_name}}<br>{{event.tour_name}}</h2>
+    <section id="availability">
+        <h3 class="fw-300 text-uppercase">Availability</h3>
+    </section>
+    <hr class="col-8 mx-auto">
+    <section id="price-range" class=" text-uppercase fw-300">
+        <h3 class="fw-300">Price range</h3>
+        <p class="mb-1"> to </p>
+        <p class="text-uppercase"><span class="fst-italic small">Average price</span> </p>
+    </section>
+</main>
+
+<footer class="fixed-bottom bg-black text-white p-3 fw-300">
+    <div id="est-wait" class="d-flex align-items-center justify-content-center">
+        <p class="m-0">Estimated wait time: <span id="wait-time">less than a minute</span></p>
+    </div>
+    <div id="your-turn" class="d-flex align-items-center justify-content-center">
+        <p class="m-0">It's your turn!</p>
+        <a href="venue/{{venue_id}}" class="btn btn-white text-uppercase fw-300 ms-2">Purchase</a>
+    </div>
+</footer>
+
+<meta name="bg-name" content="{{event.image_name}}">
+<script src="/js/set-tour-bg.js"></script><script type="module">
+    import { parseArray } from '/js/array-functions.mjs'
+    //import * as datefns from '../date-fns'
+    
+    const params = new URLSearchParams(window.location.search)
+    const nextUrl = "venue/" + (params.has("venue") ? params.get("venue") : "")
+
+    let queue, interval, usersTurn = false
+
+    $(document).ready(async function() {
+
+        $("main").css("margin-bottom", $("footer").outerHeight())
+
+        /*let turnTime = new Date().setSeconds(randomBetween(5000, 3000))
+        console.log(new Date(turnTime))
+        let delay = randomBetween(5000, 30000) // just here for logging purposes
+        console.log(delay)
+        setTimeout(function() {
+            console.log("your turn!")
+        }, delay)
+
+        let delaySeconds = randomBetween(5, 30)
+        console.log(delaySeconds)
+
+        setInterval(() => {
+            delaySeconds--
+            console.log(delaySeconds)
+        }, 1000) */
+
+        let delay = randomBetween(5 * 1000, 30 * 1000)
+
+        setTimeout(function() {
+
+        }, delay)
+
+        //let turnStart = 
+    })
+
+
+    function randomBetween(min, max) {
+        if (max < min) [min, max] = [max, min]
+        return Math.floor(Math.random() * (max - min) + min)
+    }
+</script>

@@ -1,6 +1,6 @@
-<nav class="navbar navbar-dark bg-dark">
+<nav class="navbar navbar-dark bg-dark position-relative" style="z-index: 2000">
     <div class="container-fluid">
-        <a href="/" class="navbar-header navbar-brand">Tickets</a>
+        <a href="/" class="navbar-header navbar-brand">Tickety Boo</a>
         <ul class="navbar-nav">
             <li class="nav-item"><a href="/events" class="nav-link">Events</a></li>
             <li class="nav-item dropdown btn-group">
@@ -15,7 +15,8 @@
                 </button>
 
                 <ul class="dropdown-menu position-absolute">
-                    <li class="dropdown-item">Purchase History</li>
+                    <li class="dropdown-item"><a href="/account#order-history">Purchase History</a></li>
+                    <li class="dropdown-item"><a href="/account#waiting-list">Ticket Waiting Lists</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
                         <form method="POST" action="/account/logout?_method=DELETE">
@@ -29,6 +30,7 @@
                     </li>
                 </ul>
             </li>
+            <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
         </ul>
 
         <form action="/search" method="get" class="d-flex col-5">

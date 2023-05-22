@@ -1,25 +1,26 @@
-{{#if (isAuth req)}}<h1>Hi {{req.user.first_name}}!</h1>{{/if}}
+<main id="events-main" class="py-3 text-center">
+    <h2 class="text-uppercase fw-700 mb-3 fs-1">Upcoming events</h2>
+    <section class="d-flex flex-column align-items-center">
+        {{#each events}}
+            <div class="text-white rounded mb-3">
+                <a href="events/tour/{{this.tour_id}}" class="py-3 px-4 rounded">
+                    <p class="text-uppercase text-white mb-1 fw-450 fst-italic">
+                        <span>{{this.artist_name}}</span>
+                        -
+                        <span class="fst-italic">{{this.tour_name}}</span>
+                    </p>
+                    <p class="mb-0 mt-1 fw-300">
+                        {{#if (compareValues (formatDate this.firstDate.date 'yyyy') '==' (formatDate this.lastDate.date 'yyyy'))}}
+                            {{formatDate this.firstDate.date "do LLLL"}}
+                        {{else}}
+                            {{formatDate this.firstDate.date "do LLLL yyy"}}
+                        {{/if}}
 
-<h2>Upcoming events</h2>
-<p class="note-to-self">maybe have some filters for date and city</p>
-<p class="note-to-self">these could be buttons e.g. today, tomorrow, this weekend, this month, etc...</p>
-{{!-- <p class="note-to-self">see what crowdstrike has in their lil dropdowns</p> --}}
-<ul>
-{{#each events}}
-    <li>
-        <a href="events/tour/{{this.tour_id}}">
-            {{this.artist_name}} - {{this.tour_name}}
-        </a>
-        <span class="d-block">
-            {{#if (compareValues (formatDate this.firstDate.date 'yyyy') '==' (formatDate this.lastDate.date 'yyyy'))}}
-                {{formatDate this.firstDate.date "do LLLL"}}
-            {{else}}
-                {{formatDate this.firstDate.date "do LLLL yyy"}}
-            {{/if}}
+                        to {{formatDate this.lastDate.date "do LLLL yyyy"}}
 
-            to {{formatDate this.lastDate.date "do LLLL yyyy"}}
-
-        </span>
-    </li>
-{{/each}}
-</ul>
+                    </p>
+                </a>
+            </div>
+        {{/each}}
+    </section>
+</main>

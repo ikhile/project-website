@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS tours (
     artist_id INT NOT NULL,
     tour_name VARCHAR(255) NOT NULL,
     ticket_limit INT NOT NULL DEFAULT 4,
+    image_name VARCHAR(255),
 
     PRIMARY KEY (tour_id),
     FOREIGN KEY (artist_id) REFERENCES artists(artist_id)
@@ -89,7 +90,7 @@ CREATE TABLE IF NOT EXISTS sold_tickets (
 
 
 INSERT INTO artists (artist_name) VALUES("Beyonce");
-INSERT INTO tours (artist_id, tour_name) VALUES(LAST_INSERT_ID(), "Renaissance World Tour");
+INSERT INTO tours (artist_id, tour_name, image_name) VALUES(LAST_INSERT_ID(), "Renaissance World Tour", "bey");
 -- SET @renaissance_id = last_insert_id();
 
 INSERT 
@@ -126,7 +127,7 @@ VALUES
 	(1, 100, "A1", "A", 9, true, true, 100.00, false);
     
 INSERT INTO artists (artist_name) VALUES("Sabrina Carpenter");
-INSERT INTO tours (artist_id, tour_name) VALUES(LAST_INSERT_ID(), "Emails I Can't Send Tour");
+INSERT INTO tours (artist_id, tour_name, image_name) VALUES(LAST_INSERT_ID(), "Emails I Can't Send Tour", "sab");
 SET @emails_tour_id = last_insert_id();
 
 INSERT INTO venues (venue_name, city) VALUES ("O2 Apollo", "Manchester");
@@ -202,8 +203,10 @@ CREATE TABLE IF NOT EXISTS orders (
  --   status VARCHAR(255), -- set pending from success page, use webhook to set complete
 	stripe_session_id VARCHAR(255),
     stripe_metadata TEXT,
-    on_waiting_list BOOLEAN DEFAULT false,
+--    on_waiting_list BOOLEAN DEFAULT false, 
     price_paid DECIMAL(7, 2),
+    refunded BOOLEAN DEFAULT false,
+    stripe_refund_id VARCHAR(255),
     
     PRIMARY KEY (order_id),    
     FOREIGN KEY (user_id) REFERENCES users(user_id),

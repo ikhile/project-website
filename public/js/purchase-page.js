@@ -12,36 +12,7 @@ let maxTickets = parseInt($('meta[name="tour-id"]').attr("content"))
 
 
 $(document).ready(async function () {
-    $(".modal").css("margin-top", $("header").height())
-    $(".modal").css("height", $(document).height() - $("header").outerHeight() - $("footer").outerHeight())
     $("body").css("margin-bottom", $("footer").outerHeight() + 10)
-
-    $(window).on("beforeunload", function() {
-        console.log("pagehide")
-        $.post('/api/decrement-headcount', {
-            tour_id: tourID
-        })
-    })
-
-    console.log(window)
-
-    //  queue
-    // const userID = $('meta[name="tour-id"]').attr("content")
-    // console.log("!!", document.getElementsByName("tour-id")[0].content)
-    // $.post('/api/user-join-queue', {
-    //     "tour_id": tourID,
-    //     "user_id": userID
-    // })
-
-    // this works, BUT since I have that extra page for when no venue is selected, I should do this on /tour/id/venue and have a set/filtered array of current users on page that I then use to generate the headcount, so if a user goes throught choose venue page to ...
-    // or i could just put the pagehide on choosevenue page as well so it balances out
-    // could also use currently in queue array to make sure non-queueing users can get straight to the queu but this is a lot of work now...
-    // maybe when they leave they could have a lil timeout set, so that they only lose access to the page, without needing to queue, after about two minutes. anyone without access is redirected to queue
-    // OR i could just make it that if no city cards they land on the same page with the modal shown
-    // still doesn't solve the issue of just getting to the page - unless somehow clicking button gives you direct access but typing link directs to queue?
-
-    console.log(venueID)
-    $.post('/api/increment-headcount', { tour_id: tourID })
 
     maxTickets = parseInt($('meta[name="max-tickets"]').attr("content"))
     console.log(maxTickets)
@@ -55,8 +26,6 @@ $(document).ready(async function () {
 
         }
     })
-
-
 
     if (!!venueID) {
  
@@ -80,21 +49,6 @@ $(document).ready(async function () {
         $("#increase-tickets").click(increaseQty)
         $("#decrease-tickets").click(decreaseQty)
 
-
-        $("#purchase").click(function(e) { // don't think I need ANY of this
-            // temp solution - later get use seat ids from database both here and in stripe...
-            let allProductIDs = [
-                "prod_Nmi1R3RRdP2r5l",
-                "prod_Nmi1R3RRdP2r5l",
-                "prod_Nmi1R3RRdP2r5l",
-                "prod_Nmi1R3RRdP2r5l",
-            ]
-
-            // use seat ids as selected
-            let productIDs = allProductIDs.slice(0, parseInt($("input[name=qty]").val()))
-            $("input[name='product-ids']").val(productIDs.join())
-        })
-
         updateDates()
 
         // if reached page from stripe cancel url, will alert user that their purchase has been cancelled and remove cancelled parameter from url so it does not stay on refresh
@@ -116,12 +70,6 @@ $(document).ready(async function () {
     }
 })
 
-// async function fetchData(url) {
-//     return await fetch(url)
-//                 .then(res => res.json())
-//                 .then(data => data)
-// }
-
 async function updateDates() {
     selectedDateIDs = []
     $("input[name=date]:checked").each((i, elem) => {
@@ -132,23 +80,25 @@ async function updateDates() {
     // the below allows for refreshing the page to keep the same dates and qty selected (noticed because I constantly refresh this page, thought it'd be nice)
     // https://stackoverflow.com/questions/824349/how-do-i-modify-the-url-without-reloading-the-page
     // https://developer.mozilla.org/en-US/docs/Web/API/History/pushState#change_a_query_parameter
-    let url = new URL(location)
-    // if (url.searchParams.has("qty")) url.searchParams.set("qty", url.searchParams.get("qty"))
+
+    const url = new URL(location)
     url.searchParams.delete("date")
+
     if (selectedDateIDs.length < numDates) {
         for (let dateID of selectedDateIDs) {
             url.searchParams.append("date", dateID)
         }
     }
-    window.history.pushState({}, "", url)
 
+    window.history.pushState({}, "", url)
     updateAvailableSeats()
 }
 
 async function updateAvailableSeats() {
+    console.log($("#available-tickets"))
     $("#available-tickets").html("<p class='text-center h3 pt-5'>Loading...</p>") // this + timeout used as an indicator to the user that the information has updated
 
-    ticketQty = $("input[name=qty]").val() // TODO constrain again just to be sure
+    ticketQty = $("input[name=qty]").val()
     let dateQry = stringifyArray(selectedDateIDs)
 
     let url = `/api/available-seats?tour=${tourID}&dates=${dateQry}&qty=${ticketQty}&orderby=${availableSort}`
@@ -157,25 +107,36 @@ async function updateAvailableSeats() {
     setTimeout(() => { 
 
         if (ticketResponse.length > 0) {
-            let context = {
-                availableTickets: ticketResponse,
+            for (let t of ticketResponse) {
+                t.price.formatted = {}
+                for (let [key, value] of Object.entries(t.price)) {
+                    if (typeof value == "number") {
+                        t.price.formatted[key] = "£" + value.toFixed(2)
+                    }
+                }
             }
+
+            let context = { availableTickets: ticketResponse }
         
             renderTemplate($("#available-tickets"), "/views/available-tickets.hbs", context)
             .then(() => {
 
                 $(".available-ticket-card").click(function() {
                     ticketResIndex = $(this).attr("data-index")
+                    const t = ticketResponse[ticketResIndex]
+                    console.log(t)
+
                     let context =  {
-                        block: ticketResponse[ticketResIndex].block,
-                        section: ticketResponse[ticketResIndex].section,
-                        row: ticketResponse[ticketResIndex].row,
-                        dates: ticketResponse[ticketResIndex].dates,
-                        ticketGroups: ticketResponse[ticketResIndex].tickets,
+                        block: t.block,
+                        section: t.section,
+                        row: t.row,
+                        dates: t.dates,
+                        ticketGroups: t.tickets,
                         singleTicket: ticketQty == 1,
                         tourID: tourID,
                         venueID: venueID,
-                        currentURL: window.location.href
+                        currentURL: window.location.href,
+                        price: t.price
                     }
 
                     renderTemplate($("#select-seats-modal"), "/views/select-seats.hbs", context)
