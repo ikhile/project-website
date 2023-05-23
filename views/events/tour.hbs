@@ -74,7 +74,7 @@
                     {{! user signed up for this slot}}
                     {{else if (arrayIncludes @root.userSignedUpSlots this.slot_id)}}
                         {{#if (slotOngoing this)}}
-                            <button class="btn btn-black-transparent">Purchase</button>
+                            <a href="/events/purchase/tour/{{this.tour_id}}/queue" class="btn btn-black-transparent">Purchase</a>
                         {{else if (slotFuture this)}}
                             <button class="unsignup-btn btn btn-black-transparent">Cancel registration</button>
                         {{else if (slotPast this)}}

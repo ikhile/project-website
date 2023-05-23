@@ -12,8 +12,8 @@
         <button id="change-city-btn" class="btn {{!ms-2}} mt-2 btn-outline-light py-0 text-uppercase fw-300">Change city/venue</button>        
     </div>
 
-    <form method="get" id="filters" class="d-flex flex-md-row flex-column mt-2 mx-3">
-        <section class="d-flex flex-wrap justify-content-center col-md-4 flex-grow-1">
+    <form method="get" id="filters" class="d-flex flex-md-row flex-column mt-2 mx-3 mb-2 mb-md-1 text-white">
+        <section class="d-flex flex-wrap justify-content-center col-md-4">
             <h3 class="mb-1 text-uppercase fw-300 text-center" style="flex-basis: 100%">Dates</h3>
             {{!-- could replace checks with a selectpicker - however, will affect the date logic in .js... would definitely look nicer though --}}
             {{#each venueDates}}
@@ -25,7 +25,7 @@
                 </div>
             {{/each}}
         </section>
-        <section class="d-flex flex-column align-items-center col-md-4">
+        <section class="d-flex flex-column align-items-center col-12 col-md-4">
             <h3 class="mb-1 text-uppercase fw-300">Tickets</h3>
             <div class="d-flex align-items-center mb-2" style="column-gap: 5px;">
                 <button type="button" id="decrease-tickets" class="btn btn-black fw-700 py-1 mt-2" style="border-radius: 50%;">-</button>
@@ -37,13 +37,13 @@
                 </div>
             </div>
         </section>
-        <section class="col-md-4 container-fluid">
+        <section class="col-md-4 container-fluid col-12">
             <div class="row">
                 <h3 class="mb-1 text-uppercase fw-300 text-center col-12">Sort by...</h3>
             </div>
             <div class="row mt-2 flex-nowrap justify-content-center" style="column-gap: 5px">
-                <button id="sort-high-low" class="sort-tix btn btn-black-transparent col-5" data-sort-order="DESC">Best Available</button>
-                <button id="sort-low-high" class="sort-tix btn btn-black-transparent col-5" data-sort-order="ASC">Cheapest</button>
+                <button id="sort-high-low" class="sort-tix btn btn-black-transparent col-5 text-uppercase fw-300" data-sort-order="DESC">Best Available</button>
+                <button id="sort-low-high" class="sort-tix btn btn-black-transparent col-5 text-uppercase fw-300" data-sort-order="ASC">Cheapest</button>
             </div>
         </section>
     </form>
@@ -70,6 +70,7 @@
 <meta name="tour-id" content="{{tour.tour_id}}">
 <meta name="max-tickets" content="{{maxTickets}}">
 <meta name="bg-name" content="{{tour.image_name}}">
+<meta name="slot-id" content="{{slot_id}}">
 
 <script src="/js/set-tour-bg.js"></script>
 <script type="module" src="/js/purchase-page.js"></script> <!--https://stackoverflow.com/a/55310399-->

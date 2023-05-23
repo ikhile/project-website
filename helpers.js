@@ -138,6 +138,7 @@ export function groupSeats(seats, mode = "range") {
 }
 
 export function formatPrice(float, forceDecimals = false) {
+    console.log(float)
     return `£${float.toFixed(float % 1 != 0 || forceDecimals ? 2 : 0)}`
 }
 

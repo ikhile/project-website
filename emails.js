@@ -3,6 +3,8 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 // https://community.nodemailer.com/2-0-0-beta/templating/
+
+
 var transporter = nodemailer.createTransport({
     service: 'hotmail',
     auth: {
@@ -12,7 +14,14 @@ var transporter = nodemailer.createTransport({
 })
 
 export function sendEmail(to, subject, text) {
-    const options = { from: `TixFix <${process.env.EMAIL_USERNAME}>`, to, subject, text }
+    const options = { 
+        from: `TixFix <${process.env.EMAIL_USERNAME}>`, 
+        to, 
+        subject, 
+        text 
+    }
+
+    // COMMENT BACK IN - SPAM AVOIDANCE
 
     transporter.sendMail(options, (error, info) => {
         if (error) console.error(error)

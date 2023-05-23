@@ -1,11 +1,10 @@
-<main class="text-center bg-white mx-auto my-4" style="max-width: 800px">
-
+<main id="wl-main" class="text-center mx-3 m-4 text-white border-none">
     <p id="alert-error" class="alert alert-danger d-none">There was an error. Please try again.</p>
 
-    <form id="waiting-list-form" method="POST" class="m-auto border rounded d-inline-block p-3">
-        <h2 class="mt-2 mb-3">Sign up for waiting list</h2>
+    <form id="waiting-list-form" method="POST" class="m-auto d-inline-block p-3 fw-300">
+        <h2 class="mt-2 mb-3 fw-light text-uppercase">Sign up for the waiting list</h2>
         <p id="info">Complete the form below to be notified when more tickets are released for:</p>
-        <p class="h4">{{tour.artist_name}} - {{tour.tour_name}}</p>
+        <p class="h4 fw-300 text-uppercase">{{tour.artist_name}} - {{tour.tour_name}}</p>
 
         <p id="alert-success" class="alert alert-success d-none">Thank you for signing up!</p>
         <p id="alert-email-error" class="alert alert-danger d-none">Error sending email confirmation.</p>
@@ -50,7 +49,12 @@
                                     {{!-- oninvalid="this.setCustomValidity('Please choose at least one venue.')"
                                     required --}}
                                 >
-                                <label for="venue-{{this.venue_id}}" class="control-label position-relative">{{this.city}} -&nbsp;<i>{{this.venue}}</i></label>
+                                <label for="venue-{{this.venue_id}}" class="control-label position-relative">
+                                    <span class="text-uppercase">
+                                        {{this.city}}
+                                    </span>
+                                    -&nbsp;{{this.venue}}
+                                </label>
                             </div>
                         </td>        
 
@@ -60,7 +64,7 @@
                                 {{!-- id="select-dates-venue-{{this.venue_id}}" --}}
                                 name="dates"
                                 {{!-- name="dates-venue-{{this.venue_id}}" --}}
-                                class="selectpicker"
+                                class="selectpicker ms-3"
                                 title="Select dates for {{this.city}}"
                                 data-selected-text-format="count > 2"
                                 data-count-selected-text="{0} dates selected"

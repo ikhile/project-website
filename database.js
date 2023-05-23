@@ -16,7 +16,7 @@ export const pool = mysql.createPool({
 
 // EVENTS
 
-export async function getAllEvents(limit = null) {
+
     // let query = `
     //     SELECT tour_id, artist_name, tour_name
     //     FROM tours
@@ -29,6 +29,8 @@ export async function getAllEvents(limit = null) {
     // https://stackoverflow.com/a/276949  
     // https://stackoverflow.com/a/8631273
     // might be better to order by sale start date ah well
+
+export async function getAllEvents(limit = null) {
 
     let query = `
         SELECT 
@@ -57,8 +59,9 @@ export async function getAllEvents(limit = null) {
 }
 
 export async function tourSalesStart(tourID) {
+    console.log(tourID)
     const slots = await getSlotsByTour(tourID)
-    if (slots.length == 0) return new Date("2000-01-01") // random past date to compare to
+    if (slots.length == 0) return new Date("2000-01-01") // random future date i
     else return (new Date(slots[0].start))
 }
 
@@ -108,7 +111,8 @@ export async function getDatesByTourGroupVenues(tourID) {
                 venue: row.venue_name,
                 venue_id: row.venue_id,
                 city: row.city,
-                dates: []
+                dates: [],
+                image_name: row.image_name
             })
             venueInd = arr.length - 1
         }
@@ -122,9 +126,10 @@ export async function getDatesByTourGroupVenues(tourID) {
 
 export async function getDatesByTourAndVenue(tourID, venueID) {
     const [rows] = await pool.query(`
-        SELECT date_id, date
+        SELECT date_id, date, venues.image_name
         FROM dates
-        WHERE tour_id = ? AND venue_id = ?
+        INNER JOIN venues ON dates.venue_id = venues.venue_id
+        WHERE tour_id = ? AND dates.venue_id = ?
     `, [tourID, venueID])
 
     return rows
@@ -142,7 +147,7 @@ export async function getDateFromID(dateID) {
 
 export async function getDateInfo(dateID) {
     const [[info]] = await pool.query(`
-        SELECT date, artist_name, tour_name, venue_name, city, image_name
+        SELECT date, artist_name, tour_name, venue_name, city, tours.image_name
         FROM dates
         INNER JOIN venues on dates.venue_id = venues.venue_id
         INNER JOIN tours ON dates.tour_id = tours.tour_id
@@ -152,6 +157,8 @@ export async function getDateInfo(dateID) {
 
     return info
 }
+
+console.log(await getDateInfo(1))
 
 
 // VENUES

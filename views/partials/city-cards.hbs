@@ -2,12 +2,10 @@
     <div 
         class="city-card card mx-auto my-2 bg-black text-white" 
         data-tour-id="{{../cardContext.event.tour_id}}"
-        data-venue-id="{{this.venue_id}}"
-        {{!-- onclick="location.href='{{addVenueIDToUrl ../cardContext.cardUrl this.venue_id}}'" --}}
-    >
+        data-venue-id="{{this.venue_id}}"    >
         <main>
             <h3>{{this.city}}, {{this.venue}}</h3>
-            <ul>
+            <ul style="list-style-type: none;">
                 {{#each (groupDates (venueDatesToDatesArray this.dates))}}
                     <li>
                         {{#each this}}
@@ -19,8 +17,8 @@
             </ul>
         </main>
 
-        <aside>
-            <img src="" alt="Seat map showing current availability">
+        <aside class="justify-content-end d-flex">
+            <img src="/images/venues/venue layout/{{this.image_name}}" alt="Seat map unavailable." class="col-4">
         </aside>
     </div>
 {{/each}}

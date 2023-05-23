@@ -19,6 +19,7 @@ router.get('/', async (req, res) => {
         event.lastDate = await api.get(`tours/${event.tour_id}/dates/last`).then((res) => res.data)
         event.purchaseSlots = await db.getSlotsByTour(event.tour_id)
         event.salesStart = await db.tourSalesStart(event.tour_id)
+        // console.log(await event.salesStart)
     }
 
     const context = {
@@ -37,6 +38,7 @@ router.get('/tour/:tour_id', validateTourID, async (req, res) => {
     const event = await api.get(`tours/${req.params.tour_id}`).then((res) => res.data)
     const venues = await api.get(`tours/${req.params.tour_id}/venues`).then((res) => res.data)
     const dates = await db.getTourDates(req.params.tour_id)
+
     let [prices] = await db.pool.query(`
         SELECT DISTINCT price
         FROM seats
@@ -128,13 +130,16 @@ router.post('/tour/:tour_id/waiting-list', validateTourID, checkAuthRedirect, as
     res.redirect(redirectUrl)
 })
 
-router.get('/purchase/tour/:tour_id/queue/', validateTourID, checkAuthRedirect, async (req, res) => {
+router.get('/purchase/tour/:tour_id/queue/', validateTourID, checkAuthRedirect, checkSlotAuth, async (req, res) => {
     let context = {
         req,
         layout: req.isAuthenticated() ?'main-logged-in' : 'main',
         event: await db.getEventById(req.params.tour_id),
-        venue_id: req.query.venue
+        venue_id: req.query.venue,
+        slot_id: res.locals.openSlot ? res.locals.openSlot.slot_id : null
     }
+
+    console.log(context.slot_id)
 
     let availableSeats, totalSeats, prices
     const {tour_id} = req.params
@@ -151,6 +156,7 @@ router.get('/purchase/tour/:tour_id/queue/', validateTourID, checkAuthRedirect, 
         WHERE tour_id = ? `
 
     if (req.query.venue) {
+        console.log("v")
         const totalQuery = baseSeatQuery + " AND venue_id = ?"
         const availableQuery = totalQuery + " AND available = true"
 
@@ -162,7 +168,16 @@ router.get('/purchase/tour/:tour_id/queue/', validateTourID, checkAuthRedirect, 
             [[{count: availableSeats}]] = await db.pool.query(availableQuery, [tour_id, req.query.venue])
         )
 
+        const priceQuery = basePriceQuery + "AND venue_id = ?"
+
+        ;(
+            [prices] = await db.pool.query(priceQuery, [tour_id, req.query.venue])
+        )
+
+        prices = prices.map(obj => parseFloat(obj.price))
+
     } else {
+
         const availableQuery = baseSeatQuery + "AND available = true"
 
         ;(
@@ -173,36 +188,29 @@ router.get('/purchase/tour/:tour_id/queue/', validateTourID, checkAuthRedirect, 
             [[{count: availableSeats}]] = await db.pool.query(availableQuery, tour_id)
         )
 
-        console.log(tour_id, basePriceQuery)
-
         ;(
             [prices] = await db.pool.query(basePriceQuery, tour_id)
         )
+
         prices = prices.map(obj => parseFloat(obj.price))
+
+        // console.log(baseSeatQuery, availableQuery, basePriceQuery)
     }
 
     context.availability = {
-        decimal: availableSeats / totalSeats,
-        percent: availableSeats / totalSeats * 100,
-        percentage: parseFloat((availableSeats / totalSeats * 100).toFixed(2)) + "%",
-
-
+        decimal: totalSeats > 0 ? availableSeats / totalSeats : 0,
+        percent: totalSeats > 0 ? availableSeats / totalSeats * 100 : 0,
+        percentage: totalSeats > 0 ? (parseFloat((availableSeats / totalSeats * 100).toFixed(2)) + "%") : "0%",
     }
-    console.log(prices)
+
     context.prices = {
-        min: !!prices ? Math.min(...prices) : 0,
-        max: !!prices ? Math.max(...prices) : 0,
-        avg: !!prices ? prices.reduce((a, b) => a + b) / prices.length : 0
+        min: prices.length > 0 ? Math.min(...prices) : 0,
+        max: prices.length > 0 ? Math.max(...prices) : 0,
+        avg: prices.length > 0 ? prices.reduce((a, b) => a + b) / prices.length : 0
     }
-    console.log(totalSeats, availableSeats, context.availability, context.prices)
 
-
-    // get availability
-    console.log(context)
 
     res.render('events/queue', context)
-
-    // could add user to queue here
 })
 
 router.get(
@@ -211,12 +219,8 @@ router.get(
         '/purchase/tour/:tour_id/venue',
         '/purchase/tour/:tour_id/venue/:venue_id',
     ], 
+
     validateTourID, validateVenueID, checkAuthRedirect, checkSlotAuth, async (req, res) => {
-
-    // validate venue ID same way as tour
-    // if (req.params.venue_id) {
-
-    // }
 
     let context = {
         req,
@@ -224,11 +228,12 @@ router.get(
         cardContext: {
             event: await api.get(`tours/${req.params.tour_id}`).then((res) => res.data),
             venues: await api.get(`tours/${req.params.tour_id}/venues`).then((res) => res.data),
+            slotID: req.query.slot_id ?? null
         },
         tour: await db.getEventById(req.params.tour_id),
         venueSelected: !!req.params.venue_id,
         isSlotSale: !!res.locals.isSlotSale, // use when getting available tickets to get slot
-        slotID: res.locals.slot_id ?? null
+        slotID: req.query.slot_id ?? null
     }
 
     if (!!req.params.venue_id) {
@@ -266,19 +271,27 @@ router.get('/purchase/success', async (req, res) => {
 
 // MIDDLEWARE
 
-async function checkSlotAuth(req, res, next) {
+
     // MAYBE check first if tour has open or future slots
     // if so then check if user is signed up
     // if not then send a lil "you are not signed up to this purchase slot" page with a back button to tour page
     // if so then pass slot id/slot sale = true through to context and render page
 
+    
+
+async function checkSlotAuth(req, res, next) {
+
     let slots = await db.getSlotsByTour(req.params.tour_id)
+    console.log(slots)
     let hasOpenSlot = false, openSlot = true, hasFutureSlots = false
 
     for (let slot of slots) {
+        console.log(helpers.slotOngoing(slot))
         if (helpers.slotOngoing(slot)) {
             hasOpenSlot = true
             openSlot = slot
+            console.log(200, openSlot)
+            res.locals.openSlot = openSlot
             break
         } else if (helpers.slotFuture(slot)) {
             hasFutureSlots = true
@@ -328,11 +341,14 @@ async function validateTourID(req, res, next) {
 
 async function validateVenueID(req, res, next) {
     console.log("validate venue")
+    console.log(req.params.venue_id)
     if (req.params.venue_id) {
         console.log("has")
         const [[{exists}]] = await db.pool.query(`
-            SELECT EXISTS (SELECT tour_id FROM tours WHERE tour_id = ?) as "exists"
+            SELECT EXISTS (SELECT venue_id FROM venues WHERE venue_id = ?) as "exists"
         `, req.params.venue_id)
+
+        console.log(exists)
 
         if (!Boolean(exists)) return res.status(404).render('events/404', { error: "venue" })
     }

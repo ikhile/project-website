@@ -37,7 +37,7 @@
 
         $("#validation-errors p").addClass("d-none my-1")
 
-        const emailRegex = /^\w+@\w+\.[\w.]+$/
+        const emailRegex = /^[\w\.]+@[\w\.]+\.[\w\.]+$/
         const passwordRegex = /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/ // https://stackoverflow.com/a/470602
         
         $("#reg-submit").click(async (e) => {           

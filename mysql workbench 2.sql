@@ -344,4 +344,27 @@ AND available = true;
 SELECT COUNT(*) AS count
 FROM seats
 INNER JOIN dates ON seats.date_id = dates.date_id
-WHERE tour_id = ? AND available = true
+WHERE tour_id = 2 AND available = true;
+
+
+SELECT * FROM purchase_slots WHERE tour_id = 2;
+
+SELECT 
+tours.tour_id, 
+tour_name, 
+artists.artist_id, 
+artist_name, 
+image_name,
+SUBSTRING_INDEX(
+	GROUP_CONCAT(date ORDER BY date ASC SEPARATOR ','), ",", 1
+) AS first_date
+FROM tours
+INNER JOIN artists ON tours.artist_id = artists.artist_id
+INNER JOIN dates ON tours.tour_id = dates.tour_id
+GROUP BY tour_id
+ORDER BY first_date ASC;
+
+ SELECT COUNT(*) AS count
+FROM seats
+INNER JOIN dates ON seats.date_id = dates.date_id
+WHERE tour_id = 1  AND venue_id = 2 

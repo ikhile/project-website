@@ -9,6 +9,7 @@ let ticketQty, qtyInput = $('input[name="qty"]')
 let ticketResponse, ticketResIndex
 let availableSort = "DESC"
 let maxTickets = parseInt($('meta[name="tour-id"]').attr("content"))
+let slot
 
 
 $(document).ready(async function () {
@@ -16,13 +17,17 @@ $(document).ready(async function () {
 
     maxTickets = parseInt($('meta[name="max-tickets"]').attr("content"))
     console.log(maxTickets)
+    
+    let params = new URLSearchParams(window.location.search)
+    slot = params.get("slot")
+    console.log(`${!!slot ? "slot=" + slot : ""}`)
 
     $("#change-city-btn").click(toggleCityPopup)
     $("#change-city-modal").click(toggleCityPopup)
     $(".city-card").click(function () {
         // if data-venue-id == current venue id then just close popup without going to a new page
         if ($(this).attr("data-venue-id") != venueID) {
-            window.location.href = `/events/purchase/tour/${$(this).attr("data-tour-id")}/venue/${$(this).attr("data-venue-id")}`
+            window.location.href = `/events/purchase/tour/${$(this).attr("data-tour-id")}/venue/${$(this).attr("data-venue-id")}${!!slot ? "?slot=" + slot : ""}`
 
         }
     })
@@ -45,6 +50,8 @@ $(document).ready(async function () {
         disableQtyBtns()
 
         // only allow date filter to be clicked when update needed
+
+
         $("input[name=date]").on("input", updateDates)
         $("#increase-tickets").click(increaseQty)
         $("#decrease-tickets").click(decreaseQty)
@@ -95,83 +102,90 @@ async function updateDates() {
 }
 
 async function updateAvailableSeats() {
-    console.log($("#available-tickets"))
-    $("#available-tickets").html("<p class='text-center h3 pt-5'>Loading...</p>") // this + timeout used as an indicator to the user that the information has updated
+    $("#available-tickets").html("<p class='text-center h3 pt-5'>Loading...</p>")
 
-    ticketQty = $("input[name=qty]").val()
-    let dateQry = stringifyArray(selectedDateIDs)
+    if (selectedDateIDs.length) {
 
-    let url = `/api/available-seats?tour=${tourID}&dates=${dateQry}&qty=${ticketQty}&orderby=${availableSort}`
-    ticketResponse = await fetchData(url)
+        ticketQty = $("input[name=qty]").val()
+        let dateQry = stringifyArray(selectedDateIDs)
 
-    setTimeout(() => { 
+        let url = `/api/available-seats?tour=${tourID}&dates=${dateQry}&qty=${ticketQty}&orderby=${availableSort}`
+        if (!!slot) url += `&slot=${slot}`
+        ticketResponse = await fetchData(url)
 
-        if (ticketResponse.length > 0) {
-            for (let t of ticketResponse) {
-                t.price.formatted = {}
-                for (let [key, value] of Object.entries(t.price)) {
-                    if (typeof value == "number") {
-                        t.price.formatted[key] = "£" + value.toFixed(2)
+        setTimeout(() => { 
+
+            if (ticketResponse.length > 0) {
+                for (let t of ticketResponse) {
+                    console.log(t)
+                    t.price.formatted = {}
+                    for (let [key, value] of Object.entries(t.price)) {
+                        if (typeof value == "number") {
+                            t.price.formatted[key] = "£" + value.toFixed(2)
+                        }
                     }
                 }
-            }
-
-            let context = { availableTickets: ticketResponse }
-        
-            renderTemplate($("#available-tickets"), "/views/available-tickets.hbs", context)
-            .then(() => {
-
-                $(".available-ticket-card").click(function() {
-                    ticketResIndex = $(this).attr("data-index")
-                    const t = ticketResponse[ticketResIndex]
-                    console.log(t)
-
-                    let context =  {
-                        block: t.block,
-                        section: t.section,
-                        row: t.row,
-                        dates: t.dates,
-                        ticketGroups: t.tickets,
-                        singleTicket: ticketQty == 1,
-                        tourID: tourID,
-                        venueID: venueID,
-                        currentURL: window.location.href,
-                        price: t.price
-                    }
-
-                    renderTemplate($("#select-seats-modal"), "/views/select-seats.hbs", context)
-                        .then(() => {
-                            $("#select-seats-modal").css("display", "flex")
-                            selectFilterSeats()
-
-                            $("#select-seats-modal select[name=date]").on("input",function() {
+    
+                let context = { availableTickets: ticketResponse }
+            
+                renderTemplate($("#available-tickets"), "/views/available-tickets.hbs", context)
+                .then(() => {
+    
+                    $(".available-ticket-card").click(function() {
+                        ticketResIndex = $(this).attr("data-index")
+                        const t = ticketResponse[ticketResIndex]
+                        console.log("!!!", t)
+    
+                        let context =  {
+                            block: t.block,
+                            section: t.section,
+                            row: t.row,
+                            dates: t.dates,
+                            ticketGroups: t.tickets,
+                            singleTicket: ticketQty == 1,
+                            tourID: tourID,
+                            venueID: venueID,
+                            currentURL: window.location.href,
+                            price: t.price,
+                            image_name: t.image_name
+                        }
+    
+                        renderTemplate($("#select-seats-modal"), "/views/select-seats.hbs", context)
+                            .then(() => {
+                                $("#select-seats-modal").css("display", "flex")
                                 selectFilterSeats()
+    
+                                $("#select-seats-modal select[name=date]").on("input",function() {
+                                    selectFilterSeats()
+                                })
+    
+                                $("#close-select-seats").click(function() {
+                                    $("#select-seats-modal").css("display", "none")
+                                })
                             })
-
-                            $("#close-select-seats").click(function() {
-                                $("#select-seats-modal").css("display", "none")
-                            })
-                        })
-                })
-
-                $(".sort-tix").click(function() {
-                    availableSort = $(this).attr("data-sort-order")
-                })
-
-            })            
-                    
-
-        } else {
-            let context = {
-                tour_id: tourID,
-                venue_id: venueID,
-                date_value: dateQry
+                    })
+    
+                    $(".sort-tix").click(function(e) {
+                        e.preventDefault()
+                        availableSort = $(this).attr("data-sort-order")
+                        updateAvailableSeats()
+                    })
+    
+                })            
+                        
+    
+            } else {
+                let context = {
+                    tour_id: tourID,
+                    venue_id: venueID,
+                    date_value: dateQry
+                }
+                renderTemplate($("#available-tickets"), "/views/no-tickets.hbs", context)
+                $("#waiting-list-dates").val(dateQry)
             }
-            renderTemplate($("#available-tickets"), "/views/no-tickets.hbs", context)
-            $("#waiting-list-dates").val(dateQry)
-        }
-
-    }, Math.random() * 500)
+    
+        }, Math.random() * 500)
+    }
 
 }
 

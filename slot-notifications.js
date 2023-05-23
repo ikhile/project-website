@@ -9,8 +9,6 @@ const alertBeforeMins = 10
 for (let slot of slots) {
     let timeUntilStart = datefns.differenceInMinutes(new Date(slot.start), new Date())
     let timeUntilAlert = timeUntilStart - alertBeforeMins
-
-    console.log(timeUntilAlert)
     
     if (timeUntilAlert + 2 > 0) {
         setInterval( async function() {

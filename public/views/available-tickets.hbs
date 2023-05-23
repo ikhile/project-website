@@ -3,10 +3,12 @@
     <button id="sort-low-high" class="sort-tix" data-sort-order="ASC">Cheapest</button>
 </div> --}}
 {{#each availableTickets}}
-    <div class="card available-ticket-card container p-3 text-white mx-0" data-index="{{@index}}">
+    <div class="card available-ticket-card container p-3 text-white mx-0 mb-2" data-index="{{@index}}">
         <div class="row mb-1 flex-wrap">
             <button class="col-auto btn btn-outline-light px-3 py-0 ms-3 mw-80">Details</button>
-            <h3 class="col-auto mb-0 flex-grow-1 fw-300">Block {{this.block}} Section {{this.section}} Row {{this.row}}</h3>
+            <h3 class="col-auto mb-0 flex-grow-1 fw-300">
+                Block {{this.block}} Section {{this.section}} Row {{this.row}}
+            </h3>
             <p class="col-auto text-end mb-0 mt-1 fs-1 fst-italic fw-300 line-height-1em">{{this.price.formatted.totalWithFees}}</p>
         </div>
         <div class="row mt-1 fs-5">

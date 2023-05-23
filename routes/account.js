@@ -120,9 +120,10 @@ router.post(
     passport.authenticate('local', { failureRedirect: 'login', failureFlash: true, }), 
     (req, res) => {// https://stackoverflow.com/a/70171106 
         // res.redirect(req.body.redirect ?? '/account') // doesn't work anymore?
+        console.log(req.body.redirect)
         res.redirect(!!req.body.redirect ? req.body.redirect : '/account')
     } 
-)
+) 
 
 router.get('/register', (req, res) => {
     res.render('account/register', { req, query: req.query })
@@ -142,7 +143,7 @@ router.post('/register', async (req, res) => {
         // could be a good place to add a stripe customer ID? or just when they reach checkout if not got one
 
         // redirect to login, with redirect parameters for login
-        res.redirect(`login${!!req.body.redirect ? "?redirect=" + req.body.redirect : ""}`)
+        res.redirect(`login${!!req.body.redirect ? ("?redirect=" + req.body.redirect) : ""}`)
 
     } catch (err) {
         console.error(err) // need to handle the error maybe add a query string?

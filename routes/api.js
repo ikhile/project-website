@@ -124,6 +124,7 @@ router.get("/available-seats", async (req, res) => {
     let dates = parseArray(req.query.dates)
     let onsale = req.query.onsale == "false" ? false : true
 
+    console.log(req.query.qty)
 
     let sql = `
         SELECT * 
@@ -132,6 +133,13 @@ router.get("/available-seats", async (req, res) => {
         AND available is true
         AND ( `
     let values = [onsale]
+
+    if (!!req.query.slot) {
+        sql = sql.replace("onsale is", "purchase_slot_id =")
+        values = [parseInt(req.query.slot)]
+    }
+
+    // console.log(sql)
 
 
     for (let [i, dateID] of dates.entries()) {
@@ -142,20 +150,30 @@ router.get("/available-seats", async (req, res) => {
         }
     }
 
-    sql += ") ORDER BY block, section, row_name, seat_number" // so I can check for consecutive seats
+    sql += ") ORDER BY block, section, row_name, seat_number, price DESC" // so I can check for consecutive seats
 
+    // console.log(sql, values)
     const [rows] = await db.pool.query(sql, values)
+
+    // console.log(rows)
 
     let requiredQty = parseInt(req.query.qty)
 
 
-    if (requiredQty) { // if asked for a specific quantity of tickets...
+    if (!!requiredQty) { // if asked for a specific quantity of tickets...
         let suitableTickets = []
 
         for (let i = 0; i < rows.length; i++) {
             // get required number of seats starting at i
             let seatSlice = rows.slice(i, i + requiredQty)
             let seat = rows[i]
+
+            // console.log("!!!", seatSlice)
+
+            // if (Boolean(seat.general_admission) && )
+        
+
+            // console.log(Boolean(seat.general_admission))
 
             // if need 1 ticket will just return all available seats grouped by location
             // if slice contains required number of seats and the seats are together, add group to seats to return
@@ -176,7 +194,7 @@ router.get("/available-seats", async (req, res) => {
                         row: seat.row_name,
                         dates: [],
                         tickets: [],
-                        qty: requiredQty
+                        qty: requiredQty,
                     }) - 1
                 }
 
@@ -197,6 +215,8 @@ router.get("/available-seats", async (req, res) => {
                     seat_ids: stringifyArray(seatSlice.map(a => a.seat_id)),
                     seats: seatSlice
                 }
+
+                // console.log(seatGroup)
 
                 suitableTickets[ind].tickets.push(seatGroup)
 
@@ -220,13 +240,30 @@ router.get("/available-seats", async (req, res) => {
 
         // stringifyLog(suitableTickets)
 
-        suitableTickets.sort((a, b) => {
-            if (req.query.orderby == "ASC") {
-                return a.tickets.seats[0].price - b.tickets.seats[0].price
-            } else /*if (req.query.orderby == "DESC")*/ {
-                return b.tickets.seats[0].price - a.tickets.seats[0].price
-            }
-        })
+        console.log(req.query.orderby)
+
+        if (req.query.orderby == "DESC") suitableTickets.sort((a, b) => a.row.localeCompare(b.row))
+        else suitableTickets.sort((a, b) => b.row.localeCompare(a.row))
+
+        // suitableTickets.sort((a, b) => {
+        //     console.log(a.totalPrice)
+        //     // console.log("!!!!!!!", a.tickets[0].price, req.query.orderby)
+        //     if (a.tickets.hasOwnProperty("seats") && b.tickets.hasOwnProperty("seats")) {
+
+        //         if (req.query.orderby == "ASC") {
+        //             return parseFloat(a.tickets.seats[0].price) - parseFloat(b.tickets.seats[0].price)
+        //         } else /*if (req.query.orderby == "DESC")*/ {
+        //             return parseFloat(b.tickets.seats[0].price) - parseFloat(a.tickets.seats[0].price)
+        //         }
+
+        //     } else {
+        //         if (req.query.orderby == "ASC") {
+        //             return parseFloat(a.tickets[0].price) - parseFloat(b.tickets[0].price)
+        //         } else /*if (req.query.orderby == "DESC")*/ {
+        //             return parseFloat(b.tickets[0].price) - parseFloat(a.tickets[0].price)
+        //         }
+        //     }
+        // })
 
         return res.json(suitableTickets)
     }
@@ -252,7 +289,7 @@ router.get("/email-available", async (req, res) => {
 
 router.post("/queue-test", async (req, res) => {
     console.log("queue test")
-    console.log(req.body, req.body.val)
+    // console.log(req.body, req.body.val)
     await db.pool.query(`
         INSERT INTO queue_test (test) VALUES("${req.body.val}")
     `)

@@ -17,7 +17,7 @@
         <p class="mb-2 fs-3 line-height-1em">
             {{formatPrice prices.min true}}
             <span class="fs-6">to</span>
-            {{formatPrice prices.min true}}
+            {{formatPrice prices.max true}}
         </p>
         <p class="text-uppercase fst-italic small mb-0">Average price</p>
         <p class="mb-0 fs-4 fw-300 line-height-1em">{{formatPrice prices.avg true}}</p>
@@ -30,7 +30,7 @@
     </div>
     <div id="your-turn" class="d-flex align-items-center justify-content-center d-none">
         <p class="m-0">Ready when you are!</p>
-        <a href="venue/{{venue_id}}" class="btn btn-white text-uppercase fw-300 ms-2">Purchase</a>
+        <a href="venue/{{venue_id}}{{#if slot_id}}?slot={{slot_id}}{{/if}}" class="btn btn-white text-uppercase fw-300 ms-2">Purchase</a>
     </div>
 </footer>
 
@@ -68,7 +68,7 @@
             console.log(delaySeconds)
         }, 1000) */
 
-        const delay = randomBetween(5 * 1000, 15 * 1000)
+        const delay = randomBetween(3 * 1000, 10 * 1000)
         const user = JSON.parse($("meta[name=user]").attr("content"))
         const event = JSON.parse($("meta[name=event]").attr("content"))
         console.log(delay, user)
