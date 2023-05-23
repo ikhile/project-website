@@ -4,7 +4,7 @@
         Welcome to tixfix!</h1>
     <section id="upcoming-events" class="text-center pt-2">
         <h2 class="text-uppercase fw-800 mb-4 fs-1">Upcoming Events</h2>
-        <div class="d-flex flex-wrap justify-content-center" style="gap: 12px">
+        <div class="d-flex flex-wrap justify-content-center mx-auto col-md-10" style="gap: 12px">
             {{#each events}}
                 <div class="card hover-scale event-card">
                     <img class="card-img-top" src="/images/tour-backgrounds/{{this.image_name}}" alt="">
@@ -30,9 +30,5 @@
             {{/each}}
         </div>
     </section>
-
-    {{!-- <section class="text-center my-3">
-        <h2>How it works</h2>
-    </section> --}}
 </main>
 

@@ -1,4 +1,7 @@
+
 import * as db from './database.js'
+
+
 import * as helpers from './helpers.js'
 import * as exphbs from 'express-handlebars'
 import express from 'express'
@@ -14,7 +17,7 @@ import { router as accountRouter } from './routes/account.js'
 import { router as payRouter } from './routes/pay.js'
 import { router as searchRouter } from './routes/search.js'
 import { router as webhookRouter } from './routes/webhook.js'
-import * as s from './slot-notifications.js'
+// import * as s from './slot-notifications.js'
 
 const app = express()
 const port = 3000
@@ -101,6 +104,7 @@ export function parseArray(str, intArray = true) {
 }
 
 app.get('/', async (req, res) => {
+    
     let events = await db.getAllEvents(10)
 
     for (let event of events) {
@@ -108,6 +112,7 @@ app.get('/', async (req, res) => {
         event.lastDate = await api.get(`tours/${event.tour_id}/dates/last`).then((res) => res.data)
         event.purchaseSlots = await db.getSlotsByTour(event.tour_id)
         event.salesStart = await db.tourSalesStart(event.tour_id)
+        console.log(event.salesStart)
     }
 
     const context = { req, events: events } 
