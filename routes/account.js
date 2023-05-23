@@ -51,7 +51,6 @@ router.get('/', checkAuthRedirect, async (req, res) => {
 })
 
 router.post('/request-refund', async (req, res) => {
-    console.log("hello")
     const { "order-id": orderID } = req.body
     const order = await db.getOrderById(orderID)
     const dateInfo = await db.getDateInfo(order.date_id)
@@ -92,20 +91,13 @@ async function refundOrder(orderID) {
     const seatIDs = parseArray(order.seat_ids)
 
     try {
-        // use orderID to...
-        // refund in stripe if I cba
         await stripe.refundOrder(order)
-
-        // update in db - now doing in stripe.refundOrder
-        // await db.pool.query(`UPDATE orders SET refunded = true WHERE order_id = ?`, orderID) // I should also do in Stripe but there's no real reason to.... other than a receipt
 
     } catch (err) {
         console.error(err)
     }
 
-
     // update status of all seats - double check the wl method
-    // console.log(order.seat_ids)
     await db.pool.query(`UPDATE orders SET refunded = true WHERE order_id = ?`, orderID)
     await db.setSeatStatus("available", seatIDs)
     // from a demo standpoint, though not a live one, best if the db updates regardless of whether stripe works
@@ -139,8 +131,6 @@ router.post('/register', async (req, res) => {
             req.body.email,
             hashedPassword
         )
-
-        // could be a good place to add a stripe customer ID? or just when they reach checkout if not got one
 
         // redirect to login, with redirect parameters for login
         res.redirect(`login${!!req.body.redirect ? ("?redirect=" + req.body.redirect) : ""}`)

@@ -59,7 +59,6 @@ export async function getAllEvents(limit = null) {
 }
 
 export async function tourSalesStart(tourID) {
-    console.log(tourID)
     const slots = await getSlotsByTour(tourID)
     if (slots.length == 0) return new Date("2000-01-01") // random future date i
     else return (new Date(slots[0].start))
@@ -157,8 +156,6 @@ export async function getDateInfo(dateID) {
 
     return info
 }
-
-console.log(await getDateInfo(1))
 
 
 // VENUES
@@ -282,7 +279,6 @@ export async function getSeats(...seatIDs) {
 }
 
 export async function setSeatStatus(status, seatIDs) {
-    console.log("sss")
     let query = `
         UPDATE seats
         SET status = ?
@@ -473,7 +469,6 @@ export async function getUserWaitingLists(userID) {
         WHERE user_id = ?
     `, userID)
 
-    console.log(wl)
     return wl
 }
 
@@ -554,10 +549,6 @@ export async function getUsersForSlot(slotID) {
         FROM slot_registrations 
         WHERE slot_id = ?`
     , slotID)
-
-    // 
-        // INNER JOIN users
-        //     ON users.user_id = slot_registrations.user_id
     return signups.map(a => a.user_id)
 }
 
@@ -637,7 +628,3 @@ export async function addSeats(schema) {
 
     return [query, values]
 }
-
-const template = {dateID: 2, price: 0, slotID: 2, section: "test", block: "test", row: "test", seats: [10, 5]}
-
-// console.log(await addSeats([template]))

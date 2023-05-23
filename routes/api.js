@@ -152,13 +152,9 @@ router.get("/available-seats", async (req, res) => {
 
     sql += ") ORDER BY block, section, row_name, seat_number, price DESC" // so I can check for consecutive seats
 
-    // console.log(sql, values)
     const [rows] = await db.pool.query(sql, values)
 
-    // console.log(rows)
-
     let requiredQty = parseInt(req.query.qty)
-
 
     if (!!requiredQty) { // if asked for a specific quantity of tickets...
         let suitableTickets = []
@@ -167,13 +163,6 @@ router.get("/available-seats", async (req, res) => {
             // get required number of seats starting at i
             let seatSlice = rows.slice(i, i + requiredQty)
             let seat = rows[i]
-
-            // console.log("!!!", seatSlice)
-
-            // if (Boolean(seat.general_admission) && )
-        
-
-            // console.log(Boolean(seat.general_admission))
 
             // if need 1 ticket will just return all available seats grouped by location
             // if slice contains required number of seats and the seats are together, add group to seats to return
@@ -288,8 +277,6 @@ router.get("/email-available", async (req, res) => {
 })
 
 router.post("/queue-test", async (req, res) => {
-    console.log("queue test")
-    // console.log(req.body, req.body.val)
     await db.pool.query(`
         INSERT INTO queue_test (test) VALUES("${req.body.val}")
     `)

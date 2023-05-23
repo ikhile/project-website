@@ -74,7 +74,6 @@
             if (await !emailAvailable) {
                 //alert("Email already in use. Please use another email address or click the link at the bottom of the page to log in to your existing account.")
                 $("#validation-errors, #email-validation-used").removeClass("d-none")
-                console.log("email used")
                 valid = false
                 e.preventDefault()
             }
@@ -94,9 +93,7 @@
             //    e.preventDefault()
             //}
 
-            console.log(valid)
             if (valid) $("#register-form").submit()
-
         })
     })
 

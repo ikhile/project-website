@@ -16,11 +16,9 @@ $(document).ready(async function () {
     $("body").css("margin-bottom", $("footer").outerHeight() + 10)
 
     maxTickets = parseInt($('meta[name="max-tickets"]').attr("content"))
-    console.log(maxTickets)
     
     let params = new URLSearchParams(window.location.search)
     slot = params.get("slot")
-    console.log(`${!!slot ? "slot=" + slot : ""}`)
 
     $("#change-city-btn").click(toggleCityPopup)
     $("#change-city-modal").click(toggleCityPopup)
@@ -48,9 +46,6 @@ $(document).ready(async function () {
         $("input[name=qty]").val(ticketQty)
         $("#qty-span").text(ticketQty)
         disableQtyBtns()
-
-        // only allow date filter to be clicked when update needed
-
 
         $("input[name=date]").on("input", updateDates)
         $("#increase-tickets").click(increaseQty)
@@ -102,7 +97,7 @@ async function updateDates() {
 }
 
 async function updateAvailableSeats() {
-    $("#available-tickets").html("<p class='text-center h3 pt-5'>Loading...</p>")
+    $("#available-tickets").html("<p class='text-center h3 pt-5 text-white'>Loading...</p>")
 
     if (selectedDateIDs.length) {
 
@@ -117,7 +112,6 @@ async function updateAvailableSeats() {
 
             if (ticketResponse.length > 0) {
                 for (let t of ticketResponse) {
-                    console.log(t)
                     t.price.formatted = {}
                     for (let [key, value] of Object.entries(t.price)) {
                         if (typeof value == "number") {
@@ -134,7 +128,6 @@ async function updateAvailableSeats() {
                     $(".available-ticket-card").click(function() {
                         ticketResIndex = $(this).attr("data-index")
                         const t = ticketResponse[ticketResIndex]
-                        console.log("!!!", t)
     
                         let context =  {
                             block: t.block,
@@ -223,21 +216,7 @@ function toggleCityPopup() {
         popup.addClass("d-none")
         popup.removeClass("d-flex")        
     }
-
-    // switch(popup.hasClass('display')) {
-    //     case "none":
-    //         popup.css('display', 'flex')
-    //         break
-    //     default:
-    //         popup.css('display', 'none')
-    // }
 }
-
-
-// can store a max quantity in the database for each tour
-// let maxTickets = 4 // fetchData(`/api/tours/${tourID}/max`) ?? 4
-// then also want to check number purchased by user already for thcont
-// let maxTickets = parseInt($('meta[name="tour-id"]').attr("content"))
 
 function increaseQty() {
     const oldVal = qtyInput.val()
@@ -257,9 +236,7 @@ function decreaseQty() {
     if (newVal < 1) newVal = 1
 
     if (oldVal != newVal) {
-        // qtyInput.val(newVal)
         ticketQty = newVal
-        // $("#filters").submit()
     }
 
     updateQtyVals()

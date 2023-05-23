@@ -15,7 +15,6 @@
     <form method="get" id="filters" class="d-flex flex-md-row flex-column mt-2 mx-3 mb-2 mb-md-1 text-white">
         <section class="d-flex flex-wrap justify-content-center col-md-4">
             <h3 class="mb-1 text-uppercase fw-300 text-center" style="flex-basis: 100%">Dates</h3>
-            {{!-- could replace checks with a selectpicker - however, will affect the date logic in .js... would definitely look nicer though --}}
             {{#each venueDates}}
                 <div class="form-check form-check-inline">
                     <input type="checkbox" class="form-check-input" id="date-check-{{this.date_id}}" name="date" value="{{this.date_id}}">

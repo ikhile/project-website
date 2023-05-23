@@ -62,14 +62,6 @@ app.use(passport.initialize())
 app.use(passport.session())
 app.use(methodOverride('_method'))
 
-// doesn't seem to work - I've just added req to most contexts
-// app.use((req, res, next) => {
-//     app.locals.req = req
-//     app.locals.user = req.user
-//     app.locals.title = "Tickets"
-//     next()
-// })
-
 function mapHelpers() {
     let helpersObj = {}
     for (let helper of Object.keys(helpers)) { helpersObj[helper] = helpers[helper] } // https://stackoverflow.com/a/71132743
@@ -77,8 +69,6 @@ function mapHelpers() {
 }
 
 export function checkAuthRedirect(req, res, next) {
-    console.log(req.originalUrl)
-    console.log("not logged in: redirect")
     if (!req.user) {
         res.redirect(
             "/account/login" 
@@ -112,7 +102,6 @@ app.get('/', async (req, res) => {
         event.lastDate = await api.get(`tours/${event.tour_id}/dates/last`).then((res) => res.data)
         event.purchaseSlots = await db.getSlotsByTour(event.tour_id)
         event.salesStart = await db.tourSalesStart(event.tour_id)
-        console.log(event.salesStart)
     }
 
     const context = { req, events: events } 

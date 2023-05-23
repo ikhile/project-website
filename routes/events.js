@@ -47,11 +47,7 @@ router.get('/tour/:tour_id', validateTourID, async (req, res) => {
     `, req.params.tour_id)
 
     prices = prices.map(price => parseFloat(price.price)).sort((a, b) => a - b)
-    // prices.push(50)
-    // prices = prices.sort((a, b) => a - b)
-    // console.log(prices)
-
-    // if is on sale, all seats for that tour will have onsale = true
+    
     let isOnsale = await api.get(`tours/${req.params.tour_id}/all-onsale`).then(res => res.data.allOnsale)
 
     let context = {
@@ -82,14 +78,10 @@ router.get('/tour/:tour_id/waiting-list', validateTourID, checkAuthRedirect, asy
     const tourID = req.params.tour_id
     const venueID = req.query.venue
 
-    // will want to check if user (if logged in) is already signed up to waiting list
-    // if not, will want to check if email is already signed up in db using form validation
-
     let context = {
         req,
         layout: req.isAuthenticated() ?'main-logged-in' : 'main',
         user: req.user,
-        // userSignedUp: // check db for user id
         tour: await api.get(`tours/${req.params.tour_id}`).then((res) => res.data),
         venues: await api.get(`tours/${req.params.tour_id}/venues`).then((res) => res.data),
         maxTickets: await api.get(`tours/${req.params.tour_id}/max`).then(res => res.data.max_tickets)
@@ -99,11 +91,8 @@ router.get('/tour/:tour_id/waiting-list', validateTourID, checkAuthRedirect, asy
 })
 
 router.post('/tour/:tour_id/waiting-list', validateTourID, checkAuthRedirect, async(req, res) => {
-    // const redirectUrl = new URL(req.originalUrl) // can't set search params and only using relative path
     let redirectUrl = req.originalUrl
     let tour = await db.getEventById(req.params.tour_id)
-
-    // console.log(req.search) // could use that to check if there's params already
 
     try {
         await db.addUserToWaitingList(req.user.user_id, req.body.dates, req.body.qty)
@@ -193,8 +182,6 @@ router.get('/purchase/tour/:tour_id/queue/', validateTourID, checkAuthRedirect, 
         )
 
         prices = prices.map(obj => parseFloat(obj.price))
-
-        // console.log(baseSeatQuery, availableQuery, basePriceQuery)
     }
 
     context.availability = {
@@ -269,24 +256,14 @@ router.get('/purchase/success', async (req, res) => {
 })
 
 
-// MIDDLEWARE
-
-
-    // MAYBE check first if tour has open or future slots
-    // if so then check if user is signed up
-    // if not then send a lil "you are not signed up to this purchase slot" page with a back button to tour page
-    // if so then pass slot id/slot sale = true through to context and render page
-
-    
+// MIDDLEWARE 
 
 async function checkSlotAuth(req, res, next) {
 
     let slots = await db.getSlotsByTour(req.params.tour_id)
-    console.log(slots)
     let hasOpenSlot = false, openSlot = true, hasFutureSlots = false
 
     for (let slot of slots) {
-        console.log(helpers.slotOngoing(slot))
         if (helpers.slotOngoing(slot)) {
             hasOpenSlot = true
             openSlot = slot

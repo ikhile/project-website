@@ -88,7 +88,6 @@ function groupedDatesToArray(groupedDates) {
 export function groupFormatDates(dates, groupFormat, dateFormat) {
     let args = Array.from(arguments); args.pop()
     groupFormat = args.length < 2 ? "startEnd" : groupFormat
-    // dateFormat = args.length < 3 ? "do LLLL"  : dateFormat
 
     if (dates.length == 1) {
         return datefns.format(new Date(dates[0]), "do LLLL yyyy")
@@ -98,7 +97,6 @@ export function groupFormatDates(dates, groupFormat, dateFormat) {
         let arr = []
         let groupedDates = groupDates(dates)
 
-        // need to add an and in
         for (let group of groupedDates) {
             arr.push(`${group.map(a => datefns.format(new Date(a), "do")).join(", ")} ${datefns.format(new Date(group[0]), "LLLL")}`)
         }
@@ -138,7 +136,6 @@ export function groupSeats(seats, mode = "range") {
 }
 
 export function formatPrice(float, forceDecimals = false) {
-    console.log(float)
     return `£${float.toFixed(float % 1 != 0 || forceDecimals ? 2 : 0)}`
 }
 
