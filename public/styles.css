@@ -334,6 +334,10 @@ div:hover > #increase-tickets:disabled + p {
     background-color: var(--white-0-7) !important;
 }
 
+#change-city-modal {
+    z-index: 3000 !important;
+}
+
 #tour-main #purchase:hover, #your-turn a:hover {
     color: white !important;
     background-color: black !important;

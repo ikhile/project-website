@@ -1,9 +1,4 @@
 $(document).ready(() => {
-    // $("#purchase").click(function() {
-    //     // console.log({{isAuth req}})
-    //     $("#change-city-modal").removeClass("d-none")
-    //     $("#change-city-modal").addClass("d-flex")
-    // })
 
     $("#change-city-modal").click(function() {
         $(this).addClass("d-none")
@@ -21,7 +16,6 @@ function purchaseClick(isAuth, tour, venue = null) {
         $("#change-city-modal").addClass("d-flex")
 
     } else {
-        // console.log(`/account/login?alert=to-purchase&redirect=[/events/purchase/tour/${tour}/queue` + (!!venue ? `&venue=${venue}` : ""))
         window.location.href = `/account/login?alert=to-purchase&redirect=/events/purchase/tour/${tour}/queue` + (!!venue ? `?venue=${venue}` : "")
     }
 }

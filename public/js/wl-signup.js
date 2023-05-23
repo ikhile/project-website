@@ -7,19 +7,8 @@ $(document).ready(async function() {
     let params = new URLSearchParams(window.location.search)
     let paramVenues = params.getAll('venue')
 
-    // if (params.has("alert")) {
-    //     switch (params.get("alert")) {
-    //         case "success":
-    //             $("p#info").addClass("d-none")
-    //             $("p#alert-success").removeClass("d-none")
-    //             break
-    //         case "error":
-    //             $("p#alert-error").removeClass("d-none")
-    //     }
-    // }
-
     for (let alert of params.getAll("alert")) {
-        switch (params.get("alert")) {
+        switch (alert) {
             case "success":
                 $("p#info").addClass("d-none")
                 $("p#alert-success").removeClass("d-none")
@@ -35,7 +24,6 @@ $(document).ready(async function() {
     // check any pre-selected venues from query string
     for (let venue of paramVenues) {
         if (!!venue) {
-            console.log(venue)
             $(`input[name=venues][value=${venue}]`).prop("checked", true)
         }
 
@@ -47,14 +35,9 @@ $(document).ready(async function() {
     let paramDates = params.get("dates")?.replace(/\[|\]/g, "").split(",")
     $(".selectpicker").selectpicker("val", paramDates)
 
-    // somehow this line breaks the show/hide function on input???
-
     $("input[name=venues]").on("input", function(e) {
-        // console.log(e.target)
         showHideDateSelect(e.target)
         $("#venue-error").addClass("d-none")
-
-        // console.log($(e.target).is(":checked"))
     })
 
     if (params.has("qty")) {
@@ -89,34 +72,23 @@ function formSubmit(e) {
 }
 
 function showHideDateSelect(eventTarget, transition = true, openDates = true) {
-    // console.log(new Date())
-    // console.log(eventTarget)
 
 
     $("input[name=venues]").each((i, input) => {
         const venueID = $(input).attr("data-venue-id")
 
-        // don't need - was using when I had a visible dates label for the selectpicker
-        // let elems = [ // could use to then add same css to both
-        //     $(`label[data-venue-id=${venueID}]`),
-        //     $(`select[data-venue-id=${venueID}]`).parent(".bootstrap-select")
-        // ]
-
         let show = $(input).is(":checked")
 
-        // console.log(venueID, show)
         let picker = $(`select[data-venue-id=${venueID}]`)
         let parentSelect = $(`select[data-venue-id=${venueID}]`).parent(".bootstrap-select")
 
         parentSelect.css("opacity", show ? 1 : 0)
 
         if (show) {
-            // console.log("show", venueID)
             picker.attr("required", true)
             parentSelect.css("visibility", "visible")
             // picker.removeAttr("disabled")
 
-            // console.log(eventTarget == null)
             if (eventTarget != null && openDates && $(input).is($(eventTarget))) picker.selectpicker("toggle")
             
         } else {
@@ -128,17 +100,7 @@ function showHideDateSelect(eventTarget, transition = true, openDates = true) {
                 picker.selectpicker("deselectAll")
             }
 
-            // using on/one transitionend means element can fade out, and picker won't be seen to deselect while still visibile
-            // having a transition parameter means they don't fade out on page load, they just aren't visible
-            // if (transition) parentSelect.on("transitionend", hideAndDeselect)
-            // else hideAndDeselect()
-            // ^ that also seems to be causing issues... no idea honestly
-
             hideAndDeselect()
-
-            // console.log(input)
-
-            // could jsut have them hidden in .hbs... but then they'll fade in anyway
         }
     })
 }

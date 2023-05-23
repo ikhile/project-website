@@ -10,7 +10,6 @@ router.post('/create-checkout-session', async (req, res) => {
     if (!req.user) return res.redirect(req.body.currentUrl)
 
     // get customer id if exists, otherwise create new customer and pass in to 
-    // console.log("!!!", req.user)
     let stripeCustomerID
     if (req.isAuthenticated()) {
         const user = await db.getUserById(req.user.user_id)
@@ -19,9 +18,7 @@ router.post('/create-checkout-session', async (req, res) => {
 
     // should also set each ticket's status in db to "reserved" at this point
 
-    // let seatIDs = req.body.seats.replace(/\[|\]/g, "").split(",")
     let seatIDs = parseArray(req.body.seats)
-
     let seats = await db.getSeats(...seatIDs)
 
     // create a product
@@ -31,7 +28,6 @@ router.post('/create-checkout-session', async (req, res) => {
 
     try {
         const session = await createCheckoutSession(seatIDs, stripeCustomerID, req)
-        // await db.setSeatStatus("reserved", seatIDs) // set seats to reserved in database
         res.redirect(303, session.url)
 
     } catch (err) {
@@ -43,14 +39,12 @@ router.post('/create-checkout-session', async (req, res) => {
 })
 
 router.get('/success', async (req, res) => {
-    console.log(req.query)
     res.send("payment success")
 })
 
 router.get('/cancel', async (req, res) => {
     const seatIDs = parseArray(req.query.seatIDs)
-    db.setSeatStatus(null, seatIDs)
     // use query params to set seats back to available in db, then redirect to previous page
+    db.setSeatStatus(null, seatIDs)
     res.redirect(req.query.cancelRedirect)
-    // res.send("payment cancelled")
 })

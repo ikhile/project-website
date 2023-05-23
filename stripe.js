@@ -13,17 +13,6 @@ export async function createCheckoutSession(seatIDs, customerID, req) {
     let seats = await db.getSeats(...seatIDs)
     const fee = {price: "price_1N9qREJuWbWNbD9CCnh2faVJ", quantity: 1}
 
-    // create a product
-    // define default price data for that product
-    // returns a product object
-    // add default price of that product object to line items
-    // for (let seat of seats) {
-
-    // }
-
-    // will later create a separate product called fees and make dynamic prices for them here
-
-
     for (let seat of seats) {
         try {
             let productDescription = `1 Ticket for ${seat.artist_name} ${seat.tour_name}\n\n${datefns.format(new Date(seat.date), 'EEEE do LLLL yyyy')}\n${seat.venue_name} ${seat.city}\n\n`
@@ -121,7 +110,6 @@ export async function constructWebhookEvent(body, signature) {
 }
 
 export async function refundOrder(order) {
-    console.log(order.stripe_session_id)
     const { payment_intent: intentID } = await stripe.checkout.sessions.retrieve(order.stripe_session_id)
     const { latest_charge: chargeID } = await stripe.paymentIntents.retrieve(intentID)
     const { id: refundID } = await stripe.refunds.create({charge: chargeID})

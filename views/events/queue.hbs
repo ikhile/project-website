@@ -49,29 +49,11 @@
     let queue, interval, usersTurn = false
 
     $(document).ready(async function() {
-
         $("main").css("margin-bottom", $("footer").outerHeight())
-
-        /*let turnTime = new Date().setSeconds(randomBetween(5000, 3000))
-        console.log(new Date(turnTime))
-        let delay = randomBetween(5000, 30000) // just here for logging purposes
-        console.log(delay)
-        setTimeout(function() {
-            console.log("your turn!")
-        }, delay)
-
-        let delaySeconds = randomBetween(5, 30)
-        console.log(delaySeconds)
-
-        setInterval(() => {
-            delaySeconds--
-            console.log(delaySeconds)
-        }, 1000) */
 
         const delay = randomBetween(3 * 1000, 10 * 1000)
         const user = JSON.parse($("meta[name=user]").attr("content"))
         const event = JSON.parse($("meta[name=event]").attr("content"))
-        console.log(delay, user)
 
         setTimeout(function() {
             $.titleAlert("Your turn to buy tickets!", { interval: 700, stopOnFocus: false })
@@ -84,8 +66,6 @@
             $("#est-wait").addClass("d-none")
             $("#your-turn").removeClass("d-none")
         }, delay)
-
-        //let turnStart = 
     })
 
 

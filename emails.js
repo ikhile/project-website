@@ -21,8 +21,6 @@ export function sendEmail(to, subject, text) {
         text 
     }
 
-    // COMMENT BACK IN - SPAM AVOIDANCE
-
     transporter.sendMail(options, (error, info) => {
         if (error) console.error(error)
         else console.log('Email sent: ' + info.response)

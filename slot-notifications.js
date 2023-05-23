@@ -3,7 +3,6 @@ import * as db from './database.js'
 import { sendEmail } from './emails.js'
 
 const slots = await db.getSlots()
-// console.log(await slots)
 const alertBeforeMins = 10
 
 for (let slot of slots) {

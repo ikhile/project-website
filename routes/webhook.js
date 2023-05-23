@@ -28,13 +28,6 @@ router.post("/", express.raw({type: 'application/json'}), async (req, res) => {
 
     if (event.data.object.object == 'checkout.session') {
         const object = event.data.object
-        console.log(object.line_items)
-
-    }
-
-    if (event.type == 'checkout.session.expired') {
-        console.log()
-
     }
 
     if (event.type == 'checkout.session.completed') {
@@ -49,7 +42,6 @@ router.post("/", express.raw({type: 'application/json'}), async (req, res) => {
             return res.sendStatus(400)
         }
 
-        // const seatIDs = parseArray(metadata.seat_ids)
         await db.setSeatAvailability(false, parseArray(metadata.seat_ids))
         await db.setSeatStatus("sold", parseArray(metadata.seat_ids))
     }

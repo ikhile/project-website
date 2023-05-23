@@ -2,7 +2,6 @@
 CREATE TABLE IF NOT EXISTS artists (
     artist_id INT NOT NULL AUTO_INCREMENT,
     artist_name VARCHAR(255) NOT NULL,
-    -- bio TEXT,
 
     PRIMARY KEY (artist_id)
 );
