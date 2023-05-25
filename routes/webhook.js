@@ -31,11 +31,11 @@ router.post("/", express.raw({type: 'application/json'}), async (req, res) => {
     }
 
     if (event.type == 'checkout.session.completed') {
-        const { id, metadata } = event.data.object
+        const { id, metadata, amount_total } = event.data.object
         console.log((id, metadata.user_id, metadata.tour_id, metadata.venue_id, metadata.date_id, metadata.seat_ids, metadata))
 
         try {
-            db.addOrder(id, metadata.user_id, metadata.tour_id, metadata.venue_id, metadata.date_id, metadata.seat_ids, JSON.stringify(metadata))
+            db.addOrder(id, metadata.user_id, metadata.tour_id, metadata.venue_id, metadata.date_id, metadata.seat_ids, JSON.stringify(metadata), amount_total / 100)
 
         } catch(err) {
             console.error(err)

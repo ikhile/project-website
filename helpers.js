@@ -136,7 +136,7 @@ export function groupSeats(seats, mode = "range") {
 }
 
 export function formatPrice(float, forceDecimals = false) {
-    return `£${float.toFixed(float % 1 != 0 || forceDecimals ? 2 : 0)}`
+    return `£${float?.toFixed(float % 1 != 0 || forceDecimals ? 2 : 0)}`
 }
 
 export function venueDatesToDatesArray (venueDates) {

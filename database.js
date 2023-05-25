@@ -475,16 +475,17 @@ export async function getUserWaitingLists(userID) {
 
 // ORDERS
 
-export async function addOrder(session, user, tour, venue, date, seats, meta) {
+export async function addOrder(session, user, tour, venue, date, seats, meta, pricePaid) {
+    console.log(session)
     return await pool.query(`
-        INSERT INTO orders (stripe_session_id, user_id, tour_id, venue_id, date_id, seat_ids, stripe_metadata)
-        VALUES(?, ?, ?, ?, ?, ?, ?)
-    `, [session, user, tour, venue, date, stringifyArray(seats), meta])
+        INSERT INTO orders (stripe_session_id, user_id, tour_id, venue_id, date_id, seat_ids, stripe_metadata, price_paid)
+        VALUES(?, ?, ?, ?, ?, ?, ?, ?)
+    `, [session, user, tour, venue, date, seats, meta, pricePaid])
 }
 
 export async function getUserOrders(userID) {
     const [orders] = await pool.query(`
-    SELECT order_id, orders.date_id, date, orders.tour_id, tour_name, artist_name, orders.venue_id, venue_name, city, stripe_session_id, on_waiting_list, seat_ids, purchased_at, refunded
+    SELECT order_id, orders.date_id, date, orders.tour_id, tour_name, artist_name, orders.venue_id, venue_name, city, stripe_session_id, on_waiting_list, seat_ids, purchased_at, refunded, price_paid
     FROM orders 
     INNER JOIN tours ON orders.tour_id = tours.tour_id
     INNER JOIN artists ON tours.artist_id = artists.artist_id

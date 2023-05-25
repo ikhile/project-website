@@ -59,6 +59,7 @@
                         <p class="mt-0 mb-1 text-center text-md-end fw-400 fst-italic" style="clear: both">
                             Purchased {{formatDistance this.purchased_at}} ago
                         </p>
+                        <p class="text-center text-md-end">{{formatPrice this.price_paid}}</p>
                     </div>
                 {{/if}}
                 <div class="text-center text-md-start">
@@ -130,7 +131,8 @@
                         Row {{this.seats.0.row_name}}
                     </p>
                     <p class="my-1 me-2 fw-300">Seat{{addPluralS this.seats.length}} {{groupSeats this.seats "range"}}</p>
-                    <p class="my-1 me-2 fw-300">£00.00</p>
+                    {{log this.price_paid}}
+                    <p class="my-1 me-2 fw-300">{{formatPrice this.price_paid}}</p>
                 </section>
                 <form action="account/request-refund" method="POST">
                     <input name="order-id" value="{{this.order_id}}" hidden>
