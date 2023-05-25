@@ -82,7 +82,7 @@ export function checkAuthRedirect(req, res, next) {
 }
 
 export function stringifyArray(array, brackets = true) {
-    let str = array.join(",")
+    let str = array?.join(",")
     if (str.length == 0) return ""
     return brackets ? `[${str}]` : str
 }
