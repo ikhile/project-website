@@ -54,9 +54,9 @@ CREATE TABLE IF NOT EXISTS seats (
     block VARCHAR(255),
     row_name VARCHAR(255),
     seat_number INT,
-    purchase_slot_id INT,
+    slot_id INT,
     onsale BOOLEAN,
-    available BOOLEAN,
+    available BOOLEAN DEFAULT true,
     price DECIMAL(7, 2),
     status VARCHAR(255) DEFAULT "available",
     
@@ -89,23 +89,23 @@ CREATE TABLE IF NOT EXISTS seats (
 
 
 INSERT INTO artists (artist_name) VALUES("Beyonce");
-INSERT INTO tours (artist_id, tour_name, image_name) VALUES(LAST_INSERT_ID(), "Renaissance World Tour", "bey");
+INSERT INTO tours (artist_id, tour_name, image_name) VALUES(LAST_INSERT_ID(), "Renaissance World Tour", "bey.jpg");
 -- SET @renaissance_id = last_insert_id();
 
-INSERT 
-INTO venues (venue_name, city) 
-VALUES
-    ("Tottenham Hotspur Stadium", "London"),
-    ("Principality Stadium", "Cardiff"),
-    ("Stadium of Light", "Sunderland"),
-    ("BT Murrayfield Stadium", "Edinburgh");
+-- INSERT 
+-- INTO venues (venue_name, city) 
+-- VALUES
+--     ("Tottenham Hotspur Stadium", "London"),
+--     ("Principality Stadium", "Cardiff"),
+--     ("Stadium of Light", "Sunderland"),
+--     ("BT Murrayfield Stadium", "Edinburgh");
     
 INSERT
-INTO venues (venue_name, city)
+INTO venues (venue_name, city, image_name)
 VALUES 
-	("O2 Arena", "London"),
-	("Corn Exchange", "Cambridge"),
-	("Utilita Arena", "Birmingham");
+	("O2 Arena", "London", "o2.png"),
+	("Corn Exchange", "Cambridge", "cx.png"),
+	("Utilita Arena", "Birmingham", "bham.png");
 
 SET @renaissance_id = (SELECT tour_id FROM tours WHERE tour_name="Renaissance World Tour");
 SET @o2_id = (SELECT venue_id FROM venues WHERE venue_name="O2 Arena");
@@ -123,13 +123,13 @@ VALUES
     (@renaissance_id, "2023-06-27", @cam_id),
     (@renaissance_id, "2023-06-25", @brum_id);
 
-SET @jun29 = (SELECT date_id FROM dates WHERE date="2023-06-29")
-SET @jun30 = (SELECT date_id FROM dates WHERE date="2023-06-30")
-SET @jul01 = (SELECT date_id FROM dates WHERE date="2023-07-01")
-SET @jul03 = (SELECT date_id FROM dates WHERE date="2023-07-03")
-SET @jul04 = (SELECT date_id FROM dates WHERE date="2023-07-04")
-SET @jun27 = (SELECT date_id FROM dates WHERE date="2023-06-27")
-SET @jun25 = (SELECT date_id FROM dates WHERE date="2023-06-25")
+SET @jun29 = (SELECT date_id FROM dates WHERE date="2023-06-29");
+SET @jun30 = (SELECT date_id FROM dates WHERE date="2023-06-30");
+SET @jul01 = (SELECT date_id FROM dates WHERE date="2023-07-01");
+SET @jul03 = (SELECT date_id FROM dates WHERE date="2023-07-03");
+SET @jul04 = (SELECT date_id FROM dates WHERE date="2023-07-04");
+SET @jun27 = (SELECT date_id FROM dates WHERE date="2023-06-27");
+SET @jun25 = (SELECT date_id FROM dates WHERE date="2023-06-25");
     
 INSERT 
 INTO seats
@@ -147,12 +147,12 @@ VALUES
 	(@jun25, "Stalls", "10", "YY", 11, true, true, 25.00),
 	(@jun25, "Stalls", "10", "YY", 12, true, true, 25.00),
 
-	(@jun29, "Stalls", "100", "P", 1, true, true, 50.00),
-	(@jun29, "Stalls", "100", "P", 2, true, true, 50.00),
-	(@jun29, "Stalls", "100", "P", 3, true, true, 50.00),
-	(@jun29, "Stalls", "100", "P", 4, true, true, 50.00),
-	(@jun29, "Stalls", "100", "P", 5, true, true, 50.00),
-	(@jun29, "Stalls", "100", "P", 6, true, true, 50.00),
+	(@jun29, "111", "100", "P", 1, true, true, 50.00),
+	(@jun29, "111", "100", "P", 2, true, true, 50.00),
+	(@jun29, "111", "100", "P", 3, true, true, 50.00),
+	(@jun29, "111", "100", "P", 4, true, true, 50.00),
+	(@jun29, "111", "100", "P", 5, true, true, 50.00),
+	(@jun29, "111", "100", "P", 6, true, true, 50.00),
 
 	(@jun29, "Floor", "A1", "A", 1, true, true, 100.00),
 	(@jun29, "Floor", "A1", "A", 2, true, true, 100.00),
@@ -178,7 +178,7 @@ VALUES
 
 --  
 INSERT INTO artists (artist_name) VALUES("Sabrina Carpenter");
-INSERT INTO tours (artist_id, tour_name, image_name) VALUES(LAST_INSERT_ID(), "Emails I Can't Send Tour" "sab");
+INSERT INTO tours (artist_id, tour_name, image_name) VALUES(LAST_INSERT_ID(), "Emails I Can't Send Tour", "sab.jpg");
 SET @emails_tour_id = last_insert_id();
 
 -- INSERT INTO venues (venue_name, city) VALUES ("O2 Apollo", "Manchester");
@@ -216,12 +216,12 @@ VALUES
 	(@jun14, "100", "111", "P", 5, @emails_slot_1, false, true, 20),
 	(@jun14, "100", "111", "P", 6, @emails_slot_1, false, true, 20),
 
-	(@jun14, "Floor", "A1", "A", 1, @emails_slot_1, false, true, 20),
-	(@jun14, "Floor", "A1", "A", 2, @emails_slot_1, false, true, 20),
-	(@jun14, "Floor", "A1", "A", 3, @emails_slot_1, false, true, 20),
-	(@jun14, "Floor", "A1", "A", 4, @emails_slot_1, false, true, 20),
-	(@jun14, "Floor", "A1", "A", 5, @emails_slot_1, false, true, 20),
-	(@jun14, "Floor", "A1", "A", 6, @emails_slot_1, false, true, 20),
+	(@jun14, "Floor", "A1", "A", 1, @emails_slot_1, false, true, 33),
+	(@jun14, "Floor", "A1", "A", 2, @emails_slot_1, false, true, 33),
+	(@jun14, "Floor", "A1", "A", 3, @emails_slot_1, false, true, 33),
+	(@jun14, "Floor", "A1", "A", 4, @emails_slot_1, false, true, 33),
+	(@jun14, "Floor", "A1", "A", 5, @emails_slot_1, false, true, 33),
+	(@jun14, "Floor", "A1", "A", 6, @emails_slot_1, false, true, 33);
     
 -- neither of these need seats, corinne needs slots
 -- need start and end dates though
@@ -240,26 +240,26 @@ VALUES
     
 SET @corinne_tour_id = (SELECT tour_id FROM tours WHERE artist_id = @corinne_id);
 SET @labrinth_tour_id = (SELECT tour_id FROM tours WHERE artist_id = @labrinth_id);
-SET @any_venue_id = (SELECT venue_id FROM venues LIMIT 1);
+SET @london_venue_id = (SELECT venue_id FROM venues WHERE city = "London");
 
 INSERT INTO dates (tour_id, venue_id, date)
 VALUES
-	(@corinne_tour_id, @any_venue_id, "2023-08-08"), 
-	(@corinne_tour_id, @any_venue_id, "2023-09-09"), 
-	(@labrinth_tour_id, @any_venue_id, "2024-02-15"), 
-	(@labrinth_tour_id, @any_venue_id, "2024-03-04");
+	(@corinne_tour_id, @london_venue_id, "2023-08-08"), 
+	(@corinne_tour_id, @london_venue_id, "2023-09-09"), 
+	(@labrinth_tour_id, @london_venue_id, "2024-02-15"), 
+	(@labrinth_tour_id, @london_venue_id, "2024-03-04");
     
 INSERT INTO purchase_slots (tour_id, start, end)
 VALUES
 	(@corinne_tour_id, "2023-07-19 09:00:00", "2023-07-19 15:00:00"),
 	(@corinne_tour_id, "2023-07-21 19:30:00", "2023-07-21 23:59:00"),
 	(@corinne_tour_id, "2023-07-22 14:00:00", "2023-07-22 19:00:00");
-    
+        
 INSERT INTO seats (date_id, onsale, price) VALUES((SELECT date_id FROM dates WHERE tour_id = @corinne_tour_id LIMIT 1), false, 50.00);
-INSERT INTO seats (date_id, onsale, available, price) VALUES((SELECT date_id FROM dates WHERE tour_id = @labrinth_tour_id LIMIT 1), false, false, 50.00);
+INSERT INTO seats (date_id, onsale, available, price) VALUES((SELECT date_id FROM dates WHERE tour_id = @labrinth_tour_id LIMIT 1), true, false, 50.00);
 
 CREATE TABLE IF NOT EXISTS users (
-    customer_id INT NOT NULL AUTO_INCREMENT,
+    user_id INT NOT NULL AUTO_INCREMENT,
     stripe_id VARCHAR(255), -- use to store IDs from Stripe payments
     first_name VARCHAR(255),
     last_name VARCHAR(255),
@@ -267,7 +267,7 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255),
     waiting_lists VARCHAR(255),
 
-    PRIMARY KEY (customer_id),
+    PRIMARY KEY (user_id),
     UNIQUE (email)
 );
 

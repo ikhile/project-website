@@ -242,7 +242,7 @@ export async function getSeats(...seatIDs) {
     let query = `
         SELECT 
             seat_id, seats.date_id, date, 
-            section, block, row_name, seat_number, general_admission, 
+            section, block, row_name, seat_number,
             available, price, 
             tours.tour_id, tour_name, 
             artists.artist_id, artist_name, 
@@ -485,7 +485,7 @@ export async function addOrder(session, user, tour, venue, date, seats, meta, pr
 
 export async function getUserOrders(userID) {
     const [orders] = await pool.query(`
-    SELECT order_id, orders.date_id, date, orders.tour_id, tour_name, artist_name, orders.venue_id, venue_name, city, stripe_session_id, on_waiting_list, seat_ids, purchased_at, refunded, price_paid
+    SELECT order_id, orders.date_id, date, orders.tour_id, tour_name, artist_name, orders.venue_id, venue_name, city, stripe_session_id, seat_ids, purchased_at, refunded, price_paid
     FROM orders 
     INNER JOIN tours ON orders.tour_id = tours.tour_id
     INNER JOIN artists ON tours.artist_id = artists.artist_id
@@ -499,7 +499,7 @@ export async function getUserOrders(userID) {
 
 export async function getOrderById(orderID) {
     const [[order]] = await pool.query(`
-    SELECT order_id, orders.date_id, date, orders.tour_id, tour_name, artist_name, orders.venue_id, venue_name, city, stripe_session_id, on_waiting_list, seat_ids, purchased_at
+    SELECT order_id, orders.date_id, date, orders.tour_id, tour_name, artist_name, orders.venue_id, venue_name, city, stripe_session_id, seat_ids, purchased_at
     FROM orders 
     INNER JOIN tours ON orders.tour_id = tours.tour_id
     INNER JOIN artists ON tours.artist_id = artists.artist_id

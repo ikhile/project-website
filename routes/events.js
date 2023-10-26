@@ -142,10 +142,10 @@ router.get('/purchase/tour/:tour_id/queue/', validateTourID, checkAuthRedirect, 
     const basePriceQuery = `
         SELECT price FROM seats
         INNER JOIN dates ON seats.date_id = dates.date_id
-        WHERE tour_id = ? `
+        WHERE available = true
+        AND tour_id = ? `
 
     if (req.query.venue) {
-        console.log("v")
         const totalQuery = baseSeatQuery + " AND venue_id = ?"
         const availableQuery = totalQuery + " AND available = true"
 

@@ -1,7 +1,6 @@
 
 import * as db from './database.js'
 
-
 import * as helpers from './helpers.js'
 import * as exphbs from 'express-handlebars'
 import express from 'express'
@@ -18,6 +17,8 @@ import { router as payRouter } from './routes/pay.js'
 import { router as searchRouter } from './routes/search.js'
 import { router as webhookRouter } from './routes/webhook.js'
 // import * as s from './slot-notifications.js'
+import dotenv from 'dotenv'
+dotenv.config()
 
 const app = express()
 const port = 3000
@@ -95,7 +96,7 @@ export function parseArray(str, intArray = true) {
 
 app.get('/', async (req, res) => {
     
-    let events = await db.getAllEvents(10)
+    let events =  await db.getAllEvents(10)
 
     for (let event of events) {
         event.firstDate = await api.get(`tours/${event.tour_id}/dates/first`).then((res) => res.data)
@@ -120,4 +121,4 @@ app.use('/pay', payRouter)
 app.use('/search', searchRouter)
 app.use('/webhook', webhookRouter)
 
-app.listen(port, 'localhost', () => console.log(`App listening to port ${port}`))
+app.listen(port, () => console.log(`App listening to port ${port}`))

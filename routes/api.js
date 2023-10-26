@@ -120,11 +120,8 @@ function areNeighbouringSeats(seatsArr) {
 
 router.get("/available-seats", async (req, res) => {
     let tour = req.query.tour
-    // let dates = req.query.dates.replace(/\[|\]/g, "").split(",").map(a => parseInt(a))
     let dates = parseArray(req.query.dates)
     let onsale = req.query.onsale == "false" ? false : true
-
-    console.log(req.query.qty)
 
     let sql = `
         SELECT * 
@@ -135,12 +132,9 @@ router.get("/available-seats", async (req, res) => {
     let values = [onsale]
 
     if (!!req.query.slot) {
-        sql = sql.replace("onsale is", "purchase_slot_id =")
+        sql = sql.replace("onsale is", "slot_id =")
         values = [parseInt(req.query.slot)]
     }
-
-    // console.log(sql)
-
 
     for (let [i, dateID] of dates.entries()) {
         if (Number.isInteger(parseInt(dateID))) {
@@ -205,8 +199,6 @@ router.get("/available-seats", async (req, res) => {
                     seats: seatSlice
                 }
 
-                // console.log(seatGroup)
-
                 suitableTickets[ind].tickets.push(seatGroup)
 
                 if (!suitableTickets[ind].dates.find(a => a.date_id == seat.date_id)) {
@@ -226,10 +218,6 @@ router.get("/available-seats", async (req, res) => {
 
             }
         }
-
-        // stringifyLog(suitableTickets)
-
-        console.log(req.query.orderby)
 
         if (req.query.orderby == "DESC") suitableTickets.sort((a, b) => a.row.localeCompare(b.row))
         else suitableTickets.sort((a, b) => b.row.localeCompare(a.row))

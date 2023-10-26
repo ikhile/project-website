@@ -34,6 +34,10 @@ export function isSameYear(date1, date2) {
     return datefns.isSameYear(new Date(date1), new Date(date2))
 }
 
+export function isSameDay(date1, date2) {
+    return datefns.isSameDay(new Date(date1), new Date(date2))
+}
+
 export function isThisYear(date) {
     return datefns.isSameYear(new Date(date), new Date())
 }
@@ -136,7 +140,10 @@ export function groupSeats(seats, mode = "range") {
 }
 
 export function formatPrice(float, forceDecimals = false) {
-    return `£${float?.toFixed(float % 1 != 0 || forceDecimals ? 2 : 0)}`
+    try { return `£${float}` }
+    catch (err) { console.error(err) }
+    return float
+    // return isNaN(float) ? ("£"+ float) : `£${float}`//.toFixed(float % 1 != 0 || forceDecimals ? 2 : 0)}`
 }
 
 export function venueDatesToDatesArray (venueDates) {
@@ -206,11 +213,11 @@ export function last(arr) {
 }
 
 export function lastSlotEnd(slotsArr) {
-    return slotsArr[slotsArr.length - 1].end
+    return slotsArr.length ? slotsArr[slotsArr.length - 1].end : null
 }
 
 export function lastSlotEndIsThisYear(slotsArr) {
-    return isThisYear(lastSlotEnd(slotsArr))
+    return slotsArr.length ? isThisYear(lastSlotEnd(slotsArr)) : null
 }
 
 

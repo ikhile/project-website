@@ -21,7 +21,7 @@
             {{> city-cards}}
         </div>
 
-    {{else}}
+    {{else if slots.length}}
         <p class="mt-3">Tickets will be released at the below times - sign up to be notified and buy tickets at a time that suits you!</p>
 
         {{#if (isAuth req)}}
@@ -57,6 +57,11 @@
                             Now
                             <span class="text-transparent-white small">until</span>
                             {{formatDate this.end "HH:mm"}}
+                            {{#unless (isSameDay this.start this.end)}}
+                                <span class="text-capitalize fw-300" style="font-size: 0.6em">
+                                    ({{formatDate this.end "do LLL"}})
+                                </span>
+                            {{/unless}}
                         </p>
                     {{else }}
                         <p class="fs-4 fw-400 mb-0 {{#if (slotPast this)}}text-muted{{/if}}">
